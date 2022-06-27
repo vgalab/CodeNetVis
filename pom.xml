@@ -11,7 +11,7 @@
 
   <properties>
     <bundle.symbolicName>ca.usask.vga.cytoscape.magnetic-layout</bundle.symbolicName>
-    <bundle.namespace>ca.usask.vga.layouts.magnetic</bundle.namespace>
+    <bundle.namespace>ca.usask.vga.layout.magnetic</bundle.namespace>
 
     <cytoscape.api.version>3.9.0</cytoscape.api.version>
     <maven-compiler-plugin.version>2.0.2</maven-compiler-plugin.version>
@@ -107,6 +107,12 @@
             <artifactId>org.osgi.core</artifactId>
             <version>${osgi.api.version}</version>
         </dependency>
-	</dependencies>
+        <dependency>
+            <groupId>org.jetbrains</groupId>
+            <artifactId>annotations-java5</artifactId>
+            <version>RELEASE</version>
+            <scope>compile</scope>
+        </dependency>
+    </dependencies>
 
 </project>

@@ -1,4 +1,4 @@
-package ca.usask.vga.layouts.magnetic;
+package ca.usask.vga.layout.magnetic;
 
 /*
  * #%L

@@ -1,5 +1,6 @@
-package ca.usask.vga.layouts.magnetic;
+package ca.usask.vga.layout.magnetic;
 
+import ca.usask.vga.layout.magnetic.util.MagneticForce;
 import org.cytoscape.model.CyNode;
 import org.cytoscape.view.layout.AbstractParallelPartitionLayoutTask;
 import org.cytoscape.view.layout.LayoutEdge;
@@ -7,6 +8,7 @@ import org.cytoscape.view.layout.LayoutNode;
 import org.cytoscape.view.layout.LayoutPartition;
 import org.cytoscape.view.model.CyNetworkView;
 import org.cytoscape.view.model.View;
+import org.cytoscape.work.TaskMonitor;
 import org.cytoscape.work.undo.UndoSupport;
 import prefuse.util.force.*;
 
@@ -90,6 +92,7 @@ public class ForceDirectedLayoutTask extends AbstractParallelPartitionLayoutTask
 		m_fsim.addForce(new NBodyForce(monitor));  // Repulsion
 		m_fsim.addForce(new SpringForce());  // Attraction (ideal dist)
 		m_fsim.addForce(new DragForce());  // Dampening
+		m_fsim.addForce(new MagneticForce());  // Magnetic force
 
 		List<LayoutNode> nodeList = part.getNodeList();
 		List<LayoutEdge> edgeList = part.getEdgeList();
