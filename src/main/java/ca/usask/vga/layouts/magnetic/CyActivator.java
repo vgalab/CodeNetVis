@@ -45,8 +45,8 @@ public class CyActivator extends AbstractCyActivator {
 		ForceDirectedLayout forceDirectedLayout = new ForceDirectedLayout(undo);
 
         Properties forceDirectedLayoutProps = new Properties();
-        forceDirectedLayoutProps.setProperty(PREFERRED_MENU,"Layout.Cytoscape Layouts");
-        forceDirectedLayoutProps.setProperty("preferredTaskManager","menu");
+        forceDirectedLayoutProps.setProperty(PREFERRED_MENU,"Layout.Magnetic Layouts");
+        forceDirectedLayoutProps.setProperty("preferredTaskManager","menu");  // Purpose: unknown
         forceDirectedLayoutProps.setProperty(TITLE,forceDirectedLayout.toString());
         forceDirectedLayoutProps.setProperty(MENU_GRAVITY,"10.5");
 		registerService(bc,forceDirectedLayout,CyLayoutAlgorithm.class, forceDirectedLayoutProps);

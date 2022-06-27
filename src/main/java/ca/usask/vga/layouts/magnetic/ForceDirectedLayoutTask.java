@@ -69,11 +69,6 @@ public class ForceDirectedLayoutTask extends AbstractParallelPartitionLayoutTask
 		edgeWeighter.setWeightAttribute(layoutAttribute);
 
 		monitor = new StateMonitor();
-		
-		// m_fsim = new ForceSimulator(monitor);
-		// m_fsim.addForce(new NBodyForce(monitor));
-		// m_fsim.addForce(new SpringForce());
-		// m_fsim.addForce(new DragForce());
 	}
 	
 	@Override
@@ -85,19 +80,16 @@ public class ForceDirectedLayoutTask extends AbstractParallelPartitionLayoutTask
 	public void layoutPartition(LayoutPartition part) {
 		// if (taskMonitor != null)
 		// 	taskMonitor.setStatusMessage("Partition " + part.getPartitionNumber() + ": Initializing...");
-		
-		ForceSimulator m_fsim = new ForceSimulator(monitor);
-		m_fsim.addForce(new NBodyForce(monitor));
-		m_fsim.addForce(new SpringForce());
-		m_fsim.addForce(new DragForce());
 
 		// Calculate our edge weights
 		part.calculateEdgeWeights();
-		
-		m_fsim = new ForceSimulator(monitor);
-		m_fsim.addForce(new NBodyForce(monitor));
-		m_fsim.addForce(new SpringForce());
-		m_fsim.addForce(new DragForce());
+
+		// REGISTERING FORCES
+		ForceSimulator m_fsim = new ForceSimulator(integrator.getNewIntegrator(monitor), monitor);
+
+		m_fsim.addForce(new NBodyForce(monitor));  // Repulsion
+		m_fsim.addForce(new SpringForce());  // Attraction (ideal dist)
+		m_fsim.addForce(new DragForce());  // Dampening
 
 		List<LayoutNode> nodeList = part.getNodeList();
 		List<LayoutEdge> edgeList = part.getEdgeList();

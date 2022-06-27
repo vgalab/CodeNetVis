@@ -40,8 +40,8 @@ import java.util.Set;
 
 public class ForceDirectedLayout extends AbstractLayoutAlgorithm {
 
-	private static final String ALGORITHM_ID = "force-directed";
-	static final String ALGORITHM_DISPLAY_NAME = "Prefuse Force Directed Layout";
+	private static final String ALGORITHM_ID = "magnetic-layout";
+	static final String ALGORITHM_DISPLAY_NAME = "Magnetic Force Directed Layout (USask)";
 
 	private Integrators integrator = Integrators.RUNGEKUTTA;
 
