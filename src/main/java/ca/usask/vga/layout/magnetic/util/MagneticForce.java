@@ -7,8 +7,15 @@ import static ca.usask.vga.layout.magnetic.util.Vector.sign;
 
 public class MagneticForce extends AbstractForce {
 
+    // TODO: Make these recommended values
     float field_strength = 0.0001f, c_m = 1, alpha = 1, beta = 1;
     boolean bi_directional;
+
+    public MagneticForce(float field_strength, float alpha, float beta) {
+        this.field_strength = field_strength;
+        this.alpha = alpha;
+        this.beta = beta;
+    }
 
     @Override
     protected String[] getParameterNames() {
