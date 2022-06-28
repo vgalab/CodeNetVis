@@ -24,16 +24,20 @@ package ca.usask.vga.layout.magnetic;
  * #L%
  */
 
+import ca.usask.vga.layout.magnetic.util.MagneticForce;
+import ca.usask.vga.layout.magnetic.util.FieldType;
 import org.cytoscape.view.layout.EdgeWeighter;
+import org.cytoscape.view.layout.WeightTypes;
 import org.cytoscape.work.ContainsTunables;
 import org.cytoscape.work.Tunable;
 import org.cytoscape.work.TunableValidator;
+import org.cytoscape.work.util.ListSingleSelection;
 
 import java.io.IOException;
 
 public class ForceDirectedLayoutContext implements TunableValidator {
 	
-	@ContainsTunables
+	//@ContainsTunables
 	public EdgeWeighter edgeWeighter = new EdgeWeighter();
 	
 	@Tunable(description="Number of Iterations:", context="both", longDescription="Number of Iterations, in numeric value", exampleStringValue="100")
@@ -48,13 +52,34 @@ public class ForceDirectedLayoutContext implements TunableValidator {
 	public boolean isDeterministic;
 
 	// TODO: Write descriptions, change to floats (?), add validation states
-	@Tunable(description="Enabled", groups="Magnet", context="both", longDescription="TODO", exampleStringValue="true")
+	@Tunable(description="Enable magnetic force", groups="Magnet", context="both", longDescription="TODO", exampleStringValue="true")
 	public boolean magnetEnabled = true;
-	@Tunable(description="Field strength", groups="Magnet", context="both", longDescription="TODO", exampleStringValue="1e-4")
+
+	public FieldType fieldType = FieldType.VERTICAL;
+
+	@Tunable(
+			description = "Field type",
+			groups = "Magnet",
+			context = "both",
+			longDescription = "TODO",
+			exampleStringValue = "Linear (horizontal)",
+			dependsOn="magnetEnabled=true"
+	)
+	public ListSingleSelection<FieldType> getFieldType() {
+		ListSingleSelection<FieldType> t = new ListSingleSelection<>(FieldType.VERTICAL, FieldType.HORIZONTAL, FieldType.POLAR, FieldType.CONCENTRIC);
+		t.setSelectedValue(this.fieldType);
+		return t;
+	}
+
+	public void setFieldType(ListSingleSelection<FieldType> t) {
+		this.fieldType = (FieldType) t.getSelectedValue();
+	}
+
+	@Tunable(description="Field strength", groups="Magnet", dependsOn="magnetEnabled=true", context="both", longDescription="TODO", exampleStringValue="1e-4")
 	public float magneticFieldStrength = 1e-4f;
-	@Tunable(description="Alpha", groups="Magnet", context="both", longDescription="TODO", exampleStringValue="1")
+	@Tunable(description="Alpha", groups="Magnet", dependsOn="magnetEnabled=true", context="both", longDescription="TODO", exampleStringValue="1")
 	public float magneticAlpha = 1;
-	@Tunable(description="Beta", groups="Magnet", context="both", longDescription="TODO", exampleStringValue="1")
+	@Tunable(description="Beta", groups="Magnet", dependsOn="magnetEnabled=true", context="both", longDescription="TODO", exampleStringValue="1")
 	public float magneticBeta = 1;
 
 	@Tunable(description="Don't partition graph before layout:", groups="Standard Settings", context="both", longDescription="Don't partition graph before layout; boolean values only, ```true``` or ```false```; defaults to ```false```", exampleStringValue="false")

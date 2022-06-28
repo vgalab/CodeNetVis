@@ -10,8 +10,10 @@ public class MagneticForce extends AbstractForce {
     // TODO: Make these recommended values
     float field_strength = 0.0001f, c_m = 1, alpha = 1, beta = 1;
     boolean bi_directional;
+    FieldType field_type;
 
-    public MagneticForce(float field_strength, float alpha, float beta) {
+    public MagneticForce(FieldType field_type, float field_strength, float alpha, float beta) {
+        this.field_type = field_type;
         this.field_strength = field_strength;
         this.alpha = alpha;
         this.beta = beta;
@@ -61,7 +63,7 @@ public class MagneticForce extends AbstractForce {
 
         // TODO: Implement different fields
         //Real2DVector field_direction = get_magnetic_field(center_of_mass(n, t), layout.primary(t, n));
-        Vector field_direction = new Vector(1, 0);
+        Vector field_direction = field_type.getFieldAt(pos_n.add(pos_t).times(0.5f));
 
         // TODO: Implement graph direction check
         // int edge_dir = layout.getEdgeDirection(n, t);

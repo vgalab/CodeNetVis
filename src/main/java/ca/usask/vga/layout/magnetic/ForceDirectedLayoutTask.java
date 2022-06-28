@@ -95,7 +95,7 @@ public class ForceDirectedLayoutTask extends AbstractParallelPartitionLayoutTask
 
 		if (context.magnetEnabled)
 			// Magnetic force
-			m_fsim.addForce(new MagneticForce(context.magneticFieldStrength, context.magneticAlpha, context.magneticBeta));
+			m_fsim.addForce(new MagneticForce(context.fieldType, context.magneticFieldStrength, context.magneticAlpha, context.magneticBeta));
 
 		List<LayoutNode> nodeList = part.getNodeList();
 		List<LayoutEdge> edgeList = part.getEdgeList();
