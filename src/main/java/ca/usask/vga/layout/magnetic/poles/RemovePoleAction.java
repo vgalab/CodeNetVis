@@ -26,6 +26,7 @@ public class RemovePoleAction  extends ActionOnSelected {
 
         this.useToggleButton = false;
         this.inToolBar = true;
+        this.insertSeparatorAfter = true;
     }
 
     @Override

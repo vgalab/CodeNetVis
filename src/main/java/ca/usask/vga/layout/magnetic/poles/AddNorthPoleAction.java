@@ -26,6 +26,7 @@ public class AddNorthPoleAction  extends ActionOnSelected {
 
         this.useToggleButton = false;
         this.inToolBar = true;
+        this.insertToolbarSeparatorBefore = true;
     }
 
     @Override
