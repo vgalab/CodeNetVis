@@ -1,4 +1,4 @@
-package ca.usask.vga.layout.magnetic.poles;
+package ca.usask.vga.layout.magnetic;
 
 import org.cytoscape.application.swing.AbstractCyAction;
 import org.cytoscape.model.CyEdge;

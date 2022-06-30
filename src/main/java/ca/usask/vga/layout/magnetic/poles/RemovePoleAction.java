@@ -1,5 +1,6 @@
 package ca.usask.vga.layout.magnetic.poles;
 
+import ca.usask.vga.layout.magnetic.ActionOnSelected;
 import org.cytoscape.model.CyNetwork;
 
 import javax.swing.*;

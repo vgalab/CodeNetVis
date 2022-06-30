@@ -1,7 +1,8 @@
 package ca.usask.vga.layout.magnetic.poles;
 
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import org.cytoscape.model.*;
-import sun.security.provider.CtrDrbg;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
@@ -13,8 +14,14 @@ public class PoleManager {
 
     protected Map<CyNetwork, Map<CyNode, Map<CyNode, Byte>>> cachedPoleDistances;
 
-    public final String NAMESPACE = "Magnetic Poles", IS_POLE = "Is pole?", CLOSEST_POLE = "Closest pole", IS_OUTWARDS = "Is pole outwards?", DISTANCE_TO_POLE = "Distance to pole";
+    // Table column names
+    public final String NAMESPACE = "Magnetic Poles", IS_POLE = "Is pole?", CLOSEST_POLE = "Closest pole",
+        IS_OUTWARDS = "Is pole outwards?", DISTANCE_TO_POLE = "Distance to pole", EDGE_POLE_INFLUENCE = "Assigned pole",
+        IS_DISCONNECTED = "Not connected";
+
     public final int UNREACHABLE_NODE = 999;
+
+    public final String DISCONNECTED_NAME = "none", MULTIPLE_POLES_NAME = "multiple";
 
     public PoleManager() {
         poleList = new HashMap<>();
@@ -132,6 +139,7 @@ public class PoleManager {
                 CyNode n2 = e.getSource();
                 if (isOutwards) n2 = e.getTarget();
                 if (visited.contains(n2)) continue;
+                if (toExplore.contains(n2)) continue;
                 toExplore.add(n2);
                 shortestDistances.put(n2, (byte) (dist+1));
             }
@@ -149,9 +157,9 @@ public class PoleManager {
         return distances.get(from);
     }
 
-    protected CyNode getClosestPole(CyNetwork network, CyNode from) {
+    protected Collection<CyNode> getClosestPoles(CyNetwork network, CyNode from) {
 
-        CyNode closestPole = null;
+        List<CyNode> closestPoles = new ArrayList<>();
         int closestDist = UNREACHABLE_NODE;
         boolean equalDistance = false;
 
@@ -160,21 +168,48 @@ public class PoleManager {
             int dist = getDistanceToPole(network, pole, from);
             if (dist <= closestDist) {
                 equalDistance = dist == closestDist;
+                if (!equalDistance)
+                    closestPoles.clear();
                 closestDist = dist;
-                closestPole = pole;
+                closestPoles.add(pole);
             }
 
         }
 
-        if (equalDistance)
-            return null; // TODO: Check if this is good
-        return closestPole;
+        if (closestDist == UNREACHABLE_NODE)
+            closestPoles.clear();
+        return closestPoles;
+    }
+
+    public CyNode getClosestPole(CyNetwork network, CyNode from) {
+        Collection<CyNode> closest = getClosestPoles(network, from);
+        if (closest.size() == 1)
+            return closest.iterator().next();
+        return null;
+    }
+
+    @Nullable
+    public Integer getClosestPoleDistance(CyNetwork network, CyNode from) {
+        Collection<CyNode> closest = getClosestPoles(network, from);
+        if (closest.size() > 0)
+            return getDistanceToPole(network, closest.iterator().next(), from);
+        return null;
+    }
+
+    private boolean isDisconnected(CyNetwork network, CyNode from) {
+        if (from == null) return true;
+        return getClosestPoles(network, from).size() == 0;
+    }
+
+    protected String getPoleName(CyNetwork network, CyNode pole) {
+        return network.getDefaultNodeTable().getRow(pole.getSUID()).get("name", String.class);
     }
 
     public void updateTables(CyNetwork network) {
 
         CyTable nodeTable = network.getDefaultNodeTable();
 
+        // IS_POLE column
         if (nodeTable.getColumn(NAMESPACE, IS_POLE) == null) {
             nodeTable.createColumn(NAMESPACE, IS_POLE, Boolean.class, false);
         }
@@ -182,27 +217,62 @@ public class PoleManager {
             nodeTable.getRow(node.getSUID()).set(NAMESPACE, IS_POLE, isPole(network, node));
         }
 
-        if (nodeTable.getColumn(NAMESPACE, IS_OUTWARDS) == null) {
+        // IS_OUTWARDS column
+        /*if (nodeTable.getColumn(NAMESPACE, IS_OUTWARDS) == null) {
             nodeTable.createColumn(NAMESPACE, IS_OUTWARDS, Boolean.class, false);
         }
         for (CyNode node : network.getNodeList()) {
             nodeTable.getRow(node.getSUID()).set(NAMESPACE, IS_OUTWARDS, isPoleOutwards(network, node));
+        }*/
+
+        // CLOSEST_POLE and DISTANCE_TO_POLE columns
+        if (nodeTable.getColumn(NAMESPACE, CLOSEST_POLE) == null) {
+            nodeTable.createColumn(NAMESPACE, CLOSEST_POLE, String.class, false);
+        }
+        if (nodeTable.getColumn(NAMESPACE, DISTANCE_TO_POLE) == null) {
+            nodeTable.createColumn(NAMESPACE, DISTANCE_TO_POLE, Integer.class, false);
+        }
+        if (nodeTable.getColumn(NAMESPACE, IS_DISCONNECTED) == null) {
+            nodeTable.createColumn(NAMESPACE, IS_DISCONNECTED, Boolean.class, false);
         }
 
-        if (nodeTable.getColumn(NAMESPACE, CLOSEST_POLE) == null) {
-            nodeTable.createColumn(NAMESPACE, CLOSEST_POLE, Long.class, false);
-        }
         for (CyNode node : network.getNodeList()) {
             CyNode closestPole = getClosestPole(network, node);
-            if (closestPole != null)
-                nodeTable.getRow(node.getSUID()).set(NAMESPACE, CLOSEST_POLE, closestPole.getSUID());
-            else
-                nodeTable.getRow(node.getSUID()).set(NAMESPACE, CLOSEST_POLE, 0L);
+            boolean isDisconnected = isDisconnected(network, node);
+            if (closestPole != null) {
+                nodeTable.getRow(node.getSUID()).set(NAMESPACE, CLOSEST_POLE, getPoleName(network, closestPole));
+            } else {
+                if (isDisconnected)
+                    nodeTable.getRow(node.getSUID()).set(NAMESPACE, CLOSEST_POLE, DISCONNECTED_NAME);
+                else
+                    nodeTable.getRow(node.getSUID()).set(NAMESPACE, CLOSEST_POLE, MULTIPLE_POLES_NAME);
+            }
+            nodeTable.getRow(node.getSUID()).set(NAMESPACE, DISTANCE_TO_POLE, getClosestPoleDistance(network, node));
+            nodeTable.getRow(node.getSUID()).set(NAMESPACE, IS_DISCONNECTED, isDisconnected);
+        }
+
+        // EDGE_POLE_INFLUENCE
+        CyTable edgeTable = network.getDefaultEdgeTable();
+
+        if (edgeTable.getColumn(NAMESPACE, EDGE_POLE_INFLUENCE) == null) {
+            edgeTable.createColumn(NAMESPACE, EDGE_POLE_INFLUENCE, String.class, false);
+        }
+        for (CyEdge edge : network.getEdgeList()) {
+            CyNode p1 = getClosestPole(network, edge.getSource());
+            CyNode p2 = getClosestPole(network, edge.getTarget());
+            boolean isDisconnected = isDisconnected(network, p1) || isDisconnected(network, p2);
+            if (p1 == p2 && p1 != null)
+                edgeTable.getRow(edge.getSUID()).set(NAMESPACE, EDGE_POLE_INFLUENCE, getPoleName(network, p1));
+            else {
+                if (isDisconnected)
+                    edgeTable.getRow(edge.getSUID()).set(NAMESPACE, EDGE_POLE_INFLUENCE, DISCONNECTED_NAME);
+                else
+                    edgeTable.getRow(edge.getSUID()).set(NAMESPACE, EDGE_POLE_INFLUENCE, MULTIPLE_POLES_NAME);
+            }
         }
 
 
     }
-
 
 
 }
