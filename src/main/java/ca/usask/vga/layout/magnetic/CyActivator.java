@@ -24,6 +24,12 @@ package ca.usask.vga.layout.magnetic;
  * #L%
  */
 
+import ca.usask.vga.layout.magnetic.poles.AddNorthPoleAction;
+import ca.usask.vga.layout.magnetic.poles.AddSouthPoleAction;
+import ca.usask.vga.layout.magnetic.poles.PoleManager;
+import ca.usask.vga.layout.magnetic.poles.RemovePoleAction;
+import org.cytoscape.application.swing.CyAction;
+import org.cytoscape.model.events.SelectedNodesAndEdgesListener;
 import org.cytoscape.service.util.AbstractCyActivator;
 import org.cytoscape.view.layout.CyLayoutAlgorithm;
 import org.cytoscape.work.undo.UndoSupport;
@@ -50,6 +56,25 @@ public class CyActivator extends AbstractCyActivator {
         forceDirectedLayoutProps.setProperty(TITLE,forceDirectedLayout.toString());
         forceDirectedLayoutProps.setProperty(MENU_GRAVITY,"10.5");
 		registerService(bc,forceDirectedLayout,CyLayoutAlgorithm.class, forceDirectedLayoutProps);
+
+		// Magnetic Poles
+		PoleManager poleManager = new PoleManager();
+		registerService(bc, poleManager, PoleManager.class);
+
+		AddNorthPoleAction addNPole = new AddNorthPoleAction(poleManager);
+		registerService(bc, addNPole, CyAction.class);
+		registerService(bc, addNPole, SelectedNodesAndEdgesListener.class);
+
+		AddSouthPoleAction addSPole = new AddSouthPoleAction(poleManager);
+		registerService(bc, addSPole, CyAction.class);
+		registerService(bc, addSPole, SelectedNodesAndEdgesListener.class);
+
+		RemovePoleAction removePole = new RemovePoleAction(poleManager);
+		registerService(bc, removePole, CyAction.class);
+		registerService(bc, removePole, SelectedNodesAndEdgesListener.class);
+
+
+
 	}
 }
 
