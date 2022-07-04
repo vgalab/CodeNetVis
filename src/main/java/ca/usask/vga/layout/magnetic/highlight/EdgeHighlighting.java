@@ -11,10 +11,8 @@ import org.cytoscape.view.presentation.property.BasicVisualLexicon;
 import org.cytoscape.view.vizmap.VisualMappingManager;
 import org.cytoscape.view.vizmap.VisualStyle;
 
-import javax.swing.*;
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.*;
 
 public class EdgeHighlighting implements SelectedNodesAndEdgesListener {
 
@@ -81,13 +79,77 @@ public class EdgeHighlighting implements SelectedNodesAndEdgesListener {
         Collection<CyNetworkView> views = cy.vm.getNetworkViews(event.getNetwork());
         for (CyNetworkView v : views) {
             for (CyNode n : event.getSelectedNodes()) {
-                exploreIncomingEdges(n, event.getNetwork(), v, desiredHopDistance);
-                exploreOutgoingEdges(n, event.getNetwork(), v, desiredHopDistance);
+                exploreEdges(n, event.getNetwork(), v, desiredHopDistance);
             }
         }
     }
 
-    protected void exploreIncomingEdges(CyNode n, CyNetwork net, CyNetworkView view, int depth, Collection<CyNode> nodes, Collection<CyEdge> edges) {
+    protected void exploreEdges(CyNode start, CyNetwork net, CyNetworkView view, int depth) {
+        exploreEdges(start, net, view, depth, null, null);
+    }
+
+    protected void exploreEdges(CyNode start, CyNetwork net, CyNetworkView view, int depth, Collection<CyNode> nodes, Collection<CyEdge> edges) {
+
+        class Point {
+            final CyNode node;
+            final boolean isStart, isInbound;
+            final byte distance;
+            final CyEdge edge;
+            public Point(CyNode node, boolean isStart, boolean isInbound, byte distance, CyEdge edge) {
+                this.node = node;
+                this.isStart = isStart;
+                this.isInbound = isInbound;
+                this.distance = distance;
+                this.edge = edge;
+            }
+        }
+
+        Queue<Point> toExplore = new ArrayDeque<>();
+
+        toExplore.add(new Point(start, true, false, (byte) 0, null));
+
+        Set<CyNode> visited = new HashSet<>();
+
+        while (!toExplore.isEmpty()) {
+
+            Point n = toExplore.remove();
+
+            if (n.edge != null) {
+                if (edges != null) edges.add(n.edge);
+                if (view != null && n.isInbound)  {
+                    // TODO: Potentially add a check for edges that are both in and out, or remove them
+                    applyIncomingStyle(n.edge, view);
+                }
+                if (view != null && !n.isInbound) {
+                    applyOutgoingStyle(n.edge, view);
+                }
+            }
+
+            if (visited.contains(n.node)) continue;
+            visited.add(n.node);
+            if (nodes != null) nodes.add(n.node);
+
+            if (n.distance >= depth) continue;
+
+            if (n.isStart || n.isInbound)
+                for (CyEdge e : net.getAdjacentEdgeIterable(n.node, CyEdge.Type.INCOMING)) {
+                    CyNode n2 = e.getSource();
+                    //if (visited.contains(n2)) continue;
+                    toExplore.add(new Point(n2, false, true, (byte) (1 + n.distance), e));
+                }
+
+            if (n.isStart || !n.isInbound)
+                for (CyEdge e : net.getAdjacentEdgeIterable(n.node, CyEdge.Type.OUTGOING)) {
+                    CyNode n2 = e.getTarget();
+                    //if (visited.contains(n2)) continue;
+                    toExplore.add(new Point(n2, false, false, (byte) (1 + n.distance), e));
+                }
+
+        }
+
+    }
+
+    /*protected void exploreIncomingEdges(CyNode n, CyNetwork net, CyNetworkView view, int depth, Collection<CyNode> nodes, Collection<CyEdge> edges) {
         if (nodes != null) nodes.add(n);
         if (depth == 0) return;
 
@@ -117,9 +179,9 @@ public class EdgeHighlighting implements SelectedNodesAndEdgesListener {
 
     protected void exploreOutgoingEdges(CyNode n, CyNetwork net, CyNetworkView view, int depth) {
         exploreOutgoingEdges(n, net, view, depth, null, null);
-    }
+    }*/
 
-        protected void applyIncomingStyle(CyEdge edge, CyNetworkView view) {
+    protected void applyIncomingStyle(CyEdge edge, CyNetworkView view) {
         View<CyEdge> edgeView = view.getEdgeView(edge);
         edgeView.setLockedValue(BasicVisualLexicon.EDGE_UNSELECTED_PAINT, Color.BLUE);
         edgeView.setLockedValue(BasicVisualLexicon.EDGE_TRANSPARENCY, 255);
@@ -182,8 +244,7 @@ public class EdgeHighlighting implements SelectedNodesAndEdgesListener {
         ArrayList<CyEdge> selectedEdges = new ArrayList<>();
 
         for (CyNode n : lastEvent.getSelectedNodes()) {
-            exploreIncomingEdges(n, supernet, null, desiredHopDistance, selectedNodes, selectedEdges);
-            exploreOutgoingEdges(n, supernet, null, desiredHopDistance, selectedNodes, selectedEdges);
+            exploreEdges(n, supernet, null, desiredHopDistance, selectedNodes, selectedEdges);
         }
 
         CyNetwork net = root.addSubNetwork(selectedNodes, selectedEdges);
