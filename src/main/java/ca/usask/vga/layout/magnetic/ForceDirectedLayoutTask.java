@@ -14,11 +14,8 @@ import prefuse.util.force.*;
 
 import java.util.*;
 
-/*
- * #%L
+/* Adapted from:
  * Cytoscape Prefuse Layout Impl (layout-prefuse-impl)
- * $Id:$
- * $HeadURL:$
  * %%
  * Copyright (C) 2007 - 2021 The Cytoscape Consortium
  * %%

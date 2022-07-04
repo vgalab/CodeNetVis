@@ -14,11 +14,9 @@ import prefuse.util.force.StateMonitor;
 import java.util.HashSet;
 import java.util.Set;
 
-/*
+/* Adapted from:
  * #%L
  * Cytoscape Prefuse Layout Impl (layout-prefuse-impl)
- * $Id:$
- * $HeadURL:$
  * %%
  * Copyright (C) 2006 - 2021 The Cytoscape Consortium
  * %%

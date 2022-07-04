@@ -1,10 +1,6 @@
 package ca.usask.vga.layout.magnetic;
 
-/*
- * #%L
- * Cytoscape Prefuse Layout Impl (layout-prefuse-impl)
- * $Id:$
- * $HeadURL:$
+/* Adapted from:
  * %%
  * Copyright (C) 2006 - 2021 The Cytoscape Consortium
  * %%
