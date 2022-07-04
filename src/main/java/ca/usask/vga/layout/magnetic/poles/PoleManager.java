@@ -157,7 +157,7 @@ public class PoleManager {
         return distances.get(from);
     }
 
-    protected Collection<CyNode> getClosestPoles(CyNetwork network, CyNode from) {
+    public Collection<CyNode> getClosestPoles(CyNetwork network, CyNode from) {
 
         List<CyNode> closestPoles = new ArrayList<>();
         int closestDist = UNREACHABLE_NODE;
@@ -196,9 +196,54 @@ public class PoleManager {
         return null;
     }
 
-    private boolean isDisconnected(CyNetwork network, CyNode from) {
+    public boolean isDisconnected(CyNetwork network, CyNode from) {
         if (from == null) return true;
         return getClosestPoles(network, from).size() == 0;
+    }
+
+    public boolean isClosestToMultiple(CyNetwork network, CyNode from) {
+        if (from == null) return false;
+        return getClosestPoles(network, from).size() > 1;
+    }
+
+    public boolean isClosestToOne(CyNetwork network, CyNode from) {
+        if (from == null) return false;
+        return getClosestPoles(network, from).size() == 1;
+    }
+
+    public Collection<CyNode> getAssignedPoles(CyNetwork network, CyEdge edge) {
+        Collection<CyNode> p1 = getClosestPoles(network, edge.getSource());
+        Collection<CyNode> p2 = getClosestPoles(network, edge.getTarget());
+        p1.addAll(p2);
+        return new HashSet<>(p1);
+    }
+
+    public CyNode getAssignedPole(CyNetwork network, CyEdge edge) {
+        Collection<CyNode> closest = getAssignedPoles(network, edge);
+        if (isClosestToOne(network, edge))
+            return closest.iterator().next();
+        return null;
+    }
+
+    public boolean isDisconnected(CyNetwork network, CyEdge edge) {
+        if (edge == null) return true;
+        return isDisconnected(network, edge.getTarget()) || isDisconnected(network, edge.getSource());
+    }
+
+    public boolean isClosestToMultiple(CyNetwork network, CyEdge edge) {
+        if (edge == null) return false;
+        if (isDisconnected(network, edge))
+            return false;
+        if (isClosestToMultiple(network, edge.getSource()) || isClosestToMultiple(network, edge.getTarget()))
+            return true;
+        return getClosestPole(network, edge.getSource()) != getClosestPole(network, edge.getTarget());
+    }
+
+    public boolean isClosestToOne(CyNetwork network, CyEdge edge) {
+        if (edge == null) return false;
+        if (isDisconnected(network, edge))
+            return false;
+        return !isClosestToMultiple(network, edge);
     }
 
     protected String getPoleName(CyNetwork network, CyNode pole) {
@@ -258,13 +303,11 @@ public class PoleManager {
             edgeTable.createColumn(NAMESPACE, EDGE_POLE_INFLUENCE, String.class, false);
         }
         for (CyEdge edge : network.getEdgeList()) {
-            CyNode p1 = getClosestPole(network, edge.getSource());
-            CyNode p2 = getClosestPole(network, edge.getTarget());
-            boolean isDisconnected = isDisconnected(network, p1) || isDisconnected(network, p2);
-            if (p1 == p2 && p1 != null)
-                edgeTable.getRow(edge.getSUID()).set(NAMESPACE, EDGE_POLE_INFLUENCE, getPoleName(network, p1));
+            CyNode pole = getAssignedPole(network, edge);
+            if (pole != null)
+                edgeTable.getRow(edge.getSUID()).set(NAMESPACE, EDGE_POLE_INFLUENCE, getPoleName(network, pole));
             else {
-                if (isDisconnected)
+                if (isDisconnected(network, edge))
                     edgeTable.getRow(edge.getSUID()).set(NAMESPACE, EDGE_POLE_INFLUENCE, DISCONNECTED_NAME);
                 else
                     edgeTable.getRow(edge.getSUID()).set(NAMESPACE, EDGE_POLE_INFLUENCE, MULTIPLE_POLES_NAME);
