@@ -57,14 +57,14 @@ public class CyActivator extends AbstractCyActivator {
 		registerService(bc, new CopyHighlightedAction(edgeHighlighting), CyAction.class, new Properties());
 		registerService(bc, new ChangeHopDistanceAction(edgeHighlighting), CyAction.class, new Properties());
 
-		// Magnetic Layout
+		// Simple Magnetic Layout
 		SimpleMagneticLayout simpleMagneticLayout = new SimpleMagneticLayout(undo);
 
         Properties sLayoutProps = new Properties();
         sLayoutProps.setProperty(PREFERRED_MENU,"Layout.Magnetic Layouts");
         sLayoutProps.setProperty("preferredTaskManager","menu");  // Purpose: unknown
         sLayoutProps.setProperty(TITLE,simpleMagneticLayout.toString());
-        sLayoutProps.setProperty(MENU_GRAVITY,"10.5");
+        sLayoutProps.setProperty(MENU_GRAVITY,"10.51");
 		registerService(bc,simpleMagneticLayout,CyLayoutAlgorithm.class, sLayoutProps);
 
 		// Magnetic Poles
@@ -83,6 +83,15 @@ public class CyActivator extends AbstractCyActivator {
 		registerService(bc, removePole, CyAction.class);
 		registerService(bc, removePole, SelectedNodesAndEdgesListener.class);
 
+		// Pole Magnetic Layout
+		PoleMagneticLayout poleMagneticLayout = new PoleMagneticLayout(poleManager, undo);
+
+		Properties pLayoutProps = new Properties();
+		pLayoutProps.setProperty(PREFERRED_MENU,"Layout.Magnetic Layouts");
+		pLayoutProps.setProperty("preferredTaskManager","menu");  // Purpose: unknown
+		pLayoutProps.setProperty(TITLE,poleMagneticLayout.toString());
+		pLayoutProps.setProperty(MENU_GRAVITY,"10.52");
+		registerService(bc,poleMagneticLayout,CyLayoutAlgorithm.class, pLayoutProps);
 
 
 	}

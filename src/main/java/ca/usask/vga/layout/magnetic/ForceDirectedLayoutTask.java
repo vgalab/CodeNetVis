@@ -10,6 +10,7 @@ import org.cytoscape.view.model.View;
 import org.cytoscape.work.undo.UndoSupport;
 import prefuse.util.force.ForceItem;
 import prefuse.util.force.ForceSimulator;
+import prefuse.util.force.Spring;
 import prefuse.util.force.StateMonitor;
 
 import java.util.*;
@@ -72,6 +73,9 @@ public abstract class ForceDirectedLayoutTask extends AbstractParallelPartitionL
 
 	protected abstract void addSimulatorForces(ForceSimulator m_fsim);
 
+	protected void mapForceItem(LayoutNode ln, ForceItem fitem) {}
+	protected void mapSpring(LayoutEdge le, Spring spring) {}
+
 	@Override
 	public void layoutPartition(LayoutPartition part) {
 
@@ -107,6 +111,8 @@ public abstract class ForceDirectedLayoutTask extends AbstractParallelPartitionL
 			fitem.location[0] = 0f;
 			fitem.location[1] = 0f;
 			m_fsim.addItem(fitem);
+
+			mapForceItem(ln, fitem);
 		}
 
 		// initialize edges
@@ -122,7 +128,8 @@ public abstract class ForceDirectedLayoutTask extends AbstractParallelPartitionL
 			if (f1 == null || f2 == null)
 				continue;
 
-			m_fsim.addSpring(f1, f2, getSpringCoefficient(e), getSpringLength(e));
+			Spring s = m_fsim.addSpring(f1, f2, getSpringCoefficient(e), getSpringLength(e));
+			mapSpring(e, s);
 		}
 
 		// perform layout

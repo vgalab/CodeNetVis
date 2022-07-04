@@ -8,15 +8,29 @@ import static ca.usask.vga.layout.magnetic.util.Vector.sign;
 public class MagneticForce extends AbstractForce {
 
     // TODO: Make these recommended values
-    float field_strength = 0.0001f, c_m = 1, alpha = 1, beta = 1;
-    boolean bi_directional;
+    float field_strength = 0.0001f, alpha = 1, beta = 1;
+    boolean bi_directional = false;
     FieldType field_type;
+
+    final PoleClassifier classifier;
+    final boolean usePoles;
 
     public MagneticForce(FieldType field_type, float field_strength, float alpha, float beta) {
         this.field_type = field_type;
         this.field_strength = field_strength;
         this.alpha = alpha;
         this.beta = beta;
+        classifier = null;
+        usePoles = false;
+    }
+
+    public MagneticForce(PoleClassifier classifier, boolean usePoles, float field_strength, float alpha, float beta) {
+        this.field_type = null;
+        this.field_strength = field_strength;
+        this.alpha = alpha;
+        this.beta = beta;
+        this.usePoles = usePoles;
+        this.classifier = classifier;
     }
 
     @Override
@@ -63,7 +77,14 @@ public class MagneticForce extends AbstractForce {
 
         // TODO: Implement different fields
         //Real2DVector field_direction = get_magnetic_field(center_of_mass(n, t), layout.primary(t, n));
-        Vector field_direction = field_type.getFieldAt(pos_n.add(pos_t).times(0.5f));
+        Vector field_direction;
+        Vector midpoint = pos_n.add(pos_t).times(0.5f);
+
+        if (!usePoles) {
+            field_direction = field_type.getFieldAt(midpoint);
+        } else {
+            field_direction = getMultiPoleFieldFor(midpoint, s);
+        }
 
         // TODO: Implement graph direction check
         // int edge_dir = layout.getEdgeDirection(n, t);
@@ -74,7 +95,7 @@ public class MagneticForce extends AbstractForce {
             return; // Cannot compute the angle when either is zero
 
         // TODO: Implement parameter input
-        Vector force_on_n = magnetic_equation(field_direction, disp, field_strength, c_m, alpha, beta);
+        Vector force_on_n = magnetic_equation(field_direction, disp, field_strength, 1, alpha, beta);
 
         Vector force_on_t = force_on_n.times(-1);
 
@@ -101,6 +122,25 @@ public class MagneticForce extends AbstractForce {
         else
             force_on_n = d.rotate90clockwise().times(-(b * c * powf(dist, alpha-1) * powf(Math.abs(m.angleSin(d)), beta) * sign(m.cross(d) * m.dot(d))));
         return force_on_n;
+    }
+
+    public Vector getMultiPoleFieldFor(Vector pos, Spring edge) {
+
+        if (classifier == null)
+            return new Vector();
+
+        if (!classifier.isClosestToOne(edge))
+            return new Vector();
+
+        ForceItem closestPole = classifier.poleOf(edge);
+        assert closestPole != null;
+
+        Vector polePos = new Vector(closestPole.location[0], closestPole.location[1]);
+
+        Vector disp = polePos.subtract(pos);
+        if (classifier.isPoleOutwards(closestPole))
+            disp = disp.times(-1);
+        return disp;
     }
 
 }
