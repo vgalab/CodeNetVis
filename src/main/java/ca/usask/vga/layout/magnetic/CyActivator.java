@@ -58,14 +58,14 @@ public class CyActivator extends AbstractCyActivator {
 		registerService(bc, new ChangeHopDistanceAction(edgeHighlighting), CyAction.class, new Properties());
 
 		// Magnetic Layout
-		ForceDirectedLayout forceDirectedLayout = new ForceDirectedLayout(undo);
+		SimpleMagneticLayout simpleMagneticLayout = new SimpleMagneticLayout(undo);
 
-        Properties forceDirectedLayoutProps = new Properties();
-        forceDirectedLayoutProps.setProperty(PREFERRED_MENU,"Layout.Magnetic Layouts");
-        forceDirectedLayoutProps.setProperty("preferredTaskManager","menu");  // Purpose: unknown
-        forceDirectedLayoutProps.setProperty(TITLE,forceDirectedLayout.toString());
-        forceDirectedLayoutProps.setProperty(MENU_GRAVITY,"10.5");
-		registerService(bc,forceDirectedLayout,CyLayoutAlgorithm.class, forceDirectedLayoutProps);
+        Properties sLayoutProps = new Properties();
+        sLayoutProps.setProperty(PREFERRED_MENU,"Layout.Magnetic Layouts");
+        sLayoutProps.setProperty("preferredTaskManager","menu");  // Purpose: unknown
+        sLayoutProps.setProperty(TITLE,simpleMagneticLayout.toString());
+        sLayoutProps.setProperty(MENU_GRAVITY,"10.5");
+		registerService(bc,simpleMagneticLayout,CyLayoutAlgorithm.class, sLayoutProps);
 
 		// Magnetic Poles
 		PoleManager poleManager = new PoleManager();

@@ -1,18 +1,9 @@
 package ca.usask.vga.layout.magnetic;
 
-import org.cytoscape.model.CyNode;
-import org.cytoscape.view.layout.AbstractLayoutAlgorithm;
-import org.cytoscape.view.model.CyNetworkView;
-import org.cytoscape.view.model.View;
-import org.cytoscape.work.TaskIterator;
-import org.cytoscape.work.undo.UndoSupport;
 import prefuse.util.force.EulerIntegrator;
 import prefuse.util.force.Integrator;
 import prefuse.util.force.RungeKuttaIntegrator;
 import prefuse.util.force.StateMonitor;
-
-import java.util.HashSet;
-import java.util.Set;
 
 /* Adapted from:
  * #%L
@@ -36,19 +27,14 @@ import java.util.Set;
  * #L%
  */
 
-public class ForceDirectedLayout extends AbstractLayoutAlgorithm {
-
-	private static final String ALGORITHM_ID = "magnetic-layout";
-	static final String ALGORITHM_DISPLAY_NAME = "Magnetic Force Directed Layout (USask)";
-
-	private Integrators integrator = Integrators.RUNGEKUTTA;
+public abstract class ForceDirectedLayout {
 
 	public enum Integrators {
 		RUNGEKUTTA("Runge-Kutta"), EULER("Euler");
 
 		private String name;
 
-		private Integrators(String str) {
+		Integrators(String str) {
 			name = str;
 		}
 
@@ -63,36 +49,5 @@ public class ForceDirectedLayout extends AbstractLayoutAlgorithm {
 			else
 				return new RungeKuttaIntegrator(monitor);
 		}
-	}
-
-	public ForceDirectedLayout(UndoSupport undo) {
-		super(ALGORITHM_ID, ALGORITHM_DISPLAY_NAME, undo);
-	}
-
-	@Override
-	public TaskIterator createTaskIterator(CyNetworkView networkView, Object context, Set<View<CyNode>> nodesToLayOut,
-			String attrName) {
-		return new TaskIterator(new ForceDirectedLayoutTask(toString(), networkView, nodesToLayOut,
-				(ForceDirectedLayoutContext) context, integrator, attrName, undoSupport));
-	}
-
-	@Override
-	public Object createLayoutContext() {
-		return new ForceDirectedLayoutContext();
-	}
-
-	@Override
-	public Set<Class<?>> getSupportedEdgeAttributeTypes() {
-		final Set<Class<?>> ret = new HashSet<>();
-
-		ret.add(Integer.class);
-		ret.add(Double.class);
-
-		return ret;
-	}
-
-	@Override
-	public boolean getSupportsSelectedOnly() {
-		return true;
 	}
 }

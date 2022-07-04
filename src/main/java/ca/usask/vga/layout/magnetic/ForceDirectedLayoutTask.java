@@ -1,6 +1,5 @@
 package ca.usask.vga.layout.magnetic;
 
-import ca.usask.vga.layout.magnetic.util.MagneticForce;
 import org.cytoscape.model.CyNode;
 import org.cytoscape.view.layout.AbstractParallelPartitionLayoutTask;
 import org.cytoscape.view.layout.LayoutEdge;
@@ -8,9 +7,10 @@ import org.cytoscape.view.layout.LayoutNode;
 import org.cytoscape.view.layout.LayoutPartition;
 import org.cytoscape.view.model.CyNetworkView;
 import org.cytoscape.view.model.View;
-import org.cytoscape.work.TaskMonitor;
 import org.cytoscape.work.undo.UndoSupport;
-import prefuse.util.force.*;
+import prefuse.util.force.ForceItem;
+import prefuse.util.force.ForceSimulator;
+import prefuse.util.force.StateMonitor;
 
 import java.util.*;
 
@@ -40,12 +40,12 @@ import java.util.*;
  * 
  * @see <a href="http://prefuse.org">Prefuse web site</a>
  */
-public class ForceDirectedLayoutTask extends AbstractParallelPartitionLayoutTask {
+public abstract class ForceDirectedLayoutTask extends AbstractParallelPartitionLayoutTask {
 
 	// private ForceSimulator m_fsim;
-	private ForceDirectedLayout.Integrators integrator;
-	private final ForceDirectedLayoutContext context;
-	private final StateMonitor monitor;
+	protected ForceDirectedLayout.Integrators integrator;
+	protected final ForceDirectedLayoutContext context;
+	protected final StateMonitor monitor;
 
 	/**
 	 * Creates a new ForceDirectedLayout object.
@@ -64,35 +64,22 @@ public class ForceDirectedLayoutTask extends AbstractParallelPartitionLayoutTask
 		this.context = context;
 		this.integrator = integrator;
 		
-		edgeWeighter = context.edgeWeighter;
-		edgeWeighter.setWeightAttribute(layoutAttribute);
+		// edgeWeighter = context.edgeWeighter;
+		// edgeWeighter.setWeightAttribute(layoutAttribute);
 
 		monitor = new StateMonitor();
 	}
-	
-	@Override
-	public String toString() {
-		return ForceDirectedLayout.ALGORITHM_DISPLAY_NAME;
-	}
+
+	protected abstract void addSimulatorForces(ForceSimulator m_fsim);
 
 	@Override
 	public void layoutPartition(LayoutPartition part) {
-		// if (taskMonitor != null)
-		// 	taskMonitor.setStatusMessage("Partition " + part.getPartitionNumber() + ": Initializing...");
 
 		// Calculate our edge weights
 		part.calculateEdgeWeights();
 
-		// REGISTERING FORCES
 		ForceSimulator m_fsim = new ForceSimulator(integrator.getNewIntegrator(monitor), monitor);
-
-		m_fsim.addForce(new NBodyForce(monitor));  // Repulsion
-		m_fsim.addForce(new SpringForce());  // Attraction (ideal dist)
-		m_fsim.addForce(new DragForce());  // Dampening
-
-		if (context.magnetEnabled)
-			// Magnetic force
-			m_fsim.addForce(new MagneticForce(context.fieldType, context.magneticFieldStrength, context.magneticAlpha, context.magneticBeta));
+		addSimulatorForces(m_fsim);
 
 		List<LayoutNode> nodeList = part.getNodeList();
 		List<LayoutEdge> edgeList = part.getEdgeList();
