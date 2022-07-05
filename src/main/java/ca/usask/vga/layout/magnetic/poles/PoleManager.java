@@ -1,12 +1,16 @@
 package ca.usask.vga.layout.magnetic.poles;
 
 import com.sun.org.apache.xpath.internal.operations.Bool;
+import org.cytoscape.application.events.SetCurrentNetworkEvent;
+import org.cytoscape.application.events.SetCurrentNetworkListener;
 import org.cytoscape.model.*;
+import org.cytoscape.model.events.NetworkAddedEvent;
+import org.cytoscape.model.events.NetworkAddedListener;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
-public class PoleManager {
+public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListener {
 
     protected Map<CyNetwork, List<CyNode>> poleList;
 
@@ -17,7 +21,7 @@ public class PoleManager {
     // Table column names
     public final String NAMESPACE = "Magnetic Poles", IS_POLE = "Is pole?", CLOSEST_POLE = "Closest pole",
         IS_OUTWARDS = "Is pole outwards?", DISTANCE_TO_POLE = "Distance to pole", EDGE_POLE_INFLUENCE = "Assigned pole",
-        IS_DISCONNECTED = "Not connected";
+        IS_DISCONNECTED = "Not connected", POLE_LIST = "Network Pole List";
 
     public final int UNREACHABLE_NODE = 999;
 
@@ -40,11 +44,18 @@ public class PoleManager {
     }
 
     protected boolean readPoleListFromTable(CyNetwork network) {
-        CyTable table = network.getDefaultNodeTable();
-        if (table.getColumn(NAMESPACE, IS_POLE) == null)
+        // TODO: Fix exceptions
+        CyTable table = network.getDefaultNetworkTable();
+        if (table.getColumn(NAMESPACE, POLE_LIST) == null)
             return false;
-        for (CyRow r : table.getMatchingRows(NAMESPACE, IS_POLE, true)) {
-            addPole(network, network.getNode(r.get("SUID", Long.class)));
+        List<String> poleNameList = table.getRow(network.getSUID()).getList(NAMESPACE, POLE_LIST, String.class);
+        if (poleNameList == null)
+            return false;
+        for (String name : poleNameList) {
+            CyRow match = network.getDefaultNodeTable().getMatchingRows("name", name).iterator().next();
+            CyNode node = network.getNode(match.getSUID());
+            if (node != null)
+                addPole(network, node);
         }
         return true;
     }
@@ -52,6 +63,24 @@ public class PoleManager {
     public List<CyNode> getPoleList(CyNetwork network) {
         initializePoleList(network);
         return poleList.get(network);
+    }
+
+    public List<Long> getPoleSUIDList(CyNetwork network) {
+        List<CyNode> list = getPoleList(network);
+        List<Long> newList = new ArrayList<>(list.size());
+        for (CyNode n : list) {
+            newList.add(n.getSUID());
+        }
+        return newList;
+    }
+
+    public List<String> getPoleNameList(CyNetwork network) {
+        List<CyNode> list = getPoleList(network);
+        List<String> newList = new ArrayList<>(list.size());
+        for (CyNode n : list) {
+            newList.add(network.getDefaultNodeTable().getRow(n.getSUID()).get("name", String.class));
+        }
+        return newList;
     }
 
     public void addPole(CyNetwork network, CyNode node) {
@@ -265,6 +294,12 @@ public class PoleManager {
 
     public void updateTables(CyNetwork network) {
 
+        CyTable networkTable = network.getDefaultNetworkTable();
+        if (networkTable.getColumn(NAMESPACE, POLE_LIST) == null) {
+            networkTable.createListColumn(NAMESPACE, POLE_LIST, String.class, false);
+        }
+        networkTable.getRow(network.getSUID()).set(NAMESPACE, POLE_LIST, getPoleNameList(network));
+
         CyTable nodeTable = network.getDefaultNodeTable();
 
         // IS_POLE column
@@ -330,5 +365,14 @@ public class PoleManager {
 
     }
 
+    @Override
+    public void handleEvent(NetworkAddedEvent e) {
+        readPoleListFromTable(e.getNetwork());
+        updateTables(e.getNetwork());
+    }
 
+    @Override
+    public void handleEvent(SetCurrentNetworkEvent e) {
+        updateTables(e.getNetwork());
+    }
 }

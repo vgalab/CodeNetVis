@@ -8,11 +8,13 @@ import ca.usask.vga.layout.magnetic.poles.AddNorthPoleAction;
 import ca.usask.vga.layout.magnetic.poles.AddSouthPoleAction;
 import ca.usask.vga.layout.magnetic.poles.PoleManager;
 import ca.usask.vga.layout.magnetic.poles.RemovePoleAction;
+import org.cytoscape.application.events.SetCurrentNetworkListener;
 import org.cytoscape.application.swing.CyAction;
 import org.cytoscape.model.CyNetworkFactory;
 import org.cytoscape.model.CyNetworkManager;
 import org.cytoscape.model.CyNetworkTableManager;
 import org.cytoscape.model.CyTableManager;
+import org.cytoscape.model.events.NetworkAddedListener;
 import org.cytoscape.model.events.SelectedNodesAndEdgesListener;
 import org.cytoscape.model.subnetwork.CyRootNetworkManager;
 import org.cytoscape.service.util.AbstractCyActivator;
@@ -76,6 +78,8 @@ public class CyActivator extends AbstractCyActivator {
 		// Magnetic Poles
 		PoleManager poleManager = new PoleManager(getService(bc, CyNetworkManager.class));
 		registerService(bc, poleManager, PoleManager.class);
+		registerService(bc, poleManager, NetworkAddedListener.class);
+		registerService(bc, poleManager, SetCurrentNetworkListener.class);
 
 		AddNorthPoleAction addNPole = new AddNorthPoleAction(poleManager);
 		registerService(bc, addNPole, CyAction.class);
