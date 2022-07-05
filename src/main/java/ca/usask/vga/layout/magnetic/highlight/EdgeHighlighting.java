@@ -1,5 +1,7 @@
 package ca.usask.vga.layout.magnetic.highlight;
 
+import ca.usask.vga.layout.magnetic.AppPreferences;
+import com.sun.org.slf4j.internal.LoggerFactory;
 import org.cytoscape.model.*;
 import org.cytoscape.model.events.SelectedNodesAndEdgesEvent;
 import org.cytoscape.model.events.SelectedNodesAndEdgesListener;
@@ -37,22 +39,33 @@ public class EdgeHighlighting implements SelectedNodesAndEdgesListener {
     }
 
     private final CyAccess cy;
+    private AppPreferences preferences;
     private SelectedNodesAndEdgesEvent lastEvent;
+
+    private final String ENABLED_PROPERTY = "magnetic-layout.edgeHighlightingEnabled";
 
     private boolean enabled = false;
     private int desiredHopDistance = 1;
 
-    public EdgeHighlighting(CyAccess cy) {
+    public EdgeHighlighting(CyAccess cy, AppPreferences preferences) {
         this.cy = cy;
+        this.preferences = preferences;
+        // Load preference from file
+        boolean enabledOnLoad = Boolean.parseBoolean(preferences.getProperties().getProperty(ENABLED_PROPERTY));
+        setEnabled(enabledOnLoad);
     }
 
     public void toggleFeature() {
-        enabled = !enabled;
+        setEnabled(!enabled);
+    }
 
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
         if (enabled)
             applyHighlighting(lastEvent);
         else
             clearHighlighting(lastEvent);
+        preferences.getProperties().setProperty(ENABLED_PROPERTY, ""+enabled);
     }
 
     public void setDesiredHopDistance(int desiredHopDistance) {
@@ -215,14 +228,6 @@ public class EdgeHighlighting implements SelectedNodesAndEdgesListener {
             clearHighlighting(event);
             applyHighlighting(event);
         }
-    }
-
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
-        if (enabled)
-            applyHighlighting(lastEvent);
-        else
-            clearHighlighting(lastEvent);
     }
 
     public boolean getEnabled() {

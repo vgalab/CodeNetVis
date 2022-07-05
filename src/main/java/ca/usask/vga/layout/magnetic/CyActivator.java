@@ -41,6 +41,12 @@ public class CyActivator extends AbstractCyActivator {
 		
 		UndoSupport undo = getService(bc,UndoSupport.class);
 
+		// App preferences
+		AppPreferences preferences = new AppPreferences("magnetic-layout");
+    	Properties propsReaderServiceProps = new Properties();
+    	propsReaderServiceProps.setProperty("cyPropertyName", "magnetic-layout.props");
+    	registerAllServices(bc, preferences, propsReaderServiceProps);
+
 		// Editor Edge Highlighting
 		final EdgeHighlighting edgeHighlighting = new EdgeHighlighting(new EdgeHighlighting.CyAccess(
 				getService(bc, CyNetworkFactory.class),
@@ -50,7 +56,7 @@ public class CyActivator extends AbstractCyActivator {
 				getService(bc, CyNetworkNaming.class),
 				getService(bc, VisualMappingManager.class),
 				getService(bc, CyRootNetworkManager.class)
-		));
+		), preferences);
 		registerService(bc, edgeHighlighting, SelectedNodesAndEdgesListener.class);
 
 		registerService(bc, new ToggleHighlightAction(edgeHighlighting), CyAction.class, new Properties());
@@ -68,7 +74,7 @@ public class CyActivator extends AbstractCyActivator {
 		registerService(bc,simpleMagneticLayout,CyLayoutAlgorithm.class, sLayoutProps);
 
 		// Magnetic Poles
-		PoleManager poleManager = new PoleManager();
+		PoleManager poleManager = new PoleManager(getService(bc, CyNetworkManager.class));
 		registerService(bc, poleManager, PoleManager.class);
 
 		AddNorthPoleAction addNPole = new AddNorthPoleAction(poleManager);

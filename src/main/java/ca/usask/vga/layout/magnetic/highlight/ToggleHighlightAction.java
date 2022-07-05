@@ -9,13 +9,17 @@ public class ToggleHighlightAction extends AbstractCyAction {
 
     private EdgeHighlighting edgeHighlighting;
 
+    private final ImageIcon onIcon, offIcon;
+
     public ToggleHighlightAction(EdgeHighlighting edgeHighlighting) {
         super("DirectedEdgeColor");
 
+        onIcon = new ImageIcon(getClass().getResource("/edge_highlighting_on_icon.png" ));
+        offIcon = new ImageIcon(getClass().getResource( "/edge_highlighting_off_icon.png"));
+
         this.edgeHighlighting = edgeHighlighting;
 
-        ImageIcon icon = new ImageIcon(getClass().getResource("/edge_highlighting_off_icon.png"));
-        putValue(LARGE_ICON_KEY, icon);
+        updateIcon();
 
         putValue(SHORT_DESCRIPTION, "Toggle directed edge highlighting");
 
@@ -26,12 +30,14 @@ public class ToggleHighlightAction extends AbstractCyAction {
         this.insertToolbarSeparatorBefore = true;
     }
 
+    protected void updateIcon() {
+        putValue(LARGE_ICON_KEY, edgeHighlighting.getEnabled() ? onIcon : offIcon);
+    }
+
     @Override
     public void actionPerformed(ActionEvent e) {
         edgeHighlighting.toggleFeature();
-
-        String icon = edgeHighlighting.getEnabled() ? "/edge_highlighting_on_icon.png" : "/edge_highlighting_off_icon.png";
-        putValue(LARGE_ICON_KEY, new ImageIcon(getClass().getResource(icon)));
+        updateIcon();
     }
 
 }

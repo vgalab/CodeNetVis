@@ -23,17 +23,30 @@ public class PoleManager {
 
     public final String DISCONNECTED_NAME = "none", MULTIPLE_POLES_NAME = "multiple";
 
-    public PoleManager() {
+    public PoleManager(CyNetworkManager networkManager) {
         poleList = new HashMap<>();
         poleIsOutwards = new HashSet<>();
         cachedPoleDistances = new HashMap<>();
+        for (CyNetwork net : networkManager.getNetworkSet()) {
+            if (readPoleListFromTable(net))
+                updateTables(net);
+        }
     }
 
     protected void initializePoleList(CyNetwork network) {
         if (!poleList.containsKey(network)) {
             poleList.put(network, new ArrayList<CyNode>());
-            updateTables(network);
         }
+    }
+
+    protected boolean readPoleListFromTable(CyNetwork network) {
+        CyTable table = network.getDefaultNodeTable();
+        if (table.getColumn(NAMESPACE, IS_POLE) == null)
+            return false;
+        for (CyRow r : table.getMatchingRows(NAMESPACE, IS_POLE, true)) {
+            addPole(network, network.getNode(r.get("SUID", Long.class)));
+        }
+        return true;
     }
 
     public List<CyNode> getPoleList(CyNetwork network) {
