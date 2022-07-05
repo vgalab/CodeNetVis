@@ -108,8 +108,8 @@ public abstract class ForceDirectedLayoutTask extends AbstractParallelPartitionL
 			}
 			
 			fitem.mass = getMassValue(ln);
-			fitem.location[0] = 0f;
-			fitem.location[1] = 0f;
+			fitem.location[0] = (float) ln.getX();
+			fitem.location[1] = (float) ln.getY();
 			m_fsim.addItem(fitem);
 
 			mapForceItem(ln, fitem);

@@ -40,4 +40,8 @@ public class PoleMagneticLayoutContext extends ForceDirectedLayoutContext {
     @Tunable(description="Beta", groups="Magnet", dependsOn="magnetEnabled=true", context="both", longDescription="TODO", exampleStringValue="1")
     public float magneticBeta = 1;
 
+
+    @Tunable(description="Pin pole positions", context="both", longDescription="TODO", exampleStringValue="true", gravity=991)
+    public boolean pinPoles = true;
+
 }

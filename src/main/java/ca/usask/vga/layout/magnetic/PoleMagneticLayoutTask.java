@@ -3,6 +3,7 @@ package ca.usask.vga.layout.magnetic;
 import ca.usask.vga.layout.magnetic.poles.PoleManager;
 import ca.usask.vga.layout.magnetic.util.MagneticForce;
 import ca.usask.vga.layout.magnetic.util.MapPoleClassifier;
+import ca.usask.vga.layout.magnetic.util.PinForce;
 import org.cytoscape.model.CyNode;
 import org.cytoscape.view.layout.LayoutEdge;
 import org.cytoscape.view.layout.LayoutNode;
@@ -52,6 +53,10 @@ public class PoleMagneticLayoutTask extends ForceDirectedLayoutTask {
                 m_fsim.addForce(new MagneticForce(context.fieldType, context.magneticFieldStrength, context.magneticAlpha, context.magneticBeta));
             }
         }
+
+        // Pole pin force
+        if (context.pinPoles)
+            m_fsim.addForce(new PinForce(poleClassifier));
 
     }
 
