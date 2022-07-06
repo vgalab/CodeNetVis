@@ -28,20 +28,22 @@ import org.cytoscape.work.TunableValidator;
 import java.io.IOException;
 
 public class ForceDirectedLayoutContext implements TunableValidator {
-	
+
+	protected final String PREFUSE_GROUP = "Prefuse layout";
+
 	// @ContainsTunables
 	// public EdgeWeighter edgeWeighter = new EdgeWeighter();
 
-	@Tunable(description="Spring Coefficient:", gravity=200.3, groups="Prefuse layout", context="both", longDescription="Default Spring Coefficient, in numeric value", exampleStringValue="1e-4")
+	@Tunable(description="Spring Coefficient:", gravity=200.3, groups=PREFUSE_GROUP, context="both", longDescription="Default Spring Coefficient, in numeric value", exampleStringValue="1e-4")
 	public double defaultSpringCoefficient = 1e-4;
 
-	@Tunable(description="Spring Length:", gravity=200.2, groups="Prefuse layout", context="both", longDescription="Default Spring Length, in numeric value", exampleStringValue="50.0")
+	@Tunable(description="Spring Length:", gravity=200.2, groups=PREFUSE_GROUP, context="both", longDescription="Default Spring Length, in numeric value", exampleStringValue="50.0")
 	public double defaultSpringLength = 50.0;
 
 	//@Tunable(description="Node Mass:", context="both", longDescription="Default Node Mass, in numeric value", exampleStringValue="3.0")
 	public double defaultNodeMass = 3.0;
 
-	@Tunable(description="Repulsion Coefficient:", gravity=200.1, groups="Prefuse layout", context="both", longDescription="Repulsion coefficient, in numeric value", exampleStringValue="1.0")
+	@Tunable(description="Repulsion Coefficient:", gravity=200.1, groups=PREFUSE_GROUP, context="both", longDescription="Repulsion coefficient, in numeric value", exampleStringValue="1.0")
 	public double repulsionCoefficient = 1.0;
 
 	//@Tunable(description="Force deterministic layouts (slower):", context="both", longDescription="Force deterministic layouts (slower); boolean values only, ```true``` or ```false```; defaults to ```false```", exampleStringValue="false")
