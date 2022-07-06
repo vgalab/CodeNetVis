@@ -7,8 +7,7 @@ import static ca.usask.vga.layout.magnetic.util.Vector.sign;
 
 public class MagneticForce extends AbstractForce {
 
-    // TODO: Make these recommended values
-    float field_strength = 0.0001f, alpha = 1, beta = 1;
+    float field_strength, alpha, beta;
     boolean bi_directional = false;
     FieldType field_type;
 
@@ -57,27 +56,19 @@ public class MagneticForce extends AbstractForce {
         // Initialize variables
         ForceItem item1 = s.item1;
         ForceItem item2 = s.item2;
-        float x1 = item1.location[0], y1 = item1.location[1];
-        float x2 = item2.location[0], y2 = item2.location[1];
-        float dx = x2-x1, dy = y2-y1;
-        float r  = (float)Math.sqrt(dx*dx+dy*dy);
 
-        if (r == 0.0) {
+        Vector pos_n = new Vector(item1.location[0], item1.location[1]);
+        Vector pos_t = new Vector(item2.location[0], item2.location[1]);
+
+        Vector disp = pos_n.displacement(pos_t);
+        float dist = disp.magnitude();
+
+        if (dist == 0.0)
             // No force is applied
             return;
-        }
 
-        // The following is from the BigGraphVis code
-
-        Vector pos_n = new Vector(x1, y1);
-        Vector pos_t = new Vector(x2, y2);
-        Vector disp = pos_n.displacement(pos_t);
-
-        float dist = (float) Math.sqrt(disp.magnitude());
-
-        // TODO: Implement different fields
-        //Real2DVector field_direction = get_magnetic_field(center_of_mass(n, t), layout.primary(t, n));
         Vector field_direction;
+        // TODO: Different midpoint calculations
         Vector midpoint = pos_n.add(pos_t).times(0.5f);
 
         if (!usePoles) {
@@ -86,26 +77,16 @@ public class MagneticForce extends AbstractForce {
             field_direction = getMultiPoleFieldFor(midpoint, s);
         }
 
-        // TODO: Implement graph direction check
-        // int edge_dir = layout.getEdgeDirection(n, t);
-        int edge_dir = 1;
+        int edge_dir = 1; // Edge direction is always the same since item2 is the target
         field_direction = field_direction.times(edge_dir);
 
-        if (dist == 0.0 || field_direction.magnitude() == 0.0)
-            return; // Cannot compute the angle when either is zero
+        if (field_direction.magnitude() == 0.0)
+            return; // Cannot compute the angle when zero
 
-        // TODO: Implement parameter input
+        // CALCULATE FORCE
         Vector force_on_n = magnetic_equation(field_direction, disp, field_strength, 1, alpha, beta);
 
         Vector force_on_t = force_on_n.times(-1);
-
-        // TODO: Complex center of mass?
-        /*Real2DVector accel_on_n = force_on_n;
-        Real2DVector accel_on_t = force_on_t;
-        if (!simple_center_of_mass) {
-            accel_on_n = force_on_n / mass(n);
-            accel_on_t = force_on_t / mass(t);
-        }*/
 
         item1.force[0] += force_on_n.x;
         item1.force[1] += force_on_n.y;
@@ -118,9 +99,11 @@ public class MagneticForce extends AbstractForce {
         float dist = (float) Math.sqrt(d.magnitude());
         Vector force_on_n;
         if (!bi_directional)
-            force_on_n = d.rotate90clockwise().times(-(b * c * powf(dist, alpha-1) * powf(m.angleCos(d), beta) * sign(m.cross(d))));
+            force_on_n = d.rotate90clockwise().times(-(b * c * powf(dist, alpha-1) *
+                    powf(m.angleCos(d), beta) * sign(m.cross(d))));
         else
-            force_on_n = d.rotate90clockwise().times(-(b * c * powf(dist, alpha-1) * powf(Math.abs(m.angleSin(d)), beta) * sign(m.cross(d) * m.dot(d))));
+            force_on_n = d.rotate90clockwise().times(-(b * c * powf(dist, alpha-1) *
+                    powf(Math.abs(m.angleSin(d)), beta) * sign(m.cross(d) * m.dot(d))));
         return force_on_n;
     }
 
