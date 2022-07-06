@@ -12,13 +12,12 @@ public class AddSouthPoleAction extends ActionOnSelected {
 
     public AddSouthPoleAction(PoleManager poleManager) {
 
-        super("AddPoleAction");
+        super("AddSouthPoleAction");
 
         this.poleManager = poleManager;
 
         ImageIcon icon = new ImageIcon(getClass().getResource("/add_pole_S_icon.png"));
         putValue(LARGE_ICON_KEY, icon);
-        setPreferredMenu("Apps");
 
         putValue(SHORT_DESCRIPTION, "Make new South (Inward) poles from selected nodes");
 
