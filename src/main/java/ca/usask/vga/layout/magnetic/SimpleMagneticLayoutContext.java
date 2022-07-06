@@ -7,7 +7,7 @@ import org.cytoscape.work.util.ListSingleSelection;
 public class SimpleMagneticLayoutContext extends ForceDirectedLayoutContext {
 
     // TODO: Write descriptions, change to floats (?), add validation states
-    @Tunable(description="Enable magnetic force", groups="Magnet", context="both", longDescription="TODO", exampleStringValue="true")
+    @Tunable(description="Enable magnetic force", /*groups="Magnet",*/ gravity=800.01, context="both", longDescription="TODO", exampleStringValue="true")
     public boolean magnetEnabled = true;
 
     public FieldType fieldType = FieldType.VERTICAL;
@@ -18,7 +18,8 @@ public class SimpleMagneticLayoutContext extends ForceDirectedLayoutContext {
             context = "both",
             longDescription = "TODO",
             exampleStringValue = "Linear (horizontal)",
-            dependsOn="magnetEnabled=true"
+            dependsOn="magnetEnabled=true",
+            gravity=300.09
     )
     public ListSingleSelection<FieldType> getFieldType() {
         ListSingleSelection<FieldType> t = new ListSingleSelection<>(FieldType.VERTICAL, FieldType.HORIZONTAL, FieldType.POLAR, FieldType.CONCENTRIC);
@@ -30,11 +31,11 @@ public class SimpleMagneticLayoutContext extends ForceDirectedLayoutContext {
         this.fieldType = (FieldType) t.getSelectedValue();
     }
 
-    @Tunable(description="Field strength", groups="Magnet", dependsOn="magnetEnabled=true", context="both", longDescription="TODO", exampleStringValue="1e-4")
-    public float magneticFieldStrength = 1e-4f;
-    @Tunable(description="Alpha", groups="Magnet", dependsOn="magnetEnabled=true", context="both", longDescription="TODO", exampleStringValue="1")
-    public float magneticAlpha = 1;
-    @Tunable(description="Beta", groups="Magnet", dependsOn="magnetEnabled=true", context="both", longDescription="TODO", exampleStringValue="1")
-    public float magneticBeta = 1;
+    @Tunable(description="Field strength", format="#.##E0", groups="Magnet", gravity=300.1, dependsOn="magnetEnabled=true", context="both", longDescription="TODO", exampleStringValue="1e-4")
+    public double magneticFieldStrength = 1e-4;
+    @Tunable(description="Distance Alpha", format="#.##", groups="Magnet", gravity=300.2, dependsOn="magnetEnabled=true", context="both", longDescription="TODO", exampleStringValue="1.0")
+    public double magneticAlpha = 1.0;
+    @Tunable(description="Angle Beta", format="#.##", groups="Magnet", gravity=300.3, dependsOn="magnetEnabled=true", context="both", longDescription="TODO", exampleStringValue="1.0")
+    public double magneticBeta = 1.0;
 
 }

@@ -39,7 +39,7 @@ public class PoleMagneticLayoutTask extends ForceDirectedLayoutTask {
     protected void addSimulatorForces(ForceSimulator m_fsim) {
 
         // REGISTERING FORCES
-        m_fsim.addForce(new NBodyForce(monitor));  // Repulsion
+        m_fsim.addForce(new NBodyForce((float) -context.repulsionCoefficient, NBodyForce.DEFAULT_DISTANCE, NBodyForce.DEFAULT_THETA, monitor));  // Repulsion
         m_fsim.addForce(new SpringForce());  // Attraction (ideal dist)
         m_fsim.addForce(new DragForce());  // Dampening
 
@@ -48,9 +48,11 @@ public class PoleMagneticLayoutTask extends ForceDirectedLayoutTask {
         // Magnetic force
         if (context.magnetEnabled) {
             if (context.usePoles) {
-                m_fsim.addForce(new MagneticForce(poleClassifier, context.usePoles, context.magneticFieldStrength, context.magneticAlpha, context.magneticBeta));
+                m_fsim.addForce(new MagneticForce(poleClassifier, context.usePoles, (float) context.magneticFieldStrength,
+                        (float) context.magneticAlpha,  (float) context.magneticBeta));
             } else {
-                m_fsim.addForce(new MagneticForce(context.fieldType, context.magneticFieldStrength, context.magneticAlpha, context.magneticBeta));
+                m_fsim.addForce(new MagneticForce(context.fieldType,  (float) context.magneticFieldStrength,
+                        (float) context.magneticAlpha,  (float) context.magneticBeta));
             }
         }
 

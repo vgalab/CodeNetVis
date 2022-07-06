@@ -12,7 +12,7 @@ public class PinForce extends AbstractForce {
     private final PoleClassifier classifier;
     private final Collection<ForceItem> pinnedItems;
 
-    public float soft_pin_factor = 0.01f;
+    public float soft_pin_factor = 0.1f;
 
     private final Map<ForceItem, Vector> savedPolePos = new HashMap<>();
 

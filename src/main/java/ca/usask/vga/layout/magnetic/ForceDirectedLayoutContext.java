@@ -31,21 +31,28 @@ public class ForceDirectedLayoutContext implements TunableValidator {
 	
 	// @ContainsTunables
 	// public EdgeWeighter edgeWeighter = new EdgeWeighter();
-	
-	@Tunable(description="Number of Iterations:", context="both", longDescription="Number of Iterations, in numeric value", exampleStringValue="100")
-	public int numIterations = 100;
-	@Tunable(description="Default Spring Coefficient:", context="both", longDescription="Default Spring Coefficient, in numeric value", exampleStringValue="1e-4")
+
+	@Tunable(description="Spring Coefficient:", gravity=200.3, groups="Prefuse layout", context="both", longDescription="Default Spring Coefficient, in numeric value", exampleStringValue="1e-4")
 	public double defaultSpringCoefficient = 1e-4;
-	@Tunable(description="Default Spring Length:", context="both", longDescription="Default Spring Length, in numeric value", exampleStringValue="50.0")
+
+	@Tunable(description="Spring Length:", gravity=200.2, groups="Prefuse layout", context="both", longDescription="Default Spring Length, in numeric value", exampleStringValue="50.0")
 	public double defaultSpringLength = 50.0;
-	@Tunable(description="Default Node Mass:", context="both", longDescription="Default Node Mass, in numeric value", exampleStringValue="3.0")
+
+	//@Tunable(description="Node Mass:", context="both", longDescription="Default Node Mass, in numeric value", exampleStringValue="3.0")
 	public double defaultNodeMass = 3.0;
-	@Tunable(description="Force deterministic layouts (slower):", context="both", longDescription="Force deterministic layouts (slower); boolean values only, ```true``` or ```false```; defaults to ```false```", exampleStringValue="false")
+
+	@Tunable(description="Repulsion Coefficient:", gravity=200.1, groups="Prefuse layout", context="both", longDescription="Repulsion coefficient, in numeric value", exampleStringValue="1.0")
+	public double repulsionCoefficient = 1.0;
+
+	//@Tunable(description="Force deterministic layouts (slower):", context="both", longDescription="Force deterministic layouts (slower); boolean values only, ```true``` or ```false```; defaults to ```false```", exampleStringValue="false")
 	public boolean isDeterministic;
 
 
-	@Tunable(description="Don't partition graph before layout:", /*(groups="Standard Settings",*/ context="both", longDescription="Don't partition graph before layout; boolean values only, ```true``` or ```false```; defaults to ```false```", exampleStringValue="false")
+	// @Tunable(description="Don't partition graph before layout:", gravity=800.2, /*(groups="Standard Settings",*/ context="both", longDescription="Don't partition graph before layout; boolean values only, ```true``` or ```false```; defaults to ```false```", exampleStringValue="false")
 	public boolean singlePartition;
+
+	@Tunable(description="Number of Iterations:", gravity=800.9, context="both", longDescription="Number of Iterations, in numeric value", exampleStringValue="100")
+	public int numIterations = 100;
 
 	@Override
 	public ValidationState getValidationState(final Appendable errMsg) {
@@ -53,11 +60,11 @@ public class ForceDirectedLayoutContext implements TunableValidator {
 		if (!isPositive(numIterations))
 			errMsg.append("Number of iterations must be > 0; current value = "+numIterations);
 		if (!isPositive(defaultSpringCoefficient))
-			errMsg.append("Default spring coefficient must be > 0; current value = "+defaultSpringCoefficient);
+			errMsg.append("Spring coefficient must be > 0; current value = "+defaultSpringCoefficient);
 		if (!isPositive(defaultSpringLength))
-			errMsg.append("Default spring length must be > 0; current value = "+defaultSpringLength);
+			errMsg.append("Spring length must be > 0; current value = "+defaultSpringLength);
 		if (!isPositive(defaultNodeMass))
-			errMsg.append("Default node mass must be > 0; current value = "+defaultNodeMass);
+			errMsg.append("Node mass must be > 0; current value = "+defaultNodeMass);
 		} catch (IOException e) {}
 		return isPositive(numIterations) && isPositive(defaultSpringCoefficient)
 		       && isPositive(defaultSpringLength) && isPositive(defaultNodeMass)
