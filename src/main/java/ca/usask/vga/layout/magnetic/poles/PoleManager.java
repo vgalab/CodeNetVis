@@ -6,11 +6,13 @@ import org.cytoscape.application.events.SetCurrentNetworkListener;
 import org.cytoscape.model.*;
 import org.cytoscape.model.events.NetworkAddedEvent;
 import org.cytoscape.model.events.NetworkAddedListener;
+import org.cytoscape.session.events.SessionAboutToBeLoadedEvent;
+import org.cytoscape.session.events.SessionAboutToBeLoadedListener;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
-public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListener {
+public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListener, SessionAboutToBeLoadedListener {
 
     protected Map<CyNetwork, List<CyNode>> poleList;
 
@@ -26,6 +28,8 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
     public final int UNREACHABLE_NODE = 999;
 
     public final String DISCONNECTED_NAME = "none", MULTIPLE_POLES_NAME = "multiple";
+
+    protected boolean tableInitialized;
 
     public PoleManager(CyNetworkManager networkManager) {
         poleList = new HashMap<>();
@@ -385,7 +389,7 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
             }
         }
 
-
+        tableInitialized = true;
     }
 
     @Override
@@ -402,6 +406,13 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
             // Network could be set to null
             return;
         }
-        updateTables(e.getNetwork());
+        if (getPoleList(e.getNetwork()).size() != 0 || tableInitialized)
+            updateTables(e.getNetwork());
+    }
+
+    @Override
+    public void handleEvent(SessionAboutToBeLoadedEvent e) {
+        // This ensures that the user has to prompt adding poles before any new tables are added
+        tableInitialized = false;
     }
 }

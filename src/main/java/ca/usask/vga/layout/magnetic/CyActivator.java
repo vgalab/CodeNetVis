@@ -19,6 +19,7 @@ import org.cytoscape.model.events.SelectedNodesAndEdgesListener;
 import org.cytoscape.model.subnetwork.CyRootNetworkManager;
 import org.cytoscape.service.util.AbstractCyActivator;
 import org.cytoscape.session.CyNetworkNaming;
+import org.cytoscape.session.events.SessionAboutToBeLoadedListener;
 import org.cytoscape.view.layout.CyLayoutAlgorithm;
 import org.cytoscape.view.layout.CyLayoutAlgorithmManager;
 import org.cytoscape.view.model.CyNetworkViewFactory;
@@ -80,6 +81,7 @@ public class CyActivator extends AbstractCyActivator {
 		registerService(bc, poleManager, PoleManager.class);
 		registerService(bc, poleManager, NetworkAddedListener.class);
 		registerService(bc, poleManager, SetCurrentNetworkListener.class);
+		registerService(bc, poleManager, SessionAboutToBeLoadedListener.class);
 
 		AddNorthPoleAction addNPole = new AddNorthPoleAction(poleManager);
 		registerService(bc, addNPole, CyAction.class);
