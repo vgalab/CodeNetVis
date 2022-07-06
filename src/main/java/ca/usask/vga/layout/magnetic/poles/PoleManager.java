@@ -21,7 +21,7 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
     // Table column names
     public final String NAMESPACE = "Magnetic Poles", IS_POLE = "Is pole?", CLOSEST_POLE = "Closest pole",
         IS_OUTWARDS = "Is pole outwards?", DISTANCE_TO_POLE = "Distance to pole", EDGE_POLE_INFLUENCE = "Assigned pole",
-        IS_DISCONNECTED = "Not connected", POLE_LIST = "Network Pole List";
+        IS_DISCONNECTED = "Not connected", IN_POLE_LIST = "Inward Pole List", OUT_POLE_LIST = "Outward Pole List";
 
     public final int UNREACHABLE_NODE = 999;
 
@@ -32,8 +32,7 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
         poleIsOutwards = new HashSet<>();
         cachedPoleDistances = new HashMap<>();
         for (CyNetwork net : networkManager.getNetworkSet()) {
-            if (readPoleListFromTable(net))
-                updateTables(net);
+            readPoleListFromTable(net);
         }
     }
 
@@ -43,21 +42,28 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
         }
     }
 
-    protected boolean readPoleListFromTable(CyNetwork network) {
-        // TODO: Fix exceptions
+    protected void readPoleListFromTable(CyNetwork network) {
+        readPoleListFromColumn(network, IN_POLE_LIST, false);
+        readPoleListFromColumn(network, OUT_POLE_LIST, true);
+    }
+
+    protected void readPoleListFromColumn(CyNetwork network, String columnName, boolean isOutwards) {
         CyTable table = network.getDefaultNetworkTable();
-        if (table.getColumn(NAMESPACE, POLE_LIST) == null)
-            return false;
-        List<String> poleNameList = table.getRow(network.getSUID()).getList(NAMESPACE, POLE_LIST, String.class);
-        if (poleNameList == null)
-            return false;
-        for (String name : poleNameList) {
-            CyRow match = network.getDefaultNodeTable().getMatchingRows("name", name).iterator().next();
-            CyNode node = network.getNode(match.getSUID());
-            if (node != null)
-                addPole(network, node);
+        if (table.getColumn(NAMESPACE, columnName) != null) {
+            List<String> poleNameList = table.getRow(network.getSUID()).getList(NAMESPACE, columnName, String.class);
+            if (poleNameList != null) {
+                for (String name : poleNameList) {
+                    Iterator<Long> iterator = network.getDefaultNodeTable().getMatchingKeys("name", name, Long.class).iterator();
+                    if (!iterator.hasNext()) continue;
+                    long matchSUID = iterator.next();
+                    CyNode node = network.getNode(matchSUID);
+                    if (node != null) {
+                        addPole(network, node);
+                        setPoleDirection(network, node, isOutwards);
+                    }
+                }
+            }
         }
-        return true;
     }
 
     public List<CyNode> getPoleList(CyNetwork network) {
@@ -65,20 +71,31 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
         return poleList.get(network);
     }
 
-    public List<Long> getPoleSUIDList(CyNetwork network) {
-        List<CyNode> list = getPoleList(network);
-        List<Long> newList = new ArrayList<>(list.size());
-        for (CyNode n : list) {
-            newList.add(n.getSUID());
-        }
-        return newList;
-    }
-
     public List<String> getPoleNameList(CyNetwork network) {
         List<CyNode> list = getPoleList(network);
         List<String> newList = new ArrayList<>(list.size());
         for (CyNode n : list) {
             newList.add(network.getDefaultNodeTable().getRow(n.getSUID()).get("name", String.class));
+        }
+        return newList;
+    }
+
+    public List<String> getInPoleNameList(CyNetwork network) {
+        List<CyNode> list = getPoleList(network);
+        List<String> newList = new ArrayList<>(list.size());
+        for (CyNode n : list) {
+            if (!isPoleOutwards(network, n))
+                newList.add(network.getDefaultNodeTable().getRow(n.getSUID()).get("name", String.class));
+        }
+        return newList;
+    }
+
+    public List<String> getOutPoleNameList(CyNetwork network) {
+        List<CyNode> list = getPoleList(network);
+        List<String> newList = new ArrayList<>(list.size());
+        for (CyNode n : list) {
+            if (isPoleOutwards(network, n))
+                newList.add(network.getDefaultNodeTable().getRow(n.getSUID()).get("name", String.class));
         }
         return newList;
     }
@@ -294,11 +311,17 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
 
     public void updateTables(CyNetwork network) {
 
+        // Network pole lists
         CyTable networkTable = network.getDefaultNetworkTable();
-        if (networkTable.getColumn(NAMESPACE, POLE_LIST) == null) {
-            networkTable.createListColumn(NAMESPACE, POLE_LIST, String.class, false);
+        if (networkTable.getColumn(NAMESPACE, IN_POLE_LIST) == null) {
+            networkTable.createListColumn(NAMESPACE, IN_POLE_LIST, String.class, false);
         }
-        networkTable.getRow(network.getSUID()).set(NAMESPACE, POLE_LIST, getPoleNameList(network));
+        networkTable.getRow(network.getSUID()).set(NAMESPACE, IN_POLE_LIST, getInPoleNameList(network));
+
+        if (networkTable.getColumn(NAMESPACE, OUT_POLE_LIST) == null) {
+            networkTable.createListColumn(NAMESPACE, OUT_POLE_LIST, String.class, false);
+        }
+        networkTable.getRow(network.getSUID()).set(NAMESPACE, OUT_POLE_LIST, getOutPoleNameList(network));
 
         CyTable nodeTable = network.getDefaultNodeTable();
 
@@ -367,12 +390,18 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
 
     @Override
     public void handleEvent(NetworkAddedEvent e) {
+        if (e.getNetwork() == null || e.getNetwork().getDefaultNetworkTable() == null) {
+            return;
+        }
         readPoleListFromTable(e.getNetwork());
-        updateTables(e.getNetwork());
     }
 
     @Override
     public void handleEvent(SetCurrentNetworkEvent e) {
+        if (e.getNetwork() == null || e.getNetwork().getDefaultNetworkTable() == null) {
+            // Network could be set to null
+            return;
+        }
         updateTables(e.getNetwork());
     }
 }
