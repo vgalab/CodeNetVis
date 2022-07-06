@@ -58,7 +58,7 @@ public class MapPoleClassifier implements PoleClassifier {
     }
 
     @Override
-    public int distanceToPole(ForceItem item) {
+    public int closestPoleDistance(ForceItem item) {
         Integer result = poleManager.getClosestPoleDistance(network, nodeMap.get(item));
         if (result == null) return poleManager.UNREACHABLE_NODE;
         return result;

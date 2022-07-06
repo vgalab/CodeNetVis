@@ -4,6 +4,7 @@ import ca.usask.vga.layout.magnetic.poles.PoleManager;
 import ca.usask.vga.layout.magnetic.util.MagneticForce;
 import ca.usask.vga.layout.magnetic.util.MapPoleClassifier;
 import ca.usask.vga.layout.magnetic.util.PinForce;
+import ca.usask.vga.layout.magnetic.util.PoleGravityForce;
 import org.cytoscape.model.CyNode;
 import org.cytoscape.view.layout.LayoutEdge;
 import org.cytoscape.view.layout.LayoutNode;
@@ -12,8 +13,6 @@ import org.cytoscape.view.model.View;
 import org.cytoscape.work.undo.UndoSupport;
 import prefuse.util.force.*;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 
 public class PoleMagneticLayoutTask extends ForceDirectedLayoutTask {
@@ -47,8 +46,8 @@ public class PoleMagneticLayoutTask extends ForceDirectedLayoutTask {
 
         // Magnetic force
         if (context.magnetEnabled) {
-            if (context.usePoles) {
-                m_fsim.addForce(new MagneticForce(poleClassifier, context.usePoles, (float) context.magneticFieldStrength,
+            if (context.useMagneticPoles) {
+                m_fsim.addForce(new MagneticForce(poleClassifier, context.useMagneticPoles, (float) context.magneticFieldStrength,
                         (float) context.magneticAlpha,  (float) context.magneticBeta));
             } else {
                 m_fsim.addForce(new MagneticForce(context.fieldType,  (float) context.magneticFieldStrength,
@@ -59,6 +58,10 @@ public class PoleMagneticLayoutTask extends ForceDirectedLayoutTask {
         // Pole pin force
         if (context.pinPoles)
             m_fsim.addForce(new PinForce(poleClassifier));
+
+        // Pole gravity force
+        if (context.usePoleAttraction)
+            m_fsim.addForce(new PoleGravityForce(poleClassifier, (float) context.poleGravity));
 
     }
 

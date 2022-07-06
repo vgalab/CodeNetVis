@@ -9,7 +9,7 @@ public interface PoleClassifier {
     boolean isPole(ForceItem item);
 
     ForceItem closestPole(ForceItem item);
-    int distanceToPole(ForceItem item);
+    int closestPoleDistance(ForceItem item);
 
     boolean isDisconnected(ForceItem item);
     boolean isClosestToMultiple(ForceItem item);
