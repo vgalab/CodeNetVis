@@ -150,6 +150,10 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
             removePole(network, n);
     }
 
+    public void removeAllPoles(CyNetwork network) {
+        getPoleList(network).clear();
+    }
+
     public boolean isPole(CyNetwork network, CyNode node) {
         return getPoleList(network).contains(node);
     }

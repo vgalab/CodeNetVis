@@ -4,10 +4,7 @@ import ca.usask.vga.layout.magnetic.highlight.ChangeHopDistanceAction;
 import ca.usask.vga.layout.magnetic.highlight.CopyHighlightedAction;
 import ca.usask.vga.layout.magnetic.highlight.EdgeHighlighting;
 import ca.usask.vga.layout.magnetic.highlight.ToggleHighlightAction;
-import ca.usask.vga.layout.magnetic.poles.AddNorthPoleAction;
-import ca.usask.vga.layout.magnetic.poles.AddSouthPoleAction;
-import ca.usask.vga.layout.magnetic.poles.PoleManager;
-import ca.usask.vga.layout.magnetic.poles.RemovePoleAction;
+import ca.usask.vga.layout.magnetic.poles.*;
 import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.application.events.SetCurrentNetworkListener;
 import org.cytoscape.application.swing.CyAction;
@@ -23,6 +20,7 @@ import org.cytoscape.view.layout.CyLayoutAlgorithm;
 import org.cytoscape.view.model.CyNetworkViewFactory;
 import org.cytoscape.view.model.CyNetworkViewManager;
 import org.cytoscape.view.vizmap.VisualMappingManager;
+import org.cytoscape.work.TaskFactory;
 import org.cytoscape.work.undo.UndoSupport;
 import org.osgi.framework.BundleContext;
 
@@ -36,6 +34,8 @@ public class CyActivator extends AbstractCyActivator {
 	}
 
 	public void start(BundleContext bc) {
+
+		final String MENU_APP_ROOT = "Apps.Magnetic Layout";
 		
 		UndoSupport undo = getService(bc,UndoSupport.class);
 
@@ -101,6 +101,13 @@ public class CyActivator extends AbstractCyActivator {
 		pLayoutProps.setProperty(MENU_GRAVITY,"10.52");
 		registerService(bc,poleMagneticLayout,CyLayoutAlgorithm.class, pLayoutProps);
 
+		// Extra pole tasks
+		ExtraTasks.MakeTopDegreePoles makeTopDegreePoles = new ExtraTasks.MakeTopDegreePoles(
+				getService(bc, CyApplicationManager.class),
+				poleManager
+		);
+		registerService(bc, ExtraTasks.getTaskFactory(makeTopDegreePoles),
+				TaskFactory.class, makeTopDegreePoles.getDefaultProperties());
 
 	}
 }
