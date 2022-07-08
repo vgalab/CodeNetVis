@@ -1,13 +1,11 @@
 package ca.usask.vga.layout.magnetic;
 
 import ca.usask.vga.layout.magnetic.poles.PoleManager;
-import ca.usask.vga.layout.magnetic.util.MagneticForce;
-import ca.usask.vga.layout.magnetic.util.MapPoleClassifier;
-import ca.usask.vga.layout.magnetic.util.PinForce;
-import ca.usask.vga.layout.magnetic.util.PoleGravityForce;
+import ca.usask.vga.layout.magnetic.util.*;
 import org.cytoscape.model.CyNode;
 import org.cytoscape.view.layout.LayoutEdge;
 import org.cytoscape.view.layout.LayoutNode;
+import org.cytoscape.view.layout.LayoutPartition;
 import org.cytoscape.view.model.CyNetworkView;
 import org.cytoscape.view.model.View;
 import org.cytoscape.work.undo.UndoSupport;
@@ -35,7 +33,7 @@ public class PoleMagneticLayoutTask extends ForceDirectedLayoutTask {
     }
 
     @Override
-    protected void addSimulatorForces(ForceSimulator m_fsim) {
+    protected void addSimulatorForces(ForceSimulator m_fsim, LayoutPartition part) {
 
         // REGISTERING FORCES
         m_fsim.addForce(new NBodyForce((float) -context.repulsionCoefficient, NBodyForce.DEFAULT_DISTANCE, NBodyForce.DEFAULT_THETA, monitor));  // Repulsion
@@ -62,6 +60,11 @@ public class PoleMagneticLayoutTask extends ForceDirectedLayoutTask {
         // Pole gravity force
         if (context.usePoleAttraction)
             m_fsim.addForce(new PoleGravityForce(poleClassifier, (float) context.poleGravity));
+
+
+        if (context.useCentralGravity)
+            m_fsim.addForce(new GravityForce(part.getAverageLocation(), (float) context.centralGravity));
+
 
     }
 

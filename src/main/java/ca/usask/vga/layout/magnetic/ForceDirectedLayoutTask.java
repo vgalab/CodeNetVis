@@ -71,7 +71,7 @@ public abstract class ForceDirectedLayoutTask extends AbstractParallelPartitionL
 		monitor = new StateMonitor();
 	}
 
-	protected abstract void addSimulatorForces(ForceSimulator m_fsim);
+	protected abstract void addSimulatorForces(ForceSimulator m_fsim, LayoutPartition part);
 
 	protected void mapForceItem(LayoutNode ln, ForceItem fitem) {}
 	protected void mapSpring(LayoutEdge le, Spring spring) {}
@@ -83,7 +83,7 @@ public abstract class ForceDirectedLayoutTask extends AbstractParallelPartitionL
 		part.calculateEdgeWeights();
 
 		ForceSimulator m_fsim = new ForceSimulator(integrator.getNewIntegrator(monitor), monitor);
-		addSimulatorForces(m_fsim);
+		addSimulatorForces(m_fsim, part);
 
 		List<LayoutNode> nodeList = part.getNodeList();
 		List<LayoutEdge> edgeList = part.getEdgeList();

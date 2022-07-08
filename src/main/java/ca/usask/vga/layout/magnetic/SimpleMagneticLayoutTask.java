@@ -2,6 +2,7 @@ package ca.usask.vga.layout.magnetic;
 
 import ca.usask.vga.layout.magnetic.util.MagneticForce;
 import org.cytoscape.model.CyNode;
+import org.cytoscape.view.layout.LayoutPartition;
 import org.cytoscape.view.model.CyNetworkView;
 import org.cytoscape.view.model.View;
 import org.cytoscape.work.undo.UndoSupport;
@@ -19,7 +20,7 @@ public class SimpleMagneticLayoutTask extends ForceDirectedLayoutTask {
     }
 
     @Override
-    protected void addSimulatorForces(ForceSimulator m_fsim) {
+    protected void addSimulatorForces(ForceSimulator m_fsim, LayoutPartition part) {
 
         // REGISTERING FORCES
         m_fsim.addForce(new NBodyForce((float) -context.repulsionCoefficient, NBodyForce.DEFAULT_DISTANCE, NBodyForce.DEFAULT_THETA, monitor));  // Repulsion

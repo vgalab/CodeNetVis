@@ -7,9 +7,10 @@ import org.cytoscape.work.util.ListSingleSelection;
 public class SimpleMagneticLayoutContext extends ForceDirectedLayoutContext {
 
     protected final String MAGNET_GROUP = "Magnetic force";
+    protected final String EXTRA_GROUP = "Extra forces";
 
     // TODO: Write descriptions, change to floats (?), add validation states
-    @Tunable(description="Enable magnetic force", /*groups="Magnet",*/ gravity=800.01, context="both", longDescription="TODO", exampleStringValue="true")
+    @Tunable(description="Enable magnetic force", gravity=800.01, context="both", longDescription="TODO", exampleStringValue="true")
     public boolean magnetEnabled = true;
 
     public FieldType fieldType = FieldType.VERTICAL;
