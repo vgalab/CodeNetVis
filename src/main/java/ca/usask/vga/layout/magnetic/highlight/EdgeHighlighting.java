@@ -1,7 +1,9 @@
 package ca.usask.vga.layout.magnetic.highlight;
 
 import ca.usask.vga.layout.magnetic.AppPreferences;
-import com.sun.org.slf4j.internal.LoggerFactory;
+import org.cytoscape.application.CyApplicationManager;
+import org.cytoscape.application.events.SetCurrentNetworkEvent;
+import org.cytoscape.application.events.SetCurrentNetworkListener;
 import org.cytoscape.model.*;
 import org.cytoscape.model.events.SelectedNodesAndEdgesEvent;
 import org.cytoscape.model.events.SelectedNodesAndEdgesListener;
@@ -15,8 +17,9 @@ import org.cytoscape.view.vizmap.VisualStyle;
 
 import java.awt.*;
 import java.util.*;
+import java.util.List;
 
-public class EdgeHighlighting implements SelectedNodesAndEdgesListener {
+public class EdgeHighlighting implements SelectedNodesAndEdgesListener, SetCurrentNetworkListener {
 
     public static class CyAccess {
         public final CyNetworkFactory nf;
@@ -26,8 +29,9 @@ public class EdgeHighlighting implements SelectedNodesAndEdgesListener {
         public final CyNetworkNaming cnn;
         public final VisualMappingManager vmm;
         public final CyRootNetworkManager rnm;
+        public final CyApplicationManager am;
 
-        public CyAccess(CyNetworkFactory nf, CyNetworkManager nm, CyNetworkViewFactory vf, CyNetworkViewManager vm, CyNetworkNaming cnn, VisualMappingManager vmm, CyRootNetworkManager rnm) {
+        public CyAccess(CyNetworkFactory nf, CyNetworkManager nm, CyNetworkViewFactory vf, CyNetworkViewManager vm, CyNetworkNaming cnn, VisualMappingManager vmm, CyRootNetworkManager rnm, CyApplicationManager am) {
             this.nf = nf;
             this.nm = nm;
             this.vf = vf;
@@ -35,11 +39,12 @@ public class EdgeHighlighting implements SelectedNodesAndEdgesListener {
             this.cnn = cnn;
             this.vmm = vmm;
             this.rnm = rnm;
+            this.am = am;
         }
     }
 
     private final CyAccess cy;
-    private AppPreferences preferences;
+    private final AppPreferences preferences;
     private SelectedNodesAndEdgesEvent lastEvent;
 
     private final String ENABLED_PROPERTY = "magnetic-layout.edgeHighlightingEnabled";
@@ -52,6 +57,7 @@ public class EdgeHighlighting implements SelectedNodesAndEdgesListener {
         this.preferences = preferences;
         // Load preference from file
         boolean enabledOnLoad = Boolean.parseBoolean(preferences.getProperties().getProperty(ENABLED_PROPERTY));
+        setEventToCurrentSelection();
         setEnabled(enabledOnLoad);
     }
 
@@ -66,6 +72,23 @@ public class EdgeHighlighting implements SelectedNodesAndEdgesListener {
         else
             clearHighlighting(lastEvent);
         preferences.getProperties().setProperty(ENABLED_PROPERTY, ""+enabled);
+    }
+
+    public void setEventToCurrentSelection() {
+        CyNetwork currentNet = cy.am.getCurrentNetwork();
+        if (currentNet == null) {
+            lastEvent = null;
+            return;
+        }
+        lastEvent = new SelectedNodesAndEdgesEvent(currentNet, true, true, true);
+    }
+
+    public void setEventToNetwork(CyNetwork network) {
+        if (network == null) {
+            lastEvent = null;
+            return;
+        }
+        lastEvent = new SelectedNodesAndEdgesEvent(network, true, true, true);
     }
 
     public void setDesiredHopDistance(int desiredHopDistance) {
@@ -224,10 +247,17 @@ public class EdgeHighlighting implements SelectedNodesAndEdgesListener {
     public void handleEvent(SelectedNodesAndEdgesEvent event) {
         lastEvent = event;
 
-        if (enabled && event.nodesChanged()) {
+        if (event != null && event.nodesChanged()) {
             clearHighlighting(event);
-            applyHighlighting(event);
+            if (enabled)
+                applyHighlighting(event);
         }
+    }
+
+    @Override
+    public void handleEvent(SetCurrentNetworkEvent e) {
+        setEventToNetwork(e.getNetwork());
+        handleEvent(lastEvent);
     }
 
     public boolean getEnabled() {

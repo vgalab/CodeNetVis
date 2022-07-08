@@ -8,12 +8,11 @@ import ca.usask.vga.layout.magnetic.poles.AddNorthPoleAction;
 import ca.usask.vga.layout.magnetic.poles.AddSouthPoleAction;
 import ca.usask.vga.layout.magnetic.poles.PoleManager;
 import ca.usask.vga.layout.magnetic.poles.RemovePoleAction;
+import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.application.events.SetCurrentNetworkListener;
 import org.cytoscape.application.swing.CyAction;
 import org.cytoscape.model.CyNetworkFactory;
 import org.cytoscape.model.CyNetworkManager;
-import org.cytoscape.model.CyNetworkTableManager;
-import org.cytoscape.model.CyTableManager;
 import org.cytoscape.model.events.NetworkAddedListener;
 import org.cytoscape.model.events.SelectedNodesAndEdgesListener;
 import org.cytoscape.model.subnetwork.CyRootNetworkManager;
@@ -21,13 +20,9 @@ import org.cytoscape.service.util.AbstractCyActivator;
 import org.cytoscape.session.CyNetworkNaming;
 import org.cytoscape.session.events.SessionAboutToBeLoadedListener;
 import org.cytoscape.view.layout.CyLayoutAlgorithm;
-import org.cytoscape.view.layout.CyLayoutAlgorithmManager;
 import org.cytoscape.view.model.CyNetworkViewFactory;
 import org.cytoscape.view.model.CyNetworkViewManager;
 import org.cytoscape.view.vizmap.VisualMappingManager;
-import org.cytoscape.view.vizmap.VisualStyleFactory;
-import org.cytoscape.work.TaskManager;
-import org.cytoscape.work.TunableSetter;
 import org.cytoscape.work.undo.UndoSupport;
 import org.osgi.framework.BundleContext;
 
@@ -58,9 +53,10 @@ public class CyActivator extends AbstractCyActivator {
 				getService(bc, CyNetworkViewManager.class),
 				getService(bc, CyNetworkNaming.class),
 				getService(bc, VisualMappingManager.class),
-				getService(bc, CyRootNetworkManager.class)
-		), preferences);
+				getService(bc, CyRootNetworkManager.class),
+				getService(bc, CyApplicationManager.class)), preferences);
 		registerService(bc, edgeHighlighting, SelectedNodesAndEdgesListener.class);
+		registerService(bc, edgeHighlighting, SetCurrentNetworkListener.class);
 
 		registerService(bc, new ToggleHighlightAction(edgeHighlighting), CyAction.class, new Properties());
 		registerService(bc, new CopyHighlightedAction(edgeHighlighting), CyAction.class, new Properties());
