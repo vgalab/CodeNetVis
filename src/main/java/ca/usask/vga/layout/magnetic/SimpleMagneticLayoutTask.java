@@ -12,14 +12,17 @@ import prefuse.util.force.ForceSimulator;
 import prefuse.util.force.NBodyForce;
 import prefuse.util.force.SpringForce;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 public class SimpleMagneticLayoutTask extends ForceDirectedLayoutTask {
 
-    private ErrorCalculator errorCalc;
+    private Map<LayoutPartition, ErrorCalculator> errorCalc;
 
     public SimpleMagneticLayoutTask(String displayName, CyNetworkView networkView, Set<View<CyNode>> nodesToLayOut, ForceDirectedLayoutContext context, ForceDirectedLayout.Integrators integrator, String attrName, UndoSupport undo) {
         super(displayName, networkView, nodesToLayOut, context, integrator, attrName, undo);
+        errorCalc = new HashMap<>();
     }
 
     @Override
@@ -37,7 +40,7 @@ public class SimpleMagneticLayoutTask extends ForceDirectedLayoutTask {
             MagneticForce mf = new MagneticForce(context.fieldType,  (float) context.magneticFieldStrength,
                     (float) context.magneticAlpha,  (float) context.magneticBeta);
             m_fsim.addForce(mf);
-            errorCalc = new ErrorCalculator(m_fsim, mf);
+            errorCalc.put(part, new ErrorCalculator(m_fsim, mf));
         }
 
     }
@@ -45,8 +48,7 @@ public class SimpleMagneticLayoutTask extends ForceDirectedLayoutTask {
     @Override
     public void layoutPartition(LayoutPartition part) {
         super.layoutPartition(part);
-        if (part.edgeCount() > 1)
-            errorCalc.displayResults(taskMonitor);
-        errorCalc = null;
+        if (part.edgeCount() > 1 && errorCalc.get(part) != null)
+            errorCalc.get(part).displayResults(taskMonitor);
     }
 }

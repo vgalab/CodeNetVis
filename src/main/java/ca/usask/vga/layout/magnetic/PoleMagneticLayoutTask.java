@@ -78,7 +78,7 @@ public class PoleMagneticLayoutTask extends ForceDirectedLayoutTask {
     @Override
     public void layoutPartition(LayoutPartition part) {
         super.layoutPartition(part);
-        if (part.edgeCount() > 1)
+        if (part.edgeCount() > 1 && errorCalc.get(part) != null)
             errorCalc.get(part).displayResults(taskMonitor);
     }
 
