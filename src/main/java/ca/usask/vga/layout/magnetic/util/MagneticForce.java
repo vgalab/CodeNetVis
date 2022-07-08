@@ -126,4 +126,28 @@ public class MagneticForce extends AbstractForce {
         return disp;
     }
 
+    public float getEdgeMisalignment(Spring s) {
+
+        ForceItem item1 = s.item1;
+        ForceItem item2 = s.item2;
+
+        Vector pos_n = new Vector(item1.location[0], item1.location[1]);
+        Vector pos_t = new Vector(item2.location[0], item2.location[1]);
+
+        Vector disp = pos_n.displacement(pos_t);
+
+        Vector field_direction;
+        Vector midpoint = pos_n.add(pos_t).times(0.5f);
+
+        if (!usePoles) {
+            field_direction = field_type.getFieldAt(midpoint);
+        } else {
+            field_direction = getMultiPoleFieldFor(midpoint, s);
+        }
+
+        float angle = field_direction.angleCos(disp);
+        return Math.abs(angle);
+
+    }
+
 }

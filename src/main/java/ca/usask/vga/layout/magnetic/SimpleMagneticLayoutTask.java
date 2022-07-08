@@ -1,5 +1,6 @@
 package ca.usask.vga.layout.magnetic;
 
+import ca.usask.vga.layout.magnetic.util.ErrorCalculator;
 import ca.usask.vga.layout.magnetic.util.MagneticForce;
 import org.cytoscape.model.CyNode;
 import org.cytoscape.view.layout.LayoutPartition;
@@ -15,6 +16,8 @@ import java.util.Set;
 
 public class SimpleMagneticLayoutTask extends ForceDirectedLayoutTask {
 
+    private ErrorCalculator errorCalc;
+
     public SimpleMagneticLayoutTask(String displayName, CyNetworkView networkView, Set<View<CyNode>> nodesToLayOut, ForceDirectedLayoutContext context, ForceDirectedLayout.Integrators integrator, String attrName, UndoSupport undo) {
         super(displayName, networkView, nodesToLayOut, context, integrator, attrName, undo);
     }
@@ -29,12 +32,21 @@ public class SimpleMagneticLayoutTask extends ForceDirectedLayoutTask {
 
         SimpleMagneticLayoutContext context = (SimpleMagneticLayoutContext) this.context;
 
-        if (context.magnetEnabled)
+        if (context.magnetEnabled) {
             // Magnetic force
-            m_fsim.addForce(new MagneticForce(context.fieldType,  (float) context.magneticFieldStrength,
-                    (float) context.magneticAlpha,  (float) context.magneticBeta));
+            MagneticForce mf = new MagneticForce(context.fieldType,  (float) context.magneticFieldStrength,
+                    (float) context.magneticAlpha,  (float) context.magneticBeta);
+            m_fsim.addForce(mf);
+            errorCalc = new ErrorCalculator(m_fsim, mf);
+        }
 
     }
 
-
+    @Override
+    public void layoutPartition(LayoutPartition part) {
+        super.layoutPartition(part);
+        if (part.edgeCount() > 1)
+            errorCalc.displayResults(taskMonitor);
+        errorCalc = null;
+    }
 }
