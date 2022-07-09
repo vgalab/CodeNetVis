@@ -61,15 +61,15 @@ public class ForceDirectedLayoutContext implements TunableValidator {
 		try {
 		if (!isPositive(numIterations))
 			errMsg.append("Number of iterations must be > 0; current value = "+numIterations);
-		if (!isPositive(defaultSpringCoefficient))
-			errMsg.append("Spring coefficient must be > 0; current value = "+defaultSpringCoefficient);
-		if (!isPositive(defaultSpringLength))
-			errMsg.append("Spring length must be > 0; current value = "+defaultSpringLength);
+		if (!isNonNegative(defaultSpringCoefficient))
+			errMsg.append("Spring coefficient must be >= 0; current value = "+defaultSpringCoefficient);
+		if (!isNonNegative(defaultSpringLength))
+			errMsg.append("Spring length must be >= 0; current value = "+defaultSpringLength);
 		if (!isPositive(defaultNodeMass))
 			errMsg.append("Node mass must be > 0; current value = "+defaultNodeMass);
 		} catch (IOException e) {}
-		return isPositive(numIterations) && isPositive(defaultSpringCoefficient)
-		       && isPositive(defaultSpringLength) && isPositive(defaultNodeMass)
+		return isPositive(numIterations) && isNonNegative(defaultSpringCoefficient)
+		       && isNonNegative(defaultSpringLength) && isPositive(defaultNodeMass)
 			? ValidationState.OK : ValidationState.INVALID;
 	}
 
@@ -79,5 +79,13 @@ public class ForceDirectedLayoutContext implements TunableValidator {
 
 	private static boolean isPositive(final double n) {
 		return n > 0.0;
+	}
+
+	private static boolean isNonNegative(final int n) {
+		return n >= 0;
+	}
+
+	private static boolean isNonNegative(final double n) {
+		return n >= 0.0;
 	}
 }
