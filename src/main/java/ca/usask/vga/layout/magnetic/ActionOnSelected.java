@@ -12,6 +12,7 @@ import java.util.Collection;
 
 /**
  * Allows actions to act on the selected nodes/edges in the current view
+ * TODO: Rewrite to work even without events
  */
 public abstract class ActionOnSelected extends AbstractCyAction implements SelectedNodesAndEdgesListener {
 

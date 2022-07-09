@@ -102,12 +102,15 @@ public class CyActivator extends AbstractCyActivator {
 		registerService(bc,poleMagneticLayout,CyLayoutAlgorithm.class, pLayoutProps);
 
 		// Extra pole tasks
-		ExtraTasks.MakeTopDegreePoles makeTopDegreePoles = new ExtraTasks.MakeTopDegreePoles(
-				getService(bc, CyApplicationManager.class),
-				poleManager
-		);
+		CyApplicationManager am = getService(bc, CyApplicationManager.class);
+
+		ExtraTasks.MakeTopDegreePoles makeTopDegreePoles = new ExtraTasks.MakeTopDegreePoles(am, poleManager);
 		registerService(bc, ExtraTasks.getTaskFactory(makeTopDegreePoles),
 				TaskFactory.class, makeTopDegreePoles.getDefaultProperties());
+
+		ExtraTasks.SelectAllPoles selectAllPoles = new ExtraTasks.SelectAllPoles(am, poleManager);
+		registerService(bc, ExtraTasks.getTaskFactory(selectAllPoles),
+				TaskFactory.class, selectAllPoles.getDefaultProperties());
 
 	}
 }
