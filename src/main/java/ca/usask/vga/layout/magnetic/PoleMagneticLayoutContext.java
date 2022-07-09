@@ -42,4 +42,8 @@ public class PoleMagneticLayoutContext extends SimpleMagneticLayoutContext {
     @Tunable(description="Gravity constant", format="#.##E0", gravity=250.42, groups=EXTRA_GROUP, dependsOn="useCentralGravity=true", context="both", longDescription="TODO", exampleStringValue="1e-4")
     public double centralGravity = 1e-4;
 
+    // TODO: Change into a drop down
+    @Tunable(description="Circle pin", gravity=270.21, groups=POLE_GROUP, dependsOn="pinPoles=true", context="both", longDescription="TODO", exampleStringValue="true")
+    public boolean useCirclePin = true;
+
 }

@@ -1,6 +1,8 @@
 package ca.usask.vga.layout.magnetic.util;
 
 import static java.lang.Math.*;
+
+import org.cytoscape.view.layout.LayoutPoint;
 import org.jetbrains.annotations.NotNull;
 
 public class Vector {
@@ -10,6 +12,10 @@ public class Vector {
     public Vector(float x, float y) {
         this.x = x;
         this.y = y;
+    }
+
+    public static Vector convert(LayoutPoint point) {
+        return new Vector((float) point.getX(), (float) point.getY());
     }
 
     public Vector() {

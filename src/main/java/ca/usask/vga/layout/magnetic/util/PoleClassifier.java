@@ -6,6 +6,7 @@ import prefuse.util.force.Spring;
 public interface PoleClassifier {
 
     Iterable<ForceItem> getPoleList();
+    int getPoleListSize();
     boolean isPole(ForceItem item);
 
     ForceItem closestPole(ForceItem item);

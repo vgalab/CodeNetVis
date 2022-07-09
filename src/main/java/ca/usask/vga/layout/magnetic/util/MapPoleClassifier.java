@@ -48,6 +48,11 @@ public class MapPoleClassifier implements PoleClassifier {
     }
 
     @Override
+    public int getPoleListSize() {
+        return poleList.size();
+    }
+
+    @Override
     public boolean isPole(ForceItem item) {
         return poleList.contains(item);
     }
