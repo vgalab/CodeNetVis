@@ -1,11 +1,14 @@
 package ca.usask.vga.layout.magnetic.util;
 
+import org.cytoscape.model.CyEdge;
 import prefuse.util.force.ForceItem;
 import prefuse.util.force.Spring;
 
 public interface PoleClassifier {
 
     Iterable<ForceItem> getPoleList();
+    Iterable<ForceItem> getPoleListSorted(CyEdge.Type edgeType);
+
     int getPoleListSize();
     boolean isPole(ForceItem item);
 

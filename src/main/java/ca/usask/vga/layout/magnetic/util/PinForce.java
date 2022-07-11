@@ -1,5 +1,6 @@
 package ca.usask.vga.layout.magnetic.util;
 
+import org.cytoscape.model.CyEdge;
 import org.cytoscape.view.layout.LayoutPartition;
 import prefuse.util.force.AbstractForce;
 import prefuse.util.force.ForceItem;
@@ -61,7 +62,7 @@ public class PinForce extends AbstractForce {
             ForceItem item = items.next();
             if (totalNum == 1) radius = 0;
             float x = (float) Math.cos(2*Math.PI*i/totalNum)*radius;
-            float y = (float) Math.sin(2*Math.PI*i/totalNum)*radius;
+            float y = (float) -Math.sin(2*Math.PI*i/totalNum)*radius;
             savedPolePos.put(item, new Vector(x, y).add(center));
         }
     }
@@ -81,7 +82,7 @@ public class PinForce extends AbstractForce {
     }
 
     public Iterable<ForceItem> getPinned() {
-        if (classifier != null) return classifier.getPoleList();
+        if (classifier != null) return classifier.getPoleListSorted(getSortType());
         return pinnedItems;
     }
 
@@ -89,6 +90,24 @@ public class PinForce extends AbstractForce {
         if (classifier != null) return classifier.getPoleListSize();
         if (pinnedItems != null) return pinnedItems.size();
         return 0;
+    }
+
+    protected CyEdge.Type getSortType() {
+        if (classifier == null) return CyEdge.Type.ANY;
+        Iterator<ForceItem> poles = classifier.getPoleList().iterator();
+        boolean isOut = false, isIn = false;
+        while (poles.hasNext()) {
+            if (classifier.isPoleOutwards(poles.next()))
+                isOut = true;
+            else
+                isIn = true;
+        }
+        if (isOut == isIn)
+            return CyEdge.Type.ANY;
+        else if (isOut)
+            return CyEdge.Type.OUTGOING;
+        else
+            return CyEdge.Type.INCOMING;
     }
 
     @Override

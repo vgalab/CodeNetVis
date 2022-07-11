@@ -75,11 +75,19 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
         return poleList.get(network);
     }
 
+    public List<CyNode> getPoleListSorted(CyNetwork network, Comparator<CyNode> comparator) {
+        List<CyNode> list = getPoleList(network);
+        list = new ArrayList<>(list);
+        Collections.sort(list, comparator);
+        Collections.reverse(list);
+        return list;
+    }
+
     public List<String> getPoleNameList(CyNetwork network) {
         List<CyNode> list = getPoleList(network);
         List<String> newList = new ArrayList<>(list.size());
         for (CyNode n : list) {
-            newList.add(network.getDefaultNodeTable().getRow(n.getSUID()).get("name", String.class));
+            newList.add(getPoleName(network, n));
         }
         return newList;
     }
@@ -89,7 +97,7 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
         List<String> newList = new ArrayList<>(list.size());
         for (CyNode n : list) {
             if (!isPoleOutwards(network, n))
-                newList.add(network.getDefaultNodeTable().getRow(n.getSUID()).get("name", String.class));
+                newList.add(getPoleName(network, n));
         }
         return newList;
     }
@@ -99,7 +107,7 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
         List<String> newList = new ArrayList<>(list.size());
         for (CyNode n : list) {
             if (isPoleOutwards(network, n))
-                newList.add(network.getDefaultNodeTable().getRow(n.getSUID()).get("name", String.class));
+                newList.add(getPoleName(network, n));
         }
         return newList;
     }

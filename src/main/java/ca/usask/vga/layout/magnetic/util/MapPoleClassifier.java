@@ -1,5 +1,6 @@
 package ca.usask.vga.layout.magnetic.util;
 
+import ca.usask.vga.layout.magnetic.poles.ExtraTasks;
 import ca.usask.vga.layout.magnetic.poles.PoleManager;
 import org.cytoscape.model.CyEdge;
 import org.cytoscape.model.CyNetwork;
@@ -45,6 +46,17 @@ public class MapPoleClassifier implements PoleClassifier {
     @Override
     public Iterable<ForceItem> getPoleList() {
         return poleList;
+    }
+
+    @Override
+    public Iterable<ForceItem> getPoleListSorted(CyEdge.Type edgeType) {
+        List<CyNode> list = poleManager.getPoleListSorted(network, ExtraTasks.getByDegreeComparator(network, edgeType));
+        List<ForceItem> items = new ArrayList<>();
+        for (CyNode n : list) {
+            if (poleMap.containsKey(n))
+                items.add(poleMap.get(n));
+        }
+        return items;
     }
 
     @Override
