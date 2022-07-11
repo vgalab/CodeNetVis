@@ -135,6 +135,8 @@ public abstract class ForceDirectedLayoutTask extends AbstractParallelPartitionL
 		// perform layout
 		long timestep = 1000L;
 
+		taskMonitor.setProgress(0);
+
 		for (int i = 0; i < context.numIterations; i++) {
 			if (cancelled)
 				return;
@@ -148,6 +150,7 @@ public abstract class ForceDirectedLayoutTask extends AbstractParallelPartitionL
 			long step = timestep + 50;
 			m_fsim.runSimulator(step);
 			// setTaskStatus((int) (((double) i / (double) context.numIterations) * 90. + 5));
+			taskMonitor.setProgress((double) i / (double) context.numIterations);
 		}
 
 		// update positions
