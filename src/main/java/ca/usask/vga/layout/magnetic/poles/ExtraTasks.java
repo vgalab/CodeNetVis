@@ -3,10 +3,17 @@ package ca.usask.vga.layout.magnetic.poles;
 
 import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.model.*;
+import org.cytoscape.view.presentation.property.BasicVisualLexicon;
+import org.cytoscape.view.vizmap.VisualMappingFunction;
+import org.cytoscape.view.vizmap.VisualMappingFunctionFactory;
+import org.cytoscape.view.vizmap.VisualMappingManager;
+import org.cytoscape.view.vizmap.mappings.DiscreteMapping;
 import org.cytoscape.work.*;
 import org.cytoscape.work.util.ListSingleSelection;
 
+import java.awt.*;
 import java.util.*;
+import java.util.List;
 
 import static org.cytoscape.work.ServiceProperties.*;
 import static org.cytoscape.work.ServiceProperties.MENU_GRAVITY;
@@ -156,7 +163,7 @@ public class ExtraTasks {
             props.setProperty(PREFERRED_MENU, MENU_APP_ROOT);
             props.setProperty(TITLE, TASK_DESCRIPTION);
             props.setProperty(IN_MENU_BAR, "true");
-            props.setProperty(MENU_GRAVITY, "6.1");
+            props.setProperty(MENU_GRAVITY, "2.1");
             // Commands here
             return props;
         }
@@ -182,6 +189,145 @@ public class ExtraTasks {
             // Select poles only
             for (CyNode node : poles) {
                 table.getRow(node.getSUID()).set(CyNetwork.SELECTED, true);
+            }
+
+        }
+    }
+
+    public static class LegacyPoleColoring extends AbstractTask {
+
+        private final CyApplicationManager am;
+        private final PoleManager pm;
+        private final VisualMappingManager vmm;
+        private final VisualMappingFunctionFactory vmff;
+
+        public LegacyPoleColoring(CyApplicationManager am, PoleManager pm, VisualMappingManager vmm, VisualMappingFunctionFactory vmff_discrete) {
+            this.am = am;
+            this.pm = pm;
+            this.vmm = vmm;
+            this.vmff = vmff_discrete;
+        }
+
+        private static final String TASK_DESCRIPTION = "Apply legacy pole coloring";
+
+        public Properties getDefaultProperties() {
+            Properties props = new Properties();
+            props.setProperty(PREFERRED_MENU, MENU_APP_ROOT);
+            props.setProperty(TITLE, TASK_DESCRIPTION);
+            props.setProperty(IN_MENU_BAR, "true");
+            props.setProperty(MENU_GRAVITY, "10.1");
+            // Commands here
+            return props;
+        }
+
+        public static Color getColorByIndex(int index) {
+            double r, g, b;
+            switch (index) {
+                case 0: r = 1.0; g = 0.5; b = 0.0; break; // orange
+                case 1: r = 0.0; g = 0.65; b = 0.93; break; // sky blue
+                case 2: r = 0.85; g = 0.39; b = 0.6; break; // pink
+                case 3: r = 0.5; g = 0.72; b = 0; break; // lime
+                case 4: r = 0.14; g = 0; b = 0.68; break; // navy
+                case 5: r = 0.53; g = 0.36; b = 0.0; break; // brown
+                case 6: r = 0.2; g = 0.75; b = 0.58; break; // teal
+                case 7: r = 0.65; g = 0; b = 0; break; // dark red
+                case 8: r = 0; g = 0.41; b = 0.07; break; // dark green
+                case 9: r = 0.67; g = 0; b = 0.64; break; // purple
+                default: r = 1.0; g = 0.0; b = 0.0; break; // red for all others
+            }
+            return new Color((float) r, (float) g, (float) b);
+        }
+
+        public static Color getMultipleColor() {
+            return new Color( 0.5f, 0.5f, 0.5f);
+        }
+
+        public static Color getDisconnectedColor() {
+            return new Color( 0.9f, 0.9f, 0.9f);
+        }
+
+        @Override
+        public void run(TaskMonitor taskMonitor) throws Exception {
+
+            taskMonitor.setTitle(TASK_DESCRIPTION);
+
+            CyNetwork net = am.getCurrentNetwork();
+            if (net == null) return;
+
+            List<CyNode> poles = pm.getPoleListSorted(net, ExtraTasks.getByDegreeComparator(net, CyEdge.Type.INCOMING));
+
+            DiscreteMapping<String, Paint> func = (DiscreteMapping<String, Paint>)
+                    vmff.createVisualMappingFunction(PoleManager.NAMESPACE + "::" + PoleManager.CLOSEST_POLE,
+                            String.class, BasicVisualLexicon.NODE_FILL_COLOR);
+
+            for (int i = 0; i < poles.size(); i++) {
+                CyNode pole = poles.get(i);
+                String name = pm.getPoleName(net, pole);
+                Color color = getColorByIndex(i);
+                func.putMapValue(name, color);
+            }
+
+            func.putMapValue(PoleManager.MULTIPLE_POLES_NAME, getMultipleColor());
+            func.putMapValue(PoleManager.DISCONNECTED_NAME, getDisconnectedColor());
+
+            vmm.getVisualStyle(am.getCurrentNetworkView()).addVisualMappingFunction(func);
+
+            new CopyNodeStyleToEdge(am, vmm, vmff).copyPoleVisualMap();
+
+        }
+    }
+
+    public static class CopyNodeStyleToEdge extends AbstractTask {
+
+        private final CyApplicationManager am;
+        private final VisualMappingManager vmm;
+        private final VisualMappingFunctionFactory vmff;
+
+        public CopyNodeStyleToEdge(CyApplicationManager am, VisualMappingManager vmm, VisualMappingFunctionFactory vmff_discrete) {
+            this.am = am;
+            this.vmm = vmm;
+            this.vmff = vmff_discrete;
+        }
+
+        private static final String TASK_DESCRIPTION = "Copy node colors to edge colors";
+
+        public Properties getDefaultProperties() {
+            Properties props = new Properties();
+            props.setProperty(PREFERRED_MENU, MENU_APP_ROOT);
+            props.setProperty(TITLE, TASK_DESCRIPTION);
+            props.setProperty(IN_MENU_BAR, "true");
+            props.setProperty(MENU_GRAVITY, "9.1");
+            // Commands here
+            return props;
+        }
+
+        public boolean copyPoleVisualMap() {
+            VisualMappingFunction<?, Paint> from = vmm.getVisualStyle(am.getCurrentNetworkView())
+                    .getVisualMappingFunction(BasicVisualLexicon.NODE_FILL_COLOR);
+            DiscreteMapping<String, Paint> to = (DiscreteMapping<String, Paint>)
+                    vmff.createVisualMappingFunction(PoleManager.NAMESPACE + "::" + PoleManager.EDGE_POLE_INFLUENCE,
+                            String.class, BasicVisualLexicon.EDGE_UNSELECTED_PAINT);
+            if (!(from instanceof DiscreteMapping))
+                return false;
+            if (!from.getMappingColumnName().equals(PoleManager.NAMESPACE + "::" + PoleManager.CLOSEST_POLE))
+                return false;
+            to.putAll(((DiscreteMapping) from).getAll());
+            vmm.getVisualStyle(am.getCurrentNetworkView()).addVisualMappingFunction(to);
+            return true;
+        }
+
+        @Override
+        public void run(TaskMonitor taskMonitor) throws IllegalArgumentException {
+
+            taskMonitor.setTitle(TASK_DESCRIPTION);
+
+            CyNetwork net = am.getCurrentNetwork();
+            if (net == null) return;
+
+            boolean copySuccess = copyPoleVisualMap();
+
+            if (!copySuccess) {
+                throw new IllegalArgumentException("Incompatible visual styles, edges were left unchanged.");
             }
 
         }

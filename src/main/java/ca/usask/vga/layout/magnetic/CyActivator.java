@@ -19,6 +19,7 @@ import org.cytoscape.session.events.SessionAboutToBeLoadedListener;
 import org.cytoscape.view.layout.CyLayoutAlgorithm;
 import org.cytoscape.view.model.CyNetworkViewFactory;
 import org.cytoscape.view.model.CyNetworkViewManager;
+import org.cytoscape.view.vizmap.VisualMappingFunctionFactory;
 import org.cytoscape.view.vizmap.VisualMappingManager;
 import org.cytoscape.work.TaskFactory;
 import org.cytoscape.work.undo.UndoSupport;
@@ -112,6 +113,17 @@ public class CyActivator extends AbstractCyActivator {
 		registerService(bc, ExtraTasks.getTaskFactory(selectAllPoles),
 				TaskFactory.class, selectAllPoles.getDefaultProperties());
 
+		ExtraTasks.LegacyPoleColoring legacyPoleColoring = new ExtraTasks.LegacyPoleColoring(am, poleManager,
+				getService(bc, VisualMappingManager.class),
+				getService(bc, VisualMappingFunctionFactory.class, "(mapping.type=discrete)"));
+		registerService(bc, ExtraTasks.getTaskFactory(legacyPoleColoring),
+				TaskFactory.class, legacyPoleColoring.getDefaultProperties());
+
+		ExtraTasks.CopyNodeStyleToEdge copyNodeStyleToEdge = new ExtraTasks.CopyNodeStyleToEdge(am,
+				getService(bc, VisualMappingManager.class),
+				getService(bc, VisualMappingFunctionFactory.class, "(mapping.type=discrete)"));
+		registerService(bc, ExtraTasks.getTaskFactory(copyNodeStyleToEdge),
+				TaskFactory.class, copyNodeStyleToEdge.getDefaultProperties());
 	}
 }
 

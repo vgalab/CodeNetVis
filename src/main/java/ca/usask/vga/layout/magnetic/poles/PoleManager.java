@@ -21,13 +21,13 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
     protected Map<CyNetwork, Map<CyNode, Map<CyNode, Byte>>> cachedPoleDistances;
 
     // Table column names
-    public final String NAMESPACE = "Magnetic Poles", IS_POLE = "Is pole?", CLOSEST_POLE = "Closest pole",
+    public static final String NAMESPACE = "Magnetic Poles", IS_POLE = "Is pole?", CLOSEST_POLE = "Closest pole",
         IS_OUTWARDS = "Is pole outwards?", DISTANCE_TO_POLE = "Distance to pole", EDGE_POLE_INFLUENCE = "Assigned pole",
         IS_DISCONNECTED = "Not connected", IN_POLE_LIST = "Inward Pole List", OUT_POLE_LIST = "Outward Pole List";
 
-    public final int UNREACHABLE_NODE = 999;
+    public static final int UNREACHABLE_NODE = 999;
 
-    public final String DISCONNECTED_NAME = "none", MULTIPLE_POLES_NAME = "multiple";
+    public static final String DISCONNECTED_NAME = "none", MULTIPLE_POLES_NAME = "multiple";
 
     protected boolean tableInitialized;
 
