@@ -15,7 +15,7 @@ public class PinForce extends AbstractForce {
     private final PoleClassifier classifier;
     private final Collection<ForceItem> pinnedItems;
 
-    public float soft_pin_factor = 1f;
+    public float soft_pin_factor = 100f;
     public float shape_size;
 
     protected boolean circlePin, polygonPin;
