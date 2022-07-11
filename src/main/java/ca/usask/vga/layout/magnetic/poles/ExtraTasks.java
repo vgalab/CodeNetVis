@@ -7,6 +7,7 @@ import org.cytoscape.view.presentation.property.BasicVisualLexicon;
 import org.cytoscape.view.vizmap.VisualMappingFunction;
 import org.cytoscape.view.vizmap.VisualMappingFunctionFactory;
 import org.cytoscape.view.vizmap.VisualMappingManager;
+import org.cytoscape.view.vizmap.VisualStyle;
 import org.cytoscape.view.vizmap.mappings.DiscreteMapping;
 import org.cytoscape.work.*;
 import org.cytoscape.work.util.ListSingleSelection;
@@ -333,6 +334,61 @@ public class ExtraTasks {
         }
     }
 
+
+    public static class MakePoleNodesLarger extends AbstractTask {
+
+        private final CyApplicationManager am;
+        private final VisualMappingManager vmm;
+        private final VisualMappingFunctionFactory vmff;
+
+        public MakePoleNodesLarger(CyApplicationManager am, VisualMappingManager vmm, VisualMappingFunctionFactory vmff_discrete) {
+            this.am = am;
+            this.vmm = vmm;
+            this.vmff = vmff_discrete;
+        }
+
+        private static final String TASK_DESCRIPTION = "Make pole nodes larger";
+
+        public Properties getDefaultProperties() {
+            Properties props = new Properties();
+            props.setProperty(PREFERRED_MENU, MENU_APP_ROOT);
+            props.setProperty(TITLE, TASK_DESCRIPTION);
+            props.setProperty(IN_MENU_BAR, "true");
+            props.setProperty(MENU_GRAVITY, "9.3");
+            // Commands here
+            return props;
+        }
+
+        @Override
+        public void run(TaskMonitor taskMonitor) throws IllegalArgumentException {
+
+            taskMonitor.setTitle(TASK_DESCRIPTION);
+
+            CyNetwork net = am.getCurrentNetwork();
+            if (net == null) return;
+
+            String columnName = PoleManager.NAMESPACE + "::" + PoleManager.IS_POLE;
+
+            DiscreteMapping<Boolean, Double> func = (DiscreteMapping<Boolean, Double>)
+                    vmff.createVisualMappingFunction(columnName,
+                            Boolean.class, BasicVisualLexicon.NODE_SIZE);
+
+            VisualStyle style = vmm.getVisualStyle(am.getCurrentNetworkView());
+
+            double defaultSize = style.getDefaultValue(BasicVisualLexicon.NODE_SIZE);
+
+            VisualMappingFunction<?, Double> oldFunc = style.getVisualMappingFunction(BasicVisualLexicon.NODE_SIZE);
+
+            if (oldFunc instanceof DiscreteMapping && oldFunc.getMappingColumnName().equals(columnName)) {
+                defaultSize = ((DiscreteMapping<Boolean, Double>) oldFunc).getMapValue(true);
+            }
+
+            func.putMapValue(true, defaultSize*2);
+
+            style.addVisualMappingFunction(func);
+
+        }
+    }
 
 }
 
