@@ -3,6 +3,7 @@ package ca.usask.vga.layout.magnetic.poles;
 
 import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.model.*;
+import org.cytoscape.view.model.VisualProperty;
 import org.cytoscape.view.presentation.property.BasicVisualLexicon;
 import org.cytoscape.view.vizmap.VisualMappingFunction;
 import org.cytoscape.view.vizmap.VisualMappingFunctionFactory;
@@ -273,7 +274,9 @@ public class ExtraTasks {
 
             vmm.getVisualStyle(am.getCurrentNetworkView()).addVisualMappingFunction(func);
 
-            new CopyNodeStyleToEdge(am, vmm, vmff).copyPoleVisualMap();
+            CopyNodeStyleToEdge copying = new CopyNodeStyleToEdge(am, vmm, vmff);
+            copying.copyPoleVisualMap(BasicVisualLexicon.EDGE_UNSELECTED_PAINT);
+            copying.copyPoleVisualMap(BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT);
 
         }
     }
@@ -302,12 +305,12 @@ public class ExtraTasks {
             return props;
         }
 
-        public boolean copyPoleVisualMap() {
+        public boolean copyPoleVisualMap(VisualProperty<Paint> visualProperty) {
             VisualMappingFunction<?, Paint> from = vmm.getVisualStyle(am.getCurrentNetworkView())
                     .getVisualMappingFunction(BasicVisualLexicon.NODE_FILL_COLOR);
             DiscreteMapping<String, Paint> to = (DiscreteMapping<String, Paint>)
                     vmff.createVisualMappingFunction(PoleManager.NAMESPACE + "::" + PoleManager.EDGE_POLE_INFLUENCE,
-                            String.class, BasicVisualLexicon.EDGE_UNSELECTED_PAINT);
+                            String.class, visualProperty);
             if (!(from instanceof DiscreteMapping))
                 return false;
             if (!from.getMappingColumnName().equals(PoleManager.NAMESPACE + "::" + PoleManager.CLOSEST_POLE))
@@ -325,7 +328,9 @@ public class ExtraTasks {
             CyNetwork net = am.getCurrentNetwork();
             if (net == null) return;
 
-            boolean copySuccess = copyPoleVisualMap();
+            CopyNodeStyleToEdge copying = new CopyNodeStyleToEdge(am, vmm, vmff);
+            boolean copySuccess = copying.copyPoleVisualMap(BasicVisualLexicon.EDGE_UNSELECTED_PAINT);
+            copying.copyPoleVisualMap(BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT);
 
             if (!copySuccess) {
                 throw new IllegalArgumentException("Incompatible visual styles, edges were left unchanged.");
