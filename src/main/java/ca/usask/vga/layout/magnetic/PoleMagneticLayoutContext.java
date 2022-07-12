@@ -50,9 +50,9 @@ public class PoleMagneticLayoutContext extends SimpleMagneticLayoutContext {
 
     // Hierarchy
     protected final String HIERARCHY_GROUP = "Hierarchy";
-    public HierarchyForce.Type hierarchyType;
+    public HierarchyForce.Type hierarchyType = HierarchyForce.Type.NONE;
 
-    @Tunable(description="Enable hierarchy force", gravity=400.41, groups=HIERARCHY_GROUP, context="both", longDescription="TODO", exampleStringValue="true")
+    @Tunable(description="Choose hierarchy type", gravity=280.1, groups=HIERARCHY_GROUP, context="both", longDescription="TODO", exampleStringValue="true")
     public ListSingleSelection<HierarchyForce.Type> getHierarchyType() {
         ListSingleSelection<HierarchyForce.Type> t = new ListSingleSelection<>(HierarchyForce.Type.NONE, HierarchyForce.Type.BASED_ON_HOP_DISTANCE, HierarchyForce.Type.SINE_FUNCTION);
         t.setSelectedValue(this.hierarchyType);
@@ -62,7 +62,7 @@ public class PoleMagneticLayoutContext extends SimpleMagneticLayoutContext {
         this.hierarchyType = (HierarchyForce.Type) t.getSelectedValue();
     }
 
-    @Tunable(description="Hierarchy force strength", format="#.##E0", gravity=400.42, groups=HIERARCHY_GROUP, context="both", longDescription="TODO", exampleStringValue="1e-4")
+    @Tunable(description="Hierarchy force strength", format="#.##E0", gravity=280.2, groups=HIERARCHY_GROUP, context="both", longDescription="TODO", exampleStringValue="1e-4")
     public double hierarchyForce = 1e-4;
 
 
