@@ -18,6 +18,10 @@ public class Vector {
         return new Vector((float) point.getX(), (float) point.getY());
     }
 
+    public static Vector convert(float[] point) {
+        return new Vector(point[0], point[1]);
+    }
+
     public Vector() {
         this(0,0);
     }

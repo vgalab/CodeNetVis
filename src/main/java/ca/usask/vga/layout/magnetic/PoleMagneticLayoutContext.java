@@ -1,6 +1,7 @@
 package ca.usask.vga.layout.magnetic;
 
 import ca.usask.vga.layout.magnetic.util.FieldType;
+import ca.usask.vga.layout.magnetic.util.HierarchyForce;
 import org.cytoscape.work.Tunable;
 import org.cytoscape.work.util.ListSingleSelection;
 
@@ -45,5 +46,26 @@ public class PoleMagneticLayoutContext extends SimpleMagneticLayoutContext {
     // TODO: Change into a drop down
     @Tunable(description="Circle pin", gravity=270.21, groups=POLE_GROUP, dependsOn="pinPoles=true", context="both", longDescription="TODO", exampleStringValue="true")
     public boolean useCirclePin = true;
+
+
+    // Hierarchy
+    protected final String HIERARCHY_GROUP = "Hierarchy";
+    public HierarchyForce.Type hierarchyType;
+
+    @Tunable(description="Enable hierarchy force", gravity=400.41, groups=HIERARCHY_GROUP, context="both", longDescription="TODO", exampleStringValue="true")
+    public ListSingleSelection<HierarchyForce.Type> getHierarchyType() {
+        ListSingleSelection<HierarchyForce.Type> t = new ListSingleSelection<>(HierarchyForce.Type.NONE, HierarchyForce.Type.BASED_ON_HOP_DISTANCE, HierarchyForce.Type.SINE_FUNCTION);
+        t.setSelectedValue(this.hierarchyType);
+        return t;
+    }
+    public void setHierarchyType(ListSingleSelection<HierarchyForce.Type> t) {
+        this.hierarchyType = (HierarchyForce.Type) t.getSelectedValue();
+    }
+
+    @Tunable(description="Hierarchy force strength", format="#.##E0", gravity=400.42, groups=HIERARCHY_GROUP, context="both", longDescription="TODO", exampleStringValue="1e-4")
+    public double hierarchyForce = 1e-4;
+
+
+
 
 }

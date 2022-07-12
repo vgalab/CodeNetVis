@@ -73,9 +73,13 @@ public class PoleMagneticLayoutTask extends ForceDirectedLayoutTask {
         if (context.usePoleAttraction)
             m_fsim.addForce(new PoleGravityForce(poleClassifier, (float) context.poleGravity));
 
-
+        // Central gravity force
         if (context.useCentralGravity)
             m_fsim.addForce(new GravityForce(part.getAverageLocation(), (float) context.centralGravity));
+
+        if (context.hierarchyType != HierarchyForce.Type.NONE)
+            m_fsim.addForce(new HierarchyForce(poleClassifier, context.hierarchyType,
+                    (float) context.hierarchyForce, HierarchyForce.getSuggestedRadius(part)));
 
 
     }
