@@ -1,6 +1,5 @@
 package ca.usask.vga.layout.magnetic.poles;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import org.cytoscape.application.events.SetCurrentNetworkEvent;
 import org.cytoscape.application.events.SetCurrentNetworkListener;
 import org.cytoscape.model.*;
@@ -22,7 +21,8 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
 
     // Table column names
     public static final String NAMESPACE = "Magnetic Poles", IS_POLE = "Is pole?", CLOSEST_POLE = "Closest pole",
-        IS_OUTWARDS = "Is pole outwards?", DISTANCE_TO_POLE = "Distance to pole", EDGE_POLE_INFLUENCE = "Assigned pole",
+        IS_OUTWARDS = "Is pole outwards?", DISTANCE_TO_POLE = "Distance to pole",
+        EDGE_ASSIGNED_POLE = "Assigned pole", EDGE_TARGET_NODE_POLE = "Target node pole",
         IS_DISCONNECTED = "Not connected", IN_POLE_LIST = "Inward Pole List", OUT_POLE_LIST = "Outward Pole List";
 
     public static final int UNREACHABLE_NODE = 999;
@@ -300,6 +300,12 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
         return null;
     }
 
+    public CyNode getTargetPole(CyNetwork network, CyEdge edge) {
+        if (isClosestToOne(network, edge.getTarget()))
+            return getClosestPole(network, edge.getTarget());
+        return null;
+    }
+
     public boolean isDisconnected(CyNetwork network, CyEdge edge) {
         if (edge == null) return true;
         return isDisconnected(network, edge.getTarget()) || isDisconnected(network, edge.getSource());
@@ -386,18 +392,35 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
         // EDGE_POLE_INFLUENCE
         CyTable edgeTable = network.getDefaultEdgeTable();
 
-        if (edgeTable.getColumn(NAMESPACE, EDGE_POLE_INFLUENCE) == null) {
-            edgeTable.createColumn(NAMESPACE, EDGE_POLE_INFLUENCE, String.class, false);
+        if (edgeTable.getColumn(NAMESPACE, EDGE_ASSIGNED_POLE) == null) {
+            edgeTable.createColumn(NAMESPACE, EDGE_ASSIGNED_POLE, String.class, false);
         }
         for (CyEdge edge : network.getEdgeList()) {
             CyNode pole = getAssignedPole(network, edge);
             if (pole != null)
-                edgeTable.getRow(edge.getSUID()).set(NAMESPACE, EDGE_POLE_INFLUENCE, getPoleName(network, pole));
+                edgeTable.getRow(edge.getSUID()).set(NAMESPACE, EDGE_ASSIGNED_POLE, getPoleName(network, pole));
             else {
                 if (isDisconnected(network, edge))
-                    edgeTable.getRow(edge.getSUID()).set(NAMESPACE, EDGE_POLE_INFLUENCE, DISCONNECTED_NAME);
+                    edgeTable.getRow(edge.getSUID()).set(NAMESPACE, EDGE_ASSIGNED_POLE, DISCONNECTED_NAME);
                 else
-                    edgeTable.getRow(edge.getSUID()).set(NAMESPACE, EDGE_POLE_INFLUENCE, MULTIPLE_POLES_NAME);
+                    edgeTable.getRow(edge.getSUID()).set(NAMESPACE, EDGE_ASSIGNED_POLE, MULTIPLE_POLES_NAME);
+            }
+        }
+
+        // EDGE_POLE_TARGET
+
+        if (edgeTable.getColumn(NAMESPACE, EDGE_TARGET_NODE_POLE) == null) {
+            edgeTable.createColumn(NAMESPACE, EDGE_TARGET_NODE_POLE, String.class, false);
+        }
+        for (CyEdge edge : network.getEdgeList()) {
+            CyNode pole = getTargetPole(network, edge);
+            if (pole != null)
+                edgeTable.getRow(edge.getSUID()).set(NAMESPACE, EDGE_TARGET_NODE_POLE, getPoleName(network, pole));
+            else {
+                if (isDisconnected(network, edge))
+                    edgeTable.getRow(edge.getSUID()).set(NAMESPACE, EDGE_TARGET_NODE_POLE, DISCONNECTED_NAME);
+                else
+                    edgeTable.getRow(edge.getSUID()).set(NAMESPACE, EDGE_TARGET_NODE_POLE, MULTIPLE_POLES_NAME);
             }
         }
 

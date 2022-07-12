@@ -275,9 +275,10 @@ public class ExtraTasks {
             vmm.getVisualStyle(am.getCurrentNetworkView()).addVisualMappingFunction(func);
 
             CopyNodeStyleToEdge copying = new CopyNodeStyleToEdge(am, vmm, vmff);
-            copying.copyPoleVisualMap(BasicVisualLexicon.EDGE_UNSELECTED_PAINT);
-            copying.copyPoleVisualMap(BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT);
+            String columnName = PoleManager.EDGE_TARGET_NODE_POLE;
 
+            copying.copyPoleVisualMap(BasicVisualLexicon.EDGE_UNSELECTED_PAINT, columnName);
+            copying.copyPoleVisualMap(BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT, columnName);
         }
     }
 
@@ -305,11 +306,11 @@ public class ExtraTasks {
             return props;
         }
 
-        public boolean copyPoleVisualMap(VisualProperty<Paint> visualProperty) {
+        public boolean copyPoleVisualMap(VisualProperty<Paint> visualProperty, String columnName) {
             VisualMappingFunction<?, Paint> from = vmm.getVisualStyle(am.getCurrentNetworkView())
                     .getVisualMappingFunction(BasicVisualLexicon.NODE_FILL_COLOR);
             DiscreteMapping<String, Paint> to = (DiscreteMapping<String, Paint>)
-                    vmff.createVisualMappingFunction(PoleManager.NAMESPACE + "::" + PoleManager.EDGE_POLE_INFLUENCE,
+                    vmff.createVisualMappingFunction(PoleManager.NAMESPACE + "::" + columnName,
                             String.class, visualProperty);
             if (!(from instanceof DiscreteMapping))
                 return false;
@@ -329,8 +330,10 @@ public class ExtraTasks {
             if (net == null) return;
 
             CopyNodeStyleToEdge copying = new CopyNodeStyleToEdge(am, vmm, vmff);
-            boolean copySuccess = copying.copyPoleVisualMap(BasicVisualLexicon.EDGE_UNSELECTED_PAINT);
-            copying.copyPoleVisualMap(BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT);
+            String columnName = PoleManager.EDGE_TARGET_NODE_POLE;
+
+            boolean copySuccess = copying.copyPoleVisualMap(BasicVisualLexicon.EDGE_UNSELECTED_PAINT, columnName);
+            copying.copyPoleVisualMap(BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT, columnName);
 
             if (!copySuccess) {
                 throw new IllegalArgumentException("Incompatible visual styles, edges were left unchanged.");
