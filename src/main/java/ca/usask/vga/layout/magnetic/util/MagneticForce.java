@@ -68,8 +68,7 @@ public class MagneticForce extends AbstractForce {
             return;
 
         Vector field_direction;
-        // TODO: Different midpoint calculations
-        Vector midpoint = pos_n.add(pos_t).times(0.5f);
+        Vector midpoint = getCenter(pos_n, pos_t);
 
         if (!usePoles) {
             field_direction = field_type.getFieldAt(midpoint);
@@ -126,6 +125,11 @@ public class MagneticForce extends AbstractForce {
         return disp;
     }
 
+    protected Vector getCenter(Vector from, Vector to) {
+        // Midpoint (other center calculations can be added)
+        return from.add(to).times(0.5f);
+    }
+
     public float getEdgeMisalignment(Spring s) {
 
         ForceItem item1 = s.item1;
@@ -137,7 +141,7 @@ public class MagneticForce extends AbstractForce {
         Vector disp = pos_n.displacement(pos_t);
 
         Vector field_direction;
-        Vector midpoint = pos_n.add(pos_t).times(0.5f);
+        Vector midpoint = getCenter(pos_n, pos_t);
 
         if (!usePoles) {
             field_direction = field_type.getFieldAt(midpoint);
