@@ -4,10 +4,12 @@ import ca.usask.vga.layout.magnetic.highlight.ChangeHopDistanceAction;
 import ca.usask.vga.layout.magnetic.highlight.CopyHighlightedAction;
 import ca.usask.vga.layout.magnetic.highlight.EdgeHighlighting;
 import ca.usask.vga.layout.magnetic.highlight.ToggleHighlightAction;
+import ca.usask.vga.layout.magnetic.io.PajekReader;
 import ca.usask.vga.layout.magnetic.poles.*;
 import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.application.events.SetCurrentNetworkListener;
 import org.cytoscape.application.swing.CyAction;
+import org.cytoscape.io.util.StreamUtil;
 import org.cytoscape.model.CyNetworkFactory;
 import org.cytoscape.model.CyNetworkManager;
 import org.cytoscape.model.events.NetworkAddedListener;
@@ -130,6 +132,14 @@ public class CyActivator extends AbstractCyActivator {
 				getService(bc, VisualMappingFunctionFactory.class, "(mapping.type=discrete)"));
 		registerService(bc, ExtraTasks.getTaskFactory(makePoleNodesLarger),
 				TaskFactory.class, makePoleNodesLarger.getDefaultProperties());
+
+
+		// PAJEK .NET File format reading
+		PajekReader pajekReader = PajekReader.create(new PajekReader.CyAccess(getService(bc, CyNetworkFactory.class),
+				getService(bc, CyNetworkViewFactory.class)), getService(bc, StreamUtil.class));
+
+		registerService(bc, pajekReader, pajekReader.getServiceClass(), pajekReader.getDefaultProperties());
+
 	}
 }
 
