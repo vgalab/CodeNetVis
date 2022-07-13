@@ -1,5 +1,6 @@
 package ca.usask.vga.layout.magnetic;
 
+import ca.usask.vga.layout.magnetic.force.*;
 import ca.usask.vga.layout.magnetic.poles.PoleManager;
 import ca.usask.vga.layout.magnetic.util.*;
 import org.cytoscape.model.CyNode;
@@ -40,8 +41,10 @@ public class PoleMagneticLayoutTask extends ForceDirectedLayoutTask {
     protected void addSimulatorForces(ForceSimulator m_fsim, LayoutPartition part) {
 
         // REGISTERING FORCES
+
+        // Default prefuse layout forces
         m_fsim.addForce(new NBodyForce((float) -context.repulsionCoefficient, NBodyForce.DEFAULT_DISTANCE, NBodyForce.DEFAULT_THETA, monitor));  // Repulsion
-        m_fsim.addForce(new SpringForce());  // Attraction (ideal dist)
+        m_fsim.addForce(new SpringForce());  // Spring Attraction (ideal dist)
         m_fsim.addForce(new DragForce());  // Dampening
 
         PoleMagneticLayoutContext context = (PoleMagneticLayoutContext) this.context;
@@ -50,9 +53,11 @@ public class PoleMagneticLayoutTask extends ForceDirectedLayoutTask {
         if (context.magnetEnabled) {
             MagneticForce mf;
             if (context.useMagneticPoles) {
-                mf = new MagneticForce(poleClassifier, context.useMagneticPoles, (float) context.magneticFieldStrength,
+                // Using magnetic pole classification
+                mf = new MagneticForce(poleClassifier, (float) context.magneticFieldStrength,
                         (float) context.magneticAlpha,  (float) context.magneticBeta);
             } else {
+                // Simpler version without poles
                 mf = new MagneticForce(context.fieldType,  (float) context.magneticFieldStrength,
                         (float) context.magneticAlpha,  (float) context.magneticBeta);
             }
@@ -77,10 +82,10 @@ public class PoleMagneticLayoutTask extends ForceDirectedLayoutTask {
         if (context.useCentralGravity)
             m_fsim.addForce(new GravityForce(part.getAverageLocation(), (float) context.centralGravity));
 
-        if (context.hierarchyType != HierarchyForce.Type.NONE)
+        // Hierarchy force
+        if (context.useHierarchyForce)
             m_fsim.addForce(new HierarchyForce(poleClassifier, context.hierarchyType,
                     (float) context.hierarchyForce, HierarchyForce.getSuggestedRadius(part)));
-
 
     }
 

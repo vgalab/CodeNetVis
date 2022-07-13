@@ -1,5 +1,7 @@
-package ca.usask.vga.layout.magnetic.util;
+package ca.usask.vga.layout.magnetic.force;
 
+import ca.usask.vga.layout.magnetic.util.PoleClassifier;
+import ca.usask.vga.layout.magnetic.util.Vector;
 import org.cytoscape.model.CyEdge;
 import org.cytoscape.view.layout.LayoutPartition;
 import prefuse.util.force.AbstractForce;
