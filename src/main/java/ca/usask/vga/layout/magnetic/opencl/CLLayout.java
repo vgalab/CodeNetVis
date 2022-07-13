@@ -25,7 +25,6 @@ package ca.usask.vga.layout.magnetic.opencl;
  */
 
 
-import java.util.HashSet;
 import java.util.Set;
 
 import org.cytoscape.model.CyNode;
@@ -37,8 +36,8 @@ import org.cytoscape.work.undo.UndoSupport;
 
 public class CLLayout extends AbstractLayoutAlgorithm 
 {
-	private static final String ALGORITHM_ID = "force-directed-cl";
-	static final String ALGORITHM_DISPLAY_NAME = "Prefuse Force Directed OpenCL Layout";
+	private static final String ALGORITHM_ID = "magnetic-layout-opencl";
+	static final String ALGORITHM_DISPLAY_NAME = "Magnetic Layout - OpenCL";
 
 	public CLLayout(UndoSupport undo) 
 	{
@@ -57,20 +56,4 @@ public class CLLayout extends AbstractLayoutAlgorithm
 		return new CLLayoutContext();
 	}
 
-	@Override
-	public Set<Class<?>> getSupportedEdgeAttributeTypes() 
-	{
-		final Set<Class<?>> ret = new HashSet<Class<?>>();
-
-		ret.add(Integer.class);
-		ret.add(Double.class);
-
-		return ret;
-	}
-
-	@Override
-	public boolean getSupportsSelectedOnly() 
-	{
-		return true;
-	}
 }

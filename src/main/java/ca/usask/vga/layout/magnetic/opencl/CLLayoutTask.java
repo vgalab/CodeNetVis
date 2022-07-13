@@ -43,8 +43,9 @@ public class CLLayoutTask extends AbstractParallelPartitionLayoutTask
 
 		this.context = context;
 
-		edgeWeighter = context.edgeWeighter;
-		edgeWeighter.setWeightAttribute(layoutAttribute);
+		// Removed for simplicity
+		// edgeWeighter = context.edgeWeighter;
+		// edgeWeighter.setWeightAttribute(layoutAttribute);
 		
 		try
 		{

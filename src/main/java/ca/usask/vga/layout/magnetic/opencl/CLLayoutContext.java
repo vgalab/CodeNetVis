@@ -24,22 +24,25 @@ package ca.usask.vga.layout.magnetic.opencl;
  * #L%
  */
 
-import java.io.IOException;
-
-import org.cytoscape.view.layout.EdgeWeighter;
+import ca.usask.vga.layout.magnetic.PoleMagneticLayoutContext;
 import org.cytoscape.work.Tunable;
-import org.cytoscape.work.ContainsTunables;
-import org.cytoscape.work.TunableValidator;
 
-public class CLLayoutContext implements TunableValidator 
-{	
+public class CLLayoutContext extends PoleMagneticLayoutContext
+{
+	/* Removed for simplicity
 	@ContainsTunables
-	public EdgeWeighter edgeWeighter = new EdgeWeighter();
-	
-	@Tunable(description="Iterations")
-	public int numIterations = 100;
+	public EdgeWeighter edgeWeighter = new EdgeWeighter();*/
+
 	@Tunable(description="Edge-Repulsive Iterations")
 	public int numIterationsEdgeRepulsive = 0;
+
+	@Tunable(description="Start from scratch")
+	public boolean fromScratch = true;
+
+	/* Inherited from ForceDirectedLayoutContext
+
+	@Tunable(description="Iterations")
+	public int numIterations = 100;
 	@Tunable(description="Default Spring Coefficient")
 	public double defaultSpringCoefficient = 1e-4;
 	@Tunable(description="Default Spring Length")
@@ -48,15 +51,13 @@ public class CLLayoutContext implements TunableValidator
 	public double defaultNodeMass = 3.0;
 	@Tunable(description="Force deterministic layouts (slower)")
 	public boolean isDeterministic;
-	@Tunable(description="Start from scratch")
-	public boolean fromScratch = true;
 	@Tunable(description="Don't partition graph before layout", groups="Standard settings")
 	public boolean singlePartition;
 
 	@Override
-	public ValidationState getValidationState(final Appendable errMsg) 
+	public ValidationState getValidationState(final Appendable errMsg)
 	{
-		try 
+		try
 		{
 			if (!isPositive(numIterations))
 				errMsg.append("Number of iterations must be > 0; current value = " + numIterations);
@@ -66,20 +67,20 @@ public class CLLayoutContext implements TunableValidator
 				errMsg.append("Default spring length must be > 0; current value = " + defaultSpringLength);
 			if (!isPositive(defaultNodeMass))
 				errMsg.append("Default node mass must be > 0; current value = " + defaultNodeMass);
-		} 
+		}
 		catch (IOException e) {}
-		
+
 		return isPositive(numIterations) && isPositive(defaultSpringCoefficient) && isPositive(defaultSpringLength) && isPositive(defaultNodeMass)
 			   ? ValidationState.OK : ValidationState.INVALID;
 	}
 
-	private static boolean isPositive(final int n) 
+	private static boolean isPositive(final int n)
 	{
 		return n > 0;
 	}
 
-	private static boolean isPositive(final double n) 
+	private static boolean isPositive(final double n)
 	{
 		return n > 0.0;
-	}
+	}*/
 }

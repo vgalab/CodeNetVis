@@ -42,7 +42,7 @@ public class CyActivator extends AbstractCyActivator {
 		        forceDirectedCLLayoutProps.setProperty(PREFERRED_MENU, "Layout.Cytoscape Layouts");
 		        forceDirectedCLLayoutProps.setProperty("preferredTaskManager", "menu");
 		        forceDirectedCLLayoutProps.setProperty(TITLE, forceDirectedCLLayout.toString());
-		        forceDirectedCLLayoutProps.setProperty(MENU_GRAVITY, "10.5");
+		        forceDirectedCLLayoutProps.setProperty(MENU_GRAVITY, "10.53");
 				registerService(bc, forceDirectedCLLayout, CyLayoutAlgorithm.class, forceDirectedCLLayoutProps);
 			} catch (Exception e) {
 				e.printStackTrace();
