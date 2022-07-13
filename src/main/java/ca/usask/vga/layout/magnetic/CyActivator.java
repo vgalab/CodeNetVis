@@ -140,6 +140,8 @@ public class CyActivator extends AbstractCyActivator {
 
 		registerService(bc, pajekReader, pajekReader.getServiceClass(), pajekReader.getDefaultProperties());
 
+		// Activate OpenCL layout
+		new ca.usask.vga.layout.magnetic.opencl.CyActivator().start(bc);
 	}
 }
 
