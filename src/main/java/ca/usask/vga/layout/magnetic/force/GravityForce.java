@@ -1,5 +1,6 @@
-package ca.usask.vga.layout.magnetic.util;
+package ca.usask.vga.layout.magnetic.force;
 
+import ca.usask.vga.layout.magnetic.util.Vector;
 import org.cytoscape.view.layout.LayoutPoint;
 import prefuse.util.force.AbstractForce;
 import prefuse.util.force.ForceItem;

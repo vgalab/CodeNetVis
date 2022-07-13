@@ -1,10 +1,14 @@
 package ca.usask.vga.layout.magnetic;
 
-import ca.usask.vga.layout.magnetic.util.FieldType;
-import ca.usask.vga.layout.magnetic.util.HierarchyForce;
+import ca.usask.vga.layout.magnetic.force.FieldType;
+import ca.usask.vga.layout.magnetic.force.HierarchyForce;
 import org.cytoscape.work.Tunable;
 import org.cytoscape.work.util.ListSingleSelection;
 
+/**
+ * Contains all the input parameters and settings of the layout.
+ * Note that it also inherits parameters from {@link SimpleMagneticLayoutContext}
+ */
 public class PoleMagneticLayoutContext extends SimpleMagneticLayoutContext {
 
     protected final String POLE_GROUP = "Selected poles";
@@ -49,12 +53,15 @@ public class PoleMagneticLayoutContext extends SimpleMagneticLayoutContext {
 
 
     // Hierarchy
+    @Tunable(description="Enable hierarchy force", gravity=280.01, groups=HIERARCHY_GROUP, context="both", longDescription="TODO", exampleStringValue="true")
+    public boolean useHierarchyForce = true;
+
     protected final String HIERARCHY_GROUP = "Hierarchy";
     public HierarchyForce.Type hierarchyType = HierarchyForce.Type.NONE;
 
-    @Tunable(description="Choose hierarchy type", gravity=280.1, groups=HIERARCHY_GROUP, context="both", longDescription="TODO", exampleStringValue="true")
+    @Tunable(description="Choose hierarchy type", gravity=280.1, groups=HIERARCHY_GROUP, dependsOn="useHierarchyForce=true", context="both", longDescription="TODO", exampleStringValue="true")
     public ListSingleSelection<HierarchyForce.Type> getHierarchyType() {
-        ListSingleSelection<HierarchyForce.Type> t = new ListSingleSelection<>(HierarchyForce.Type.NONE, HierarchyForce.Type.BASED_ON_HOP_DISTANCE, HierarchyForce.Type.SINE_FUNCTION);
+        ListSingleSelection<HierarchyForce.Type> t = new ListSingleSelection<>(HierarchyForce.Type.BASED_ON_HOP_DISTANCE, HierarchyForce.Type.SINE_FUNCTION);
         t.setSelectedValue(this.hierarchyType);
         return t;
     }
@@ -62,7 +69,7 @@ public class PoleMagneticLayoutContext extends SimpleMagneticLayoutContext {
         this.hierarchyType = (HierarchyForce.Type) t.getSelectedValue();
     }
 
-    @Tunable(description="Hierarchy force strength", format="#.##E0", gravity=280.2, groups=HIERARCHY_GROUP, context="both", longDescription="TODO", exampleStringValue="1e-4")
+    @Tunable(description="Hierarchy force strength", format="#.##E0", gravity=280.2, groups=HIERARCHY_GROUP, dependsOn="useHierarchyForce=true", context="both", longDescription="TODO", exampleStringValue="1e-4")
     public double hierarchyForce = 1e-4;
 
 

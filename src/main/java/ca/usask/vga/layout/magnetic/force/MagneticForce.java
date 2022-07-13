@@ -1,10 +1,16 @@
-package ca.usask.vga.layout.magnetic.util;
+package ca.usask.vga.layout.magnetic.force;
 
+import ca.usask.vga.layout.magnetic.util.PoleClassifier;
+import ca.usask.vga.layout.magnetic.util.Vector;
 import prefuse.util.force.*;
 
 import static ca.usask.vga.layout.magnetic.util.Vector.powf;
 import static ca.usask.vga.layout.magnetic.util.Vector.sign;
 
+
+/**
+ * Class defining magnetic force calculations for the {@link ForceSimulator}.
+ */
 public class MagneticForce extends AbstractForce {
 
     float field_strength, alpha, beta;
@@ -14,6 +20,14 @@ public class MagneticForce extends AbstractForce {
     final PoleClassifier classifier;
     final boolean usePoles;
 
+    /**
+     * Constructor for the {@link MagneticForce} class.
+     * Uses a simplified version of the Magnetic Force calculation.
+     * @param field_type Magnetic field type to use
+     * @param field_strength Strength of the magnetic field
+     * @param alpha Exponent of the distance term
+     * @param beta Exponent of the angle term
+     */
     public MagneticForce(FieldType field_type, float field_strength, float alpha, float beta) {
         this.field_type = field_type;
         this.field_strength = field_strength;
@@ -23,13 +37,21 @@ public class MagneticForce extends AbstractForce {
         usePoles = false;
     }
 
-    public MagneticForce(PoleClassifier classifier, boolean usePoles, float field_strength, float alpha, float beta) {
+    /**
+     * Constructor for the {@link MagneticForce} class.
+     * Uses multiple poles to calculate the magnetic field.
+     * @param classifier Pole classifier to use
+     * @param field_strength Strength of the magnetic field
+     * @param alpha Exponent of the distance term
+     * @param beta Exponent of the angle term
+     */
+    public MagneticForce(PoleClassifier classifier, float field_strength, float alpha, float beta) {
         this.field_type = null;
         this.field_strength = field_strength;
         this.alpha = alpha;
         this.beta = beta;
-        this.usePoles = usePoles;
         this.classifier = classifier;
+        this.usePoles = true;
     }
 
     @Override
@@ -83,7 +105,7 @@ public class MagneticForce extends AbstractForce {
             return; // Cannot compute the angle when zero
 
         // CALCULATE FORCE
-        Vector force_on_n = magnetic_equation(field_direction, disp, field_strength, 1, alpha, beta);
+        Vector force_on_n = magnetic_equation(field_direction, disp, field_strength, alpha, beta);
 
         Vector force_on_t = force_on_n.times(-1);
 
@@ -93,19 +115,34 @@ public class MagneticForce extends AbstractForce {
         item2.force[1] += force_on_t.y;
     }
 
-    private Vector magnetic_equation(Vector m, Vector d, float b, float c, float alpha, float beta)
+    /**
+     * Calculates the force vector acting on the nodes due to the magnetic force.
+     * @param m Magnetic field vector
+     * @param d Vector direction of the edge
+     * @param b Strength of the magnetic field
+     * @param alpha Exponent of the distance term
+     * @param beta Exponent of the angle term
+     * @return Vector representing the force on the node
+     */
+    private Vector magnetic_equation(Vector m, Vector d, float b, float alpha, float beta)
     {
         float dist = (float) Math.sqrt(d.magnitude());
         Vector force_on_n;
         if (!bi_directional)
-            force_on_n = d.rotate90clockwise().times(-(b * c * powf(dist, alpha-1) *
+            force_on_n = d.rotate90clockwise().times(-(b * powf(dist, alpha-1) *
                     powf(m.angleCos(d), beta) * sign(m.cross(d))));
         else
-            force_on_n = d.rotate90clockwise().times(-(b * c * powf(dist, alpha-1) *
+            force_on_n = d.rotate90clockwise().times(-(b * powf(dist, alpha-1) *
                     powf(Math.abs(m.angleSin(d)), beta) * sign(m.cross(d) * m.dot(d))));
         return force_on_n;
     }
 
+    /**
+     * Calculates magnetic field direction towards the closest pole.
+     * @param pos Position of the center of the spring
+     * @param edge Edge that is to be evaluated
+     * @return Magnetic field direction
+     */
     public Vector getMultiPoleFieldFor(Vector pos, Spring edge) {
 
         if (classifier == null)
@@ -125,11 +162,22 @@ public class MagneticForce extends AbstractForce {
         return disp;
     }
 
+    /**
+     * Returns the center of the spring given the two nodes.
+     * @param from Position of the source node
+     * @param to Position of the target node
+     * @return Vector representing the center position of the edge
+     */
     protected Vector getCenter(Vector from, Vector to) {
         // Midpoint (other center calculations can be added)
         return from.add(to).times(0.5f);
     }
 
+    /**
+     * Utility function to calculate edge misalignment.
+     * @param s Spring to be evaluated
+     * @return Angle between the edge and the magnetic field
+     */
     public float getEdgeMisalignment(Spring s) {
 
         ForceItem item1 = s.item1;

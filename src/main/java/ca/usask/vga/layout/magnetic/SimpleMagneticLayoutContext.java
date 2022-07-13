@@ -1,9 +1,13 @@
 package ca.usask.vga.layout.magnetic;
 
-import ca.usask.vga.layout.magnetic.util.FieldType;
+import ca.usask.vga.layout.magnetic.force.FieldType;
 import org.cytoscape.work.Tunable;
 import org.cytoscape.work.util.ListSingleSelection;
 
+/**
+ * Contains all the input parameters and settings of the layout.
+ * Note that it also inherits parameters from {@link ForceDirectedLayoutContext}
+ */
 public class SimpleMagneticLayoutContext extends ForceDirectedLayoutContext {
 
     protected final String MAGNET_GROUP = "Magnetic force";

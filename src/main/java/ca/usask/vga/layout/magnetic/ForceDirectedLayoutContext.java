@@ -27,6 +27,10 @@ import org.cytoscape.work.TunableValidator;
 
 import java.io.IOException;
 
+/**
+ * Contains all the default input parameters and settings of the layout
+ * Some parameters were made commented out to simplify the UI.
+ */
 public class ForceDirectedLayoutContext implements TunableValidator {
 
 	protected final String PREFUSE_GROUP = "Prefuse layout";

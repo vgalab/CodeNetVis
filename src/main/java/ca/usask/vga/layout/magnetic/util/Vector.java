@@ -5,6 +5,9 @@ import static java.lang.Math.*;
 import org.cytoscape.view.layout.LayoutPoint;
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * Utility class for easier 2D vector calculations
+ */
 public class Vector {
 
     public final float x, y;
@@ -28,21 +31,21 @@ public class Vector {
 
     // Basic properties
 
-    float magnitude()
+    public float magnitude()
     {
         return (float) sqrt(x*x + y*y);
     }
 
-    Vector displacement(@NotNull Vector to) {
+    public Vector displacement(@NotNull Vector to) {
         return new Vector(to.x - x, to.y - y);
     }
 
-    float distance(@NotNull Vector to)
+    public float distance(@NotNull Vector to)
     {
         return displacement(to).magnitude();
     }
 
-    Vector normalized()
+    public Vector normalized()
     {
         // Prevents division by zero
         if (magnitude() == 0)
@@ -52,40 +55,40 @@ public class Vector {
 
     // Scalar operations
 
-    Vector times(float b)
+    public Vector times(float b)
     {
         return new Vector(this.x * b, this.y * b);
     }
 
-    Vector divide(float b)
+    public Vector divide(float b)
     {
         return new Vector(this.x / b, this.y / b);
     }
 
     // Vector operations
 
-    Vector add(@NotNull Vector b)
+    public Vector add(@NotNull Vector b)
     {
         return new Vector(this.x + b.x, this.y + b.y);
     }
 
 
-    Vector subtract(@NotNull Vector b)
+    public Vector subtract(@NotNull Vector b)
     {
         return new Vector(this.x - b.x, this.y - b.y);
     }
 
-    float dot(Vector b)
+    public float dot(Vector b)
     {
         return this.x * b.x + this.y * b.y;
     }
 
-    float cross(Vector b)
+    public float cross(Vector b)
     {
         return this.x * b.y - this.y * b.x;
     }
 
-    float angleCos(Vector b)
+    public float angleCos(Vector b)
     {
         if (this.magnitude() == 0 || b.magnitude() == 0)
             return 0;
@@ -94,7 +97,7 @@ public class Vector {
         return (float) acos(clamped_dot_product);
     }
 
-    float angleSin(Vector b)
+    public float angleSin(Vector b)
     {
         if (this.magnitude() == 0 || b.magnitude() == 0)
             return 0;
@@ -103,7 +106,7 @@ public class Vector {
         return (float) asin(clamped_cross_product);
     }
 
-    Vector rotate90clockwise()
+    public Vector rotate90clockwise()
     {
         //noinspection SuspiciousNameCombination
         return new Vector(this.y, -this.x);
@@ -111,11 +114,11 @@ public class Vector {
 
     // Number operations
 
-    static int sign(float x) {
+    public static int sign(float x) {
         return Float.compare(x, 0);
     }
 
-    static float powf(float x, float exp) {
+    public static float powf(float x, float exp) {
         if (exp == 0) return 1;
         if (exp == 1) return x;
         return (float) pow(x, exp);

@@ -1,7 +1,7 @@
 package ca.usask.vga.layout.magnetic;
 
 import ca.usask.vga.layout.magnetic.util.ErrorCalculator;
-import ca.usask.vga.layout.magnetic.util.MagneticForce;
+import ca.usask.vga.layout.magnetic.force.MagneticForce;
 import org.cytoscape.model.CyNode;
 import org.cytoscape.view.layout.LayoutPartition;
 import org.cytoscape.view.model.CyNetworkView;
@@ -29,14 +29,16 @@ public class SimpleMagneticLayoutTask extends ForceDirectedLayoutTask {
     protected void addSimulatorForces(ForceSimulator m_fsim, LayoutPartition part) {
 
         // REGISTERING FORCES
+
+        // Default prefuse layout forces
         m_fsim.addForce(new NBodyForce((float) -context.repulsionCoefficient, NBodyForce.DEFAULT_DISTANCE, NBodyForce.DEFAULT_THETA, monitor));  // Repulsion
         m_fsim.addForce(new SpringForce());  // Attraction (ideal dist)
         m_fsim.addForce(new DragForce());  // Dampening
 
         SimpleMagneticLayoutContext context = (SimpleMagneticLayoutContext) this.context;
 
+        // Magnetic force (simplified version)
         if (context.magnetEnabled) {
-            // Magnetic force
             MagneticForce mf = new MagneticForce(context.fieldType,  (float) context.magneticFieldStrength,
                     (float) context.magneticAlpha,  (float) context.magneticBeta);
             m_fsim.addForce(mf);

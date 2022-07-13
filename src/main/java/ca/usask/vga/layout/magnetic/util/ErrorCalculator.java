@@ -1,11 +1,15 @@
 package ca.usask.vga.layout.magnetic.util;
 
+import ca.usask.vga.layout.magnetic.force.MagneticForce;
 import org.cytoscape.work.TaskMonitor;
 import prefuse.util.force.ForceSimulator;
 import prefuse.util.force.Spring;
 
 import java.util.Iterator;
 
+/**
+ * Used to calculate alignment statistics and error for a {@link ForceSimulator} layout.
+ */
 public class ErrorCalculator {
 
     private final ForceSimulator m_fsim;
