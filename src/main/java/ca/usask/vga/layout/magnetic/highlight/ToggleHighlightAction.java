@@ -14,8 +14,8 @@ public class ToggleHighlightAction extends AbstractCyAction {
     public ToggleHighlightAction(EdgeHighlighting edgeHighlighting) {
         super("DirectedEdgeColor");
 
-        onIcon = new ImageIcon(getClass().getResource("/edge_highlighting_on_icon.png" ));
-        offIcon = new ImageIcon(getClass().getResource( "/edge_highlighting_off_icon.png"));
+        onIcon = new ImageIcon(getClass().getResource("/icons/edge_highlighting_on_icon.png"));
+        offIcon = new ImageIcon(getClass().getResource("/icons/edge_highlighting_off_icon.png"));
 
         this.edgeHighlighting = edgeHighlighting;
 
