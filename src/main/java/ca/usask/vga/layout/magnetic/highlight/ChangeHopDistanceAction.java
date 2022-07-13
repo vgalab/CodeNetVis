@@ -16,7 +16,7 @@ public class ChangeHopDistanceAction extends AbstractCyAction {
 
         this.edgeHighlighting = edgeHighlighting;
 
-        ImageIcon icon = new ImageIcon(getClass().getResource("/hop_distance1.png"));
+        ImageIcon icon = new ImageIcon(getClass().getResource("/icons/hop_distance1.png"));
         putValue(LARGE_ICON_KEY, icon);
 
         putValue(SHORT_DESCRIPTION, "Change the hop distance for the edge highlighting");
@@ -31,7 +31,7 @@ public class ChangeHopDistanceAction extends AbstractCyAction {
     public void actionPerformed(ActionEvent e) {
         counter = (counter % 4) + 1;
         edgeHighlighting.setDesiredHopDistance(counter);
-        ImageIcon icon = new ImageIcon(getClass().getResource("/hop_distance" + counter + ".png"));
+        ImageIcon icon = new ImageIcon(getClass().getResource("/icons/hop_distance" + counter + ".png"));
         putValue(LARGE_ICON_KEY, icon);
 
     }

@@ -14,7 +14,7 @@ public class CopyHighlightedAction extends AbstractCyAction {
 
         this.edgeHighlighting = edgeHighlighting;
 
-        ImageIcon icon = new ImageIcon(getClass().getResource("/copy_highlighted_graph.png"));
+        ImageIcon icon = new ImageIcon(getClass().getResource("/icons/copy_highlighted_graph.png"));
         putValue(LARGE_ICON_KEY, icon);
 
         putValue(SHORT_DESCRIPTION, "Make a new graph with the highlighted edges and nodes");

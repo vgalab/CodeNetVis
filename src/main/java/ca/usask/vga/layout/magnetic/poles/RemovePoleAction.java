@@ -16,7 +16,7 @@ public class RemovePoleAction  extends ActionOnSelected {
 
         this.poleManager = poleManager;
 
-        ImageIcon icon = new ImageIcon(getClass().getResource("/remove_pole_icon.png"));
+        ImageIcon icon = new ImageIcon(getClass().getResource("/icons/remove_pole_icon.png"));
         putValue(LARGE_ICON_KEY, icon);
 
         putValue(SHORT_DESCRIPTION, "Remove selected poles");
