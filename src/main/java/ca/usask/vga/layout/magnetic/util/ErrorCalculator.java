@@ -2,6 +2,7 @@ package ca.usask.vga.layout.magnetic.util;
 
 import ca.usask.vga.layout.magnetic.force.MagneticForce;
 import org.cytoscape.work.TaskMonitor;
+import prefuse.util.force.ForceItem;
 import prefuse.util.force.ForceSimulator;
 import prefuse.util.force.Spring;
 
@@ -15,7 +16,8 @@ public class ErrorCalculator {
     private final ForceSimulator m_fsim;
     private final MagneticForce magneticForce;
 
-    private int totalCount = -1;
+    private int _totalEdges = -1;
+    private int _totalNodes = -1;
 
     public ErrorCalculator(ForceSimulator m_fsim, MagneticForce magneticForce) {
         this.m_fsim = m_fsim;
@@ -23,14 +25,25 @@ public class ErrorCalculator {
     }
 
     public int totalEdges() {
-        if (totalCount >= 0) return totalCount;
-        totalCount = 0;
+        if (_totalEdges >= 0) return _totalEdges;
+        _totalEdges = 0;
         Iterator<Spring> springs = m_fsim.getSprings();
         while (springs.hasNext()) {
             springs.next();
-            totalCount++;
+            _totalEdges++;
         }
-        return totalCount;
+        return _totalEdges;
+    }
+
+    public int totalNodes() {
+        if (_totalNodes >= 0) return _totalNodes;
+        _totalNodes = 0;
+        Iterator<Spring> springs = m_fsim.getSprings();
+        while (springs.hasNext()) {
+            springs.next();
+            _totalNodes++;
+        }
+        return _totalNodes;
     }
 
     public int misalignedEdges(float threshold) {
@@ -48,7 +61,7 @@ public class ErrorCalculator {
         return 100f * misalignedEdges(threshold) / totalEdges();
     }
 
-    public float averageMisalignment() {
+    public float misalignmentMean() {
         float total = 0;
         Iterator<Spring> springs = m_fsim.getSprings();
         while (springs.hasNext()) {
@@ -58,9 +71,9 @@ public class ErrorCalculator {
         return total / totalEdges();
     }
 
-    public float standardDeviation() {
+    public float misalignmentSD() {
         float sd = 0;
-        float mean = averageMisalignment();
+        float mean = misalignmentMean();
         Iterator<Spring> springs = m_fsim.getSprings();
         while (springs.hasNext()) {
             float val = magneticForce.getEdgeMisalignment(springs.next());
@@ -73,17 +86,50 @@ public class ErrorCalculator {
         return (float) Math.toDegrees(radians);
     }
 
+    protected String formatFloat(float x) {
+        return String.format("%.2f", x);
+    }
+
+    protected String formatExp(float x) {
+        return String.format("%.1e", x);
+    }
+
+
     public void displayResults(TaskMonitor taskMonitor) {
-        float percent = percentOfMisaligned((float) Math.PI / 3);
-        float average = degrees(averageMisalignment());
-        float sd = degrees(standardDeviation());
-        percent = Math.round(percent * 100) / 100f;
-        average = Math.round(average * 100) / 100f;
-        sd = Math.round(sd * 100) / 100f;
+        float M_percent = percentOfMisaligned((float) Math.PI / 3);
+        float M_mean = degrees(misalignmentMean());
+        float M_sd = degrees(misalignmentSD());
+        float F_mean = degrees(forceMean());
+        float F_sd = degrees(forceSD());
         char deg = '\u00B0';
-        taskMonitor.showMessage(TaskMonitor.Level.INFO, "Total edges: " + totalEdges());
-        taskMonitor.showMessage(TaskMonitor.Level.INFO, "Misaligned edges (> 60"+deg+"): " + percent + "%");
-        taskMonitor.showMessage(TaskMonitor.Level.INFO, "Angle mean = " + average + deg + ", sd = " + sd + deg);
+        taskMonitor.showMessage(TaskMonitor.Level.INFO,
+                "Total edges: " + totalEdges());
+        taskMonitor.showMessage(TaskMonitor.Level.INFO,
+                "Misaligned edges (> 60"+deg+"): " + formatFloat(M_percent) + "%");
+        taskMonitor.showMessage(TaskMonitor.Level.INFO,
+                "Angle mean = " + formatFloat(M_mean) + deg + ", sd = " + formatFloat(M_sd) + deg);
+        taskMonitor.showMessage(TaskMonitor.Level.INFO,
+                "Force mean = " + formatFloat(F_mean) + ", sd = " + formatFloat(F_sd));
+    }
+
+    public float forceMean() {
+        float totalForce = 0;
+        Iterator<ForceItem> items = m_fsim.getItems();
+        while (items.hasNext()) {
+            totalForce += Vector.convert(items.next().force).magnitude();
+        }
+        return totalForce / totalNodes();
+    }
+
+    public float forceSD() {
+        float sd = 0;
+        float mean = forceMean();
+        Iterator<ForceItem> items = m_fsim.getItems();
+        while (items.hasNext()) {
+            float val = Vector.convert(items.next().force).magnitude();
+            sd += (val - mean) * (val - mean);
+        }
+        return (float) Math.sqrt(sd / totalNodes());
     }
 
 
