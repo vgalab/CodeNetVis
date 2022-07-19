@@ -4,6 +4,10 @@ import org.cytoscape.model.CyEdge;
 import prefuse.util.force.ForceItem;
 import prefuse.util.force.Spring;
 
+
+/**
+ * Functions used for force calculations to determine which pole a node is connected to.
+ */
 public interface PoleClassifier {
 
     Iterable<ForceItem> getPoleList();
