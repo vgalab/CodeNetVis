@@ -53,4 +53,9 @@ public class SimpleMagneticLayoutTask extends ForceDirectedLayoutTask {
         if (part.edgeCount() > 1 && errorCalc.get(part) != null)
             errorCalc.get(part).displayResults(taskMonitor);
     }
+
+    public ErrorCalculator getErrorCalculator(LayoutPartition part) {
+        return errorCalc.get(part);
+    }
+
 }
