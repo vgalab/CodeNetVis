@@ -93,7 +93,7 @@ public class PoleMagneticLayoutTask extends ForceDirectedLayoutTask {
         // Hierarchy force
         if (context.useHierarchyForce)
             m_fsim.addForce(new HierarchyForce(poleClassifier, context.hierarchyType,
-                    (float) context.hierarchyForce, HierarchyForce.getSuggestedRadius(part)));
+                    (float) context.hierarchyForce, (float) context.ringRadius));
 
     }
 
