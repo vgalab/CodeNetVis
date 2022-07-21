@@ -1,11 +1,13 @@
 package ca.usask.vga.layout.magnetic;
 
+import ca.usask.vga.layout.magnetic.poles.PoleManager;
 import org.cytoscape.view.layout.*;
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
 import prefuse.util.force.ForceItem;
 import prefuse.util.force.ForceSimulator;
 import prefuse.util.force.Spring;
+import prefuse.util.force.StateMonitor;
 
 import java.util.*;
 
@@ -15,10 +17,12 @@ public class AutoLayout extends AbstractTask {
 
     private final PoleMagneticLayoutTask layout;
     private final LayoutPartition part;
+    private final StateMonitor monitor;
 
-    public AutoLayout(PoleMagneticLayoutTask layout, LayoutPartition part) {
+    public AutoLayout(PoleMagneticLayoutTask layout, LayoutPartition part, StateMonitor monitor) {
         this.layout = layout;
         this.part = part;
+        this.monitor = monitor;
     }
 
     public PoleMagneticLayoutContext getContext() {
@@ -44,6 +48,8 @@ public class AutoLayout extends AbstractTask {
 
         for (int[] combination : combinations) {
 
+            if (monitor.isCancelled()) return;
+
             taskMonitor.setProgress((float) progress / totalCombinations);
             progress++;
 
@@ -58,9 +64,13 @@ public class AutoLayout extends AbstractTask {
 
         }
 
+        // TODO: Reduce excessive messages
         taskMonitor.showMessage(TaskMonitor.Level.INFO, "Chosen combination: " + Arrays.toString(bestComb) + " Score: " + maxScore);
-        taskMonitor.showMessage(TaskMonitor.Level.INFO, auto.combinationToString(bestComb));
+
         taskMonitor.showMessage(TaskMonitor.Level.INFO, new AutoLayoutQuality(getContext()).qualityToString(layout.getErrorCalculator(part)));
+        taskMonitor.showMessage(TaskMonitor.Level.INFO, auto.combinationToString(bestComb));
+
+        taskMonitor.showMessage(TaskMonitor.Level.INFO, "Applying found parameters...");
 
         auto.setAll(bestComb);
     }
@@ -108,6 +118,16 @@ public class AutoLayout extends AbstractTask {
             layout.mapForceItem(ln, fitem);
         }
 
+        // Sample the graph if larger than 500
+        if (nodeList.size() > 500)
+            for (LayoutNode ln : nodeList) {
+                ForceItem fitem = forceItems.get(ln);
+                if (fitem != null && Math.random() > 500f / nodeList.size() && !layout.poleClassifier.isPole(fitem)) {
+                    m_fsim.removeItem(fitem);
+                    forceItems.remove(ln);
+                }
+            }
+
         // initialize edges
         for (LayoutEdge e : edgeList) {
 
@@ -128,6 +148,8 @@ public class AutoLayout extends AbstractTask {
         long timestep = 1000L;
 
         for (int i = 0; i < iterations; i++) {
+
+            if (monitor.isCancelled()) return m_fsim;
 
             timestep *= (1.0 - i / (double) iterations);
             long step = timestep + 50;

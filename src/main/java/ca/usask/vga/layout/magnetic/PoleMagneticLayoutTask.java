@@ -101,7 +101,7 @@ public class PoleMagneticLayoutTask extends ForceDirectedLayoutTask {
     public void layoutPartition(LayoutPartition part) {
         PoleMagneticLayoutContext context = (PoleMagneticLayoutContext) this.context;
         if (context.useAutoLayout)
-            new AutoLayout(this, part).run(taskMonitor);
+            new AutoLayout(this, part, monitor).run(taskMonitor);
 
         super.layoutPartition(part);
         if (part.edgeCount() > 1 && errorCalc.get(part) != null)
