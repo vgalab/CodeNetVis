@@ -18,7 +18,7 @@ public class AutoLayoutVariables {
         List<IndependentVar> vars = new ArrayList<>();
 
         vars.add(new RepulsionCoefficient());
-        vars.add(new SpringLength());
+        vars.add(new SpringCoefficient());
 
         if (context instanceof SimpleMagneticLayoutContext) {
             var cxt = (SimpleMagneticLayoutContext) context;
@@ -56,6 +56,18 @@ public class AutoLayoutVariables {
             product *= v.suggestedCount();
         }
         return product;
+    }
+
+    public String combinationToString(int[] combination) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < variables.size(); i++) {
+            var parameter = variables.get(i);
+            float value = parameter.getSuggested(combination[i]);
+            String name = parameter.getClass().getSimpleName();
+            sb.append(name).append(": ").append(value);
+            if (i < variables.size() - 1) sb.append(", \n");
+        }
+        return sb.toString();
     }
 
     protected ForceDirectedLayoutContext getPrefuseContext() {
@@ -113,6 +125,21 @@ public class AutoLayoutVariables {
 
         public void set(float val) {
             getPrefuseContext().defaultSpringLength = val;
+        }
+    }
+
+    public class SpringCoefficient extends IndependentVar {
+
+        protected SpringCoefficient() {
+            super(new float[] {1e-4f, 1e-5f, 1e-3f});
+        }
+
+        public float get() {
+            return (float) getPrefuseContext().defaultSpringCoefficient;
+        }
+
+        public void set(float val) {
+            getPrefuseContext().defaultSpringCoefficient = val;
         }
     }
 

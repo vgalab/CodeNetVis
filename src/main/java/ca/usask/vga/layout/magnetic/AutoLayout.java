@@ -59,6 +59,9 @@ public class AutoLayout extends AbstractTask {
         }
 
         taskMonitor.showMessage(TaskMonitor.Level.INFO, "Chosen combination: " + Arrays.toString(bestComb) + " Score: " + maxScore);
+        taskMonitor.showMessage(TaskMonitor.Level.INFO, auto.combinationToString(bestComb));
+        taskMonitor.showMessage(TaskMonitor.Level.INFO, new AutoLayoutQuality(getContext()).qualityToString(layout.getErrorCalculator(part)));
+
         auto.setAll(bestComb);
     }
 
@@ -121,7 +124,6 @@ public class AutoLayout extends AbstractTask {
         }
 
         // perform layout
-        // TODO: Match full time steps
 
         long timestep = 1000L;
 
@@ -132,6 +134,33 @@ public class AutoLayout extends AbstractTask {
             m_fsim.runSimulator(step);
 
         }
+
+        // Matching full time steps (mixed results)
+        /* long timestep = 1000L;
+        long cumulative_step = 0;
+        int j = 1;
+        System.out.println("LOOP");
+
+        for (int i = 0; i < getContext().numIterations; i++) {
+
+            timestep *= (1.0 - i / (double) getContext().numIterations);
+            long step = timestep + 50;
+            cumulative_step += step;
+            //System.out.println("step " + i + "  " + j / iterations + "  vs  " + i / getContext().numIterations);
+
+            if ((float) j / iterations <  (float) i / getContext().numIterations) {
+                System.out.println("Big step " + j + " " + cumulative_step);
+                j++;
+                m_fsim.runSimulator(cumulative_step);
+                cumulative_step = 0;
+            }
+
+        }
+
+        if (cumulative_step > 0) {
+            System.out.println("Big step " + j + " " + cumulative_step);
+            m_fsim.runSimulator(cumulative_step);
+        }*/
 
         return m_fsim;
     }

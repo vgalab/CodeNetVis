@@ -42,6 +42,18 @@ public class AutoLayoutQuality {
         return score;
     }
 
+    public String qualityToString(ErrorCalculator errorCalculator) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < measures.size(); i++) {
+            QualityMeasure measure = measures.get(i);
+            String name = measure.getClass().getSimpleName();
+            boolean satisfied = measure.isSatisfied(errorCalculator);
+            sb.append(name).append(": ").append(satisfied);
+            if (i < measures.size() - 1) sb.append(", \n");
+        }
+        return sb.toString();
+    }
+
     protected static class EdgeAlignment extends QualityMeasure {
         boolean isSatisfied(ErrorCalculator ec) {
             return ec.degrees(ec.misalignmentMean()) < 45;
@@ -56,17 +68,17 @@ public class AutoLayoutQuality {
             return ec.forceMean() < 1e-1;
         }
         float getPriority() {
-            return 0.1f;
+            return 0.001f;
         }
     }
 
     protected static class NodeDensity extends QualityMeasure {
         boolean isSatisfied(ErrorCalculator ec) {
             float density = ec.density();
-            return density < 9e-5f && density > 8e-6f;
+            return density < 5e-5f && density > 8e-6f;
         }
         float getPriority() {
-            return 0.001f;
+            return 0.1f;
         }
     }
 
@@ -81,7 +93,7 @@ public class AutoLayoutQuality {
 
     protected static class NodeLocationSD extends QualityMeasure {
         boolean isSatisfied(ErrorCalculator ec) {
-            return ec.sdXY() >= ec.uniformSD(0, 1)*0.8;
+            return ec.sdXY() >= ec.uniformSD(0, 1)*0.7;
         }
         float getPriority() {
             return 0.01f;
