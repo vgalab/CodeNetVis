@@ -32,8 +32,12 @@ public class RemovePoleAction  extends ActionOnSelected {
     public void actionPerformed(ActionEvent e) {
         if (isSelectionActive()) {
             CyNetwork network = getNetwork();
+            poleManager.beginEdit(getClass().getSimpleName(), network);
+
             poleManager.removePole(network, getSelectedNodes());
             poleManager.updateTables(network);
+
+            poleManager.completeEdit();
         }
     }
 

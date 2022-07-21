@@ -32,9 +32,13 @@ public class AddNorthPoleAction  extends ActionOnSelected {
     public void actionPerformed(ActionEvent e) {
         if (isSelectionActive()) {
             CyNetwork network = getNetwork();
+            poleManager.beginEdit(getClass().getSimpleName(), network);
+
             poleManager.addPole(network, getSelectedNodes());
             poleManager.setPoleDirection(network, getSelectedNodes(), true);
             poleManager.updateTables(network);
+
+            poleManager.completeEdit();
         }
     }
 

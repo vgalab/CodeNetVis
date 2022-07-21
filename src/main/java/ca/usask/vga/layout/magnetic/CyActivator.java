@@ -76,7 +76,7 @@ public class CyActivator extends AbstractCyActivator {
 		registerService(bc,simpleMagneticLayout,CyLayoutAlgorithm.class, sLayoutProps);
 
 		// Magnetic Poles
-		PoleManager poleManager = new PoleManager(getService(bc, CyNetworkManager.class));
+		PoleManager poleManager = new PoleManager(getService(bc, CyNetworkManager.class), undo);
 		registerService(bc, poleManager, PoleManager.class);
 		registerService(bc, poleManager, NetworkAddedListener.class);
 		registerService(bc, poleManager, SetCurrentNetworkListener.class);

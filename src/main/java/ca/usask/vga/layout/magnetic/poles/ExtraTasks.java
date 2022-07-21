@@ -135,10 +135,12 @@ public class ExtraTasks {
 
             if (currentNet != null) {
                 List<CyNode> topNodes = getTopNodes(currentNet, topN, edgeType);
+                pm.beginEdit(TASK_DESCRIPTION, currentNet);
                 pm.removeAllPoles(currentNet);
                 pm.addPole(currentNet, topNodes);
                 pm.setPoleDirection(currentNet, topNodes, edgeType == CyEdge.Type.OUTGOING);
                 pm.updateTables(currentNet);
+                pm.completeEdit();
                 taskMonitor.showMessage(TaskMonitor.Level.INFO, "Successfully selected " + topNodes.size() + " poles");
                 taskMonitor.showMessage(TaskMonitor.Level.INFO, pm.getPoleNameList(currentNet).toString());
             } else {
