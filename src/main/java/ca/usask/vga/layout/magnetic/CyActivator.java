@@ -123,13 +123,13 @@ public class CyActivator extends AbstractCyActivator {
 
 		ExtraTasks.CopyNodeStyleToEdge copyNodeStyleToEdge = new ExtraTasks.CopyNodeStyleToEdge(am,
 				getService(bc, VisualMappingManager.class),
-				getService(bc, VisualMappingFunctionFactory.class, "(mapping.type=discrete)"));
+				getService(bc, VisualMappingFunctionFactory.class, "(mapping.type=discrete)"), undo);
 		registerService(bc, ExtraTasks.getTaskFactory(copyNodeStyleToEdge),
 				TaskFactory.class, copyNodeStyleToEdge.getDefaultProperties());
 
 		ExtraTasks.MakePoleNodesLarger makePoleNodesLarger = new ExtraTasks.MakePoleNodesLarger(am,
 				getService(bc, VisualMappingManager.class),
-				getService(bc, VisualMappingFunctionFactory.class, "(mapping.type=discrete)"));
+				getService(bc, VisualMappingFunctionFactory.class, "(mapping.type=discrete)"), undo);
 		registerService(bc, ExtraTasks.getTaskFactory(makePoleNodesLarger),
 				TaskFactory.class, makePoleNodesLarger.getDefaultProperties());
 

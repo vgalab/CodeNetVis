@@ -10,9 +10,11 @@ public class AddSouthPoleAction extends ActionOnSelected {
 
     private final PoleManager poleManager;
 
+    private static final String TASK_DESCRIPTION = "Add new inward poles";
+
     public AddSouthPoleAction(PoleManager poleManager) {
 
-        super("AddSouthPoleAction");
+        super(TASK_DESCRIPTION);
 
         this.poleManager = poleManager;
 
@@ -31,7 +33,7 @@ public class AddSouthPoleAction extends ActionOnSelected {
     public void actionPerformed(ActionEvent e) {
         if (isSelectionActive()) {
             CyNetwork network = getNetwork();
-            poleManager.beginEdit(getClass().getSimpleName(), network);
+            poleManager.beginEdit(TASK_DESCRIPTION, network);
 
             poleManager.addPole(network, getSelectedNodes());
             poleManager.setPoleDirection(network, getSelectedNodes(), false);

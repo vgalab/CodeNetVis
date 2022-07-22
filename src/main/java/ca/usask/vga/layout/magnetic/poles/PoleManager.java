@@ -14,7 +14,7 @@ import java.util.*;
 
 public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListener, SessionAboutToBeLoadedListener {
 
-    private final UndoSupport undoSupport;
+    protected final UndoSupport undoSupport;
 
     protected Map<CyNetwork, List<CyNode>> poleList;
     protected Set<CyNode> poleIsOutwards;
