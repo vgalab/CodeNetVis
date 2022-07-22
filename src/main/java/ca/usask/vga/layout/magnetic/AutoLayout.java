@@ -10,6 +10,13 @@ import prefuse.util.force.StateMonitor;
 
 import java.util.*;
 
+
+/**
+ * AutoLayout attempts to find good parameters for the force simulator by running multiple trials
+ * on a subset of the network.
+ * @see AutoLayoutQuality
+ * @see AutoLayoutVariables
+ */
 public class AutoLayout extends AbstractTask {
 
     public final static int TRIAL_ITERATIONS = 5;

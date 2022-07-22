@@ -17,6 +17,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+
+/**
+ * This class extends the force directed layout functionality to add the following new forces:
+ * {@link MagneticForce}, {@link GravityForce}, {@link PinForce}, {@link PoleGravityForce}, {@link HierarchyForce}.
+ * The context is used to toggle the forces on and off.
+ */
 public class PoleMagneticLayoutTask extends ForceDirectedLayoutTask {
 
     private final PoleManager poleManager;

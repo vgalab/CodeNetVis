@@ -16,6 +16,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+
+/**
+ * This class extends force directed layout functionality to add a simple magnetic force.
+ */
 public class SimpleMagneticLayoutTask extends ForceDirectedLayoutTask {
 
     private Map<LayoutPartition, ErrorCalculator> errorCalc;

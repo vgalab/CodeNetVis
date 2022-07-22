@@ -35,6 +35,7 @@ import java.util.*;
 
 /**
  * This class wraps the Prefuse force-directed layout algorithm.
+ * This is the original Cytoscape implementation of the force-directed layout.
  * 
  * @see <a href="http://prefuse.org">Prefuse web site</a>
  */

@@ -2,6 +2,7 @@ package ca.usask.vga.layout.magnetic.util;
 
 import ca.usask.vga.layout.magnetic.force.MagneticForce;
 import org.cytoscape.work.TaskMonitor;
+import org.jetbrains.annotations.Nullable;
 import prefuse.util.force.ForceItem;
 import prefuse.util.force.ForceSimulator;
 import prefuse.util.force.Spring;
@@ -13,6 +14,7 @@ import java.util.function.Function;
 
 /**
  * Used to calculate alignment statistics and error for a {@link ForceSimulator} layout.
+ * Optionally needs the {@link MagneticForce} to calculate directed edge misalignment.
  */
 public class ErrorCalculator {
 
@@ -25,7 +27,7 @@ public class ErrorCalculator {
     private Statistics<ForceItem> nodeStat;
     private Statistics<Spring> edgeStat;
 
-    public ErrorCalculator(ForceSimulator m_fsim, MagneticForce magneticForce) {
+    public ErrorCalculator(ForceSimulator m_fsim, @Nullable MagneticForce magneticForce) {
         this.m_fsim = m_fsim;
         this.magneticForce = magneticForce;
         nodeStat = new Statistics<>(4);

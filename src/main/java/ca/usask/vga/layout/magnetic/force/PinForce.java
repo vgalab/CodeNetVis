@@ -12,6 +12,11 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+/**
+ * Pin force keeps nodes at their initial positions.
+ * Optionally it would arrange pinned nodes in a circle around the center of the layout.
+ * Pinned nodes are either poles provided by the {@link PoleClassifier} or a list of nodes.
+ */
 public class PinForce extends AbstractForce {
 
     private final PoleClassifier classifier;

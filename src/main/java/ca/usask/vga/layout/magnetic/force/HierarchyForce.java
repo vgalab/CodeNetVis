@@ -7,6 +7,10 @@ import org.jetbrains.annotations.NotNull;
 import prefuse.util.force.AbstractForce;
 import prefuse.util.force.ForceItem;
 
+/**
+ * Hierarchy force that arranges nodes in rings around the poles.
+ * There are two types of hierarchy: BASED_ON_HOP_DISTANCE and SINE_FUNCTION.
+ */
 public class HierarchyForce extends AbstractForce {
 
     public enum Type {
