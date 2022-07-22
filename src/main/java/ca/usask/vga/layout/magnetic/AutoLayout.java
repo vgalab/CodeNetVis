@@ -1,6 +1,5 @@
 package ca.usask.vga.layout.magnetic;
 
-import ca.usask.vga.layout.magnetic.poles.PoleManager;
 import org.cytoscape.view.layout.*;
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
@@ -35,12 +34,13 @@ public class AutoLayout extends AbstractTask {
         // TODO: Consider multiple threads/executions
         taskMonitor.showMessage(TaskMonitor.Level.INFO, "Finding parameters...");
 
+        AutoLayoutQuality quality = new AutoLayoutQuality(getContext());
         AutoLayoutVariables auto = new AutoLayoutVariables(getContext());
         Iterable<int[]> combinations = auto.getAllCombinations();
 
         int[] bestComb = new int[auto.getVarCount()];
         auto.setAll(bestComb);
-        float maxScore = runTrial();
+        float maxScore = runTrial(quality);
 
         float newScore;
 
@@ -54,7 +54,7 @@ public class AutoLayout extends AbstractTask {
             progress++;
 
             auto.setAll(combination);
-            newScore = runTrial();
+            newScore = runTrial(quality);
             //taskMonitor.showMessage(TaskMonitor.Level.INFO, "Comb: " + Arrays.toString(combination) + " Score: " + newScore);
 
             if (newScore > maxScore) {
@@ -67,7 +67,7 @@ public class AutoLayout extends AbstractTask {
         // TODO: Reduce excessive messages
         taskMonitor.showMessage(TaskMonitor.Level.INFO, "Chosen combination: " + Arrays.toString(bestComb) + " Score: " + maxScore);
 
-        taskMonitor.showMessage(TaskMonitor.Level.INFO, new AutoLayoutQuality(getContext()).qualityToString(layout.getErrorCalculator(part)));
+        taskMonitor.showMessage(TaskMonitor.Level.INFO, quality.qualityToString(layout.getErrorCalculator(part)));
         taskMonitor.showMessage(TaskMonitor.Level.INFO, auto.combinationToString(bestComb));
 
         taskMonitor.showMessage(TaskMonitor.Level.INFO, "Applying found parameters...");
@@ -75,9 +75,9 @@ public class AutoLayout extends AbstractTask {
         auto.setAll(bestComb);
     }
 
-    public float runTrial() {
+    public float runTrial(AutoLayoutQuality quality) {
         runNewSimulation(TRIAL_ITERATIONS);
-        return new AutoLayoutQuality(getContext()).calculateScore(layout.getErrorCalculator(part));
+        return quality.calculateScore(layout.getErrorCalculator(part));
     }
 
     protected ForceSimulator runNewSimulation(int iterations) {

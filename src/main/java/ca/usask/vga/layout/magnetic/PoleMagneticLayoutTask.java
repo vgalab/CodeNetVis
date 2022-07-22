@@ -104,8 +104,11 @@ public class PoleMagneticLayoutTask extends ForceDirectedLayoutTask {
             new AutoLayout(this, part, monitor).run(taskMonitor);
 
         super.layoutPartition(part);
-        if (part.edgeCount() > 1 && errorCalc.get(part) != null)
-            errorCalc.get(part).displayResults(taskMonitor);
+        if (part.edgeCount() > 1 && errorCalc.get(part) != null) {
+            var calc = errorCalc.get(part);
+            calc.recalculate();
+            calc.displayResults(taskMonitor);
+        }
     }
 
     public ErrorCalculator getErrorCalculator(LayoutPartition part) {

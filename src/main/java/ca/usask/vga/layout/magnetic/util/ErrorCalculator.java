@@ -2,9 +2,13 @@ package ca.usask.vga.layout.magnetic.util;
 
 import ca.usask.vga.layout.magnetic.force.MagneticForce;
 import org.cytoscape.work.TaskMonitor;
+import prefuse.util.force.ForceItem;
 import prefuse.util.force.ForceSimulator;
+import prefuse.util.force.Spring;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.function.Function;
 
 /**
@@ -15,17 +19,60 @@ public class ErrorCalculator {
     private final ForceSimulator m_fsim;
     private final MagneticForce magneticForce;
 
+    private static final int NODE_X = 0, NODE_Y = 1, NODE_FORCE = 2, NODE_VELOCITY = 3;
+    private static final int EDGE_MISALIGNMENT = 0;
+
+    private Statistics<ForceItem> nodeStat;
+    private Statistics<Spring> edgeStat;
+
     public ErrorCalculator(ForceSimulator m_fsim, MagneticForce magneticForce) {
         this.m_fsim = m_fsim;
         this.magneticForce = magneticForce;
+        nodeStat = new Statistics<>(4);
+        edgeStat = new Statistics<>(1);
+    }
+
+    protected static class Statistics<T> {
+        public Statistics(int count, float[] min, float[] max, float[] mean, float[] deviation) {
+            this.count = count;
+            this.min = min;
+            this.max = max;
+            this.mean = mean;
+            this.deviation = deviation;
+        }
+        public Statistics(int measure_total) {
+            this.count = 0;
+            min = new float[measure_total];
+            max = new float[measure_total];
+            mean = new float[measure_total];
+            deviation = new float[measure_total];
+        }
+        int count;
+        float[] min, max, mean, deviation;
+    }
+
+    public void recalculate() {
+        List<Function<ForceItem, Float>> nodeFunc = new ArrayList<>();
+        nodeFunc.add(item -> item.location[0]);
+        nodeFunc.add(item -> item.location[1]);
+        nodeFunc.add(item -> Vector.convert(item.force).magnitude());
+        nodeFunc.add(item -> Vector.convert(item.velocity).magnitude());
+        nodeStat = calculateStatistics(m_fsim.getItems(), nodeFunc);
+
+        List<Function<Spring, Float>> edgeFunc = new ArrayList<>();
+        if (magneticForce != null)
+            edgeFunc.add(magneticForce::getEdgeMisalignment);
+        else
+            edgeFunc.add(s -> 0f);
+        edgeStat = calculateStatistics(m_fsim.getSprings(), edgeFunc);
     }
 
     public long totalEdges() {
-        return count(m_fsim.getSprings());
+        return edgeStat.count;
     }
 
     public long totalNodes() {
-        return count(m_fsim.getItems());
+        return nodeStat.count;
     }
 
     public long misalignedEdges(float threshold) {
@@ -38,29 +85,27 @@ public class ErrorCalculator {
     }
 
     public float misalignmentMean() {
-        if (magneticForce == null) return 0;
-        return mean(m_fsim.getSprings(), magneticForce::getEdgeMisalignment);
+        return edgeStat.mean[EDGE_MISALIGNMENT];
     }
 
     public float misalignmentSD() {
-        if (magneticForce == null) return 0;
-        return sd(m_fsim.getSprings(), magneticForce::getEdgeMisalignment, misalignmentMean());
+        return edgeStat.deviation[EDGE_MISALIGNMENT];
     }
 
     public float forceMean() {
-        return mean(m_fsim.getItems(), (item) -> Vector.convert(item.force).magnitude());
+        return nodeStat.mean[NODE_FORCE];
     }
 
     public float forceSD() {
-        return sd(m_fsim.getItems(), (item) -> Vector.convert(item.force).magnitude(), forceMean());
+        return nodeStat.deviation[NODE_FORCE];
     }
 
     public float velocityMean() {
-        return mean(m_fsim.getItems(), (item) -> Vector.convert(item.velocity).magnitude());
+        return nodeStat.mean[NODE_VELOCITY];
     }
 
     public float velocitySD() {
-        return sd(m_fsim.getItems(), (item) -> Vector.convert(item.velocity).magnitude(), velocityMean());
+        return nodeStat.deviation[NODE_VELOCITY];
     }
 
     public float degrees(float radians) {
@@ -108,30 +153,30 @@ public class ErrorCalculator {
     }
 
     public float minX() {
-        return min(m_fsim.getItems(), item -> item.location[0]);
+        return nodeStat.min[NODE_X];
     }
     public float minY() {
-        return min(m_fsim.getItems(), item -> item.location[1]);
+        return nodeStat.min[NODE_Y];
     }
     public float maxX() {
-        return max(m_fsim.getItems(), item -> item.location[0]);
+        return nodeStat.max[NODE_X];
     }
     public float maxY() {
-        return max(m_fsim.getItems(), item -> item.location[1]);
+        return nodeStat.max[NODE_Y];
     }
 
     public float meanX() {
-        return mean(m_fsim.getItems(), item -> item.location[0]);
+        return nodeStat.mean[NODE_X];
     }
     public float meanY() {
-        return mean(m_fsim.getItems(), item -> item.location[1]);
+        return nodeStat.mean[NODE_Y];
     }
 
     public float sdX() {
-        return sd(m_fsim.getItems(), item -> item.location[0], meanX());
+        return nodeStat.deviation[NODE_X];
     }
     public float sdY() {
-        return sd(m_fsim.getItems(), item -> item.location[1], meanY());
+        return nodeStat.deviation[NODE_Y];
     }
 
     public float sdXY() {
@@ -175,6 +220,36 @@ public class ErrorCalculator {
         return current < desired ? desired / current : current / desired; //-1
         // TODO: Check implementation
         //return (1 / (current * desired)) *  (current - desired) * (current - desired);
+    }
+
+    public <T> Statistics<T> calculateStatistics(Iterator<T> iterator, List<Function<T, Float>> measures) {
+        int measures_length = measures.size();
+        int count = 0;
+        float[] total = new float[measures_length];
+        float[] total_squared = new float[measures_length];
+        float[] min = new float[measures_length], max = new float[measures_length];
+        while (iterator.hasNext()) {
+            T t = iterator.next();
+            count++;
+            for (int i = 0; i < measures_length; i++) {
+                float val = measures.get(i).apply(t);
+                total[i] += val;
+                total_squared[i] += val*val;
+                min[i] = Math.min(min[i], val);
+                max[i] = Math.max(max[i], val);
+                if (count == 1) {
+                    min[i] = val;
+                    max[i] = val;
+                }
+            }
+        }
+        float[] mean = new float[measures_length];
+        float[] deviation = new float[measures_length];
+        for (int i = 0; i < measures_length; i++) {
+            mean[i] = total[i] / count;
+            deviation[i] = (float) Math.sqrt(total_squared[i] / count - mean[i] * mean[i]);
+        }
+        return new Statistics<>(count, min, max, mean, deviation);
     }
 
     public <T> long count(Iterator<T> iterator) {

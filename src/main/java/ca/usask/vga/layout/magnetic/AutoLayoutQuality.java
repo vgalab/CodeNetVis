@@ -34,6 +34,7 @@ public class AutoLayoutQuality {
     }
 
     public float calculateScore(ErrorCalculator errorCalculator) {
+        errorCalculator.recalculate();
         float score = 0;
         for (QualityMeasure measure : measures) {
             if (measure.isSatisfied(errorCalculator))
