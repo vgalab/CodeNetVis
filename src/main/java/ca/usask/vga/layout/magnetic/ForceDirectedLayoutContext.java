@@ -60,6 +60,9 @@ public class ForceDirectedLayoutContext implements TunableValidator {
 	@Tunable(description="Number of Iterations:", gravity=800.9, context="both", longDescription="Number of Iterations, in numeric value", exampleStringValue="100")
 	public int numIterations = 100;
 
+	@Tunable(description="ANIMATE", gravity=900.02, context="both", longDescription="TODO", exampleStringValue="true")
+	public boolean useAnimation = false;
+
 	@Override
 	public ValidationState getValidationState(final Appendable errMsg) {
 		try {

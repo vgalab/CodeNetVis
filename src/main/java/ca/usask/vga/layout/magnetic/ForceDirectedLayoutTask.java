@@ -42,6 +42,8 @@ import java.util.*;
 public abstract class ForceDirectedLayoutTask extends AbstractPartitionLayoutTask {
 	// TODO: Allow for parallel computation
 
+	protected static final int ANIMATION_FRAME_PERIOD = 10;
+
 	// private ForceSimulator m_fsim;
 	protected ForceDirectedLayout.Integrators integrator;
 	protected final ForceDirectedLayoutContext context;
@@ -142,6 +144,25 @@ public abstract class ForceDirectedLayoutTask extends AbstractPartitionLayoutTas
 		for (int i = 0; i < context.numIterations; i++) {
 			if (cancelled)
 				return;
+
+			if (context.useAnimation && (i % ANIMATION_FRAME_PERIOD == 0 || context.numIterations <= ANIMATION_FRAME_PERIOD)) {
+				// update positions
+				part.resetNodes(); // reset the nodes so we get the new average location
+				part.offset(0, 0); // removes "dontMove" flag
+
+				for (LayoutNode ln : part.getNodeList()) {
+					if (cancelled)
+						return;
+
+					if (!ln.isLocked()) {
+						ForceItem fitem = forceItems.get(ln);
+						ln.setX(fitem.location[0]);
+						ln.setY(fitem.location[1]);
+						part.moveNodeToLocation(ln);
+					}
+				}
+			}
+
 
 			timestep *= (1.0 - i / (double) context.numIterations);
 			long step = timestep + 50;
