@@ -33,16 +33,16 @@ public class PoleMagneticLayoutContext extends SimpleMagneticLayoutContext {
     public boolean useMagneticPoles = true;
 
     @Tunable(description="Pin pole positions", gravity=270.2, groups=POLE_GROUP, context="both", longDescription="TODO", exampleStringValue="true")
-    public boolean pinPoles = true;
+    public boolean pinPoles = false;
 
     @Tunable(description="Enable pole attraction", gravity=270.31, groups=POLE_GROUP, context="both", longDescription="TODO", exampleStringValue="true")
-    public boolean usePoleAttraction = true;
+    public boolean usePoleAttraction = false;
 
     @Tunable(description="Pole attraction", format="#.##E0", gravity=270.32, groups=POLE_GROUP, dependsOn="usePoleAttraction=true", context="both", longDescription="TODO", exampleStringValue="1e-4")
     public double poleGravity = 1e-4;
 
     @Tunable(description="Enable central gravity", gravity=250.41, groups=EXTRA_GROUP, context="both", longDescription="TODO", exampleStringValue="true")
-    public boolean useCentralGravity = true;
+    public boolean useCentralGravity = false;
 
     @Tunable(description="Gravity constant", format="#.##E0", gravity=250.42, groups=EXTRA_GROUP, dependsOn="useCentralGravity=true", context="both", longDescription="TODO", exampleStringValue="1e-4")
     public double centralGravity = 1e-4;
@@ -54,7 +54,7 @@ public class PoleMagneticLayoutContext extends SimpleMagneticLayoutContext {
 
     // Hierarchy
     @Tunable(description="Enable hierarchy force", gravity=280.01, groups=HIERARCHY_GROUP, context="both", longDescription="TODO", exampleStringValue="true")
-    public boolean useHierarchyForce = true;
+    public boolean useHierarchyForce = false;
 
     protected final String HIERARCHY_GROUP = "Hierarchy";
     public HierarchyForce.Type hierarchyType = HierarchyForce.Type.NONE;
@@ -76,7 +76,7 @@ public class PoleMagneticLayoutContext extends SimpleMagneticLayoutContext {
     public double ringRadius = 250;
 
     @Tunable(description="AUTO LAYOUT", gravity=900.01, context="both", longDescription="TODO", exampleStringValue="true")
-    public boolean useAutoLayout = true;
+    public boolean useAutoLayout = false;
 
 
 }
