@@ -9,7 +9,8 @@ import static ca.usask.vga.layout.magnetic.util.Vector.sign;
 
 
 /**
- * Class defining magnetic force calculations for the {@link ForceSimulator}.
+ * Magnetic force aligns directed edges with a magnetic field.
+ * Requires a {@link PoleClassifier} if the edges should be aligned with poles.
  */
 public class MagneticForce extends AbstractForce {
 

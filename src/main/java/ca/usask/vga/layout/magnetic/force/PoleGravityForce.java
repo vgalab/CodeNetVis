@@ -6,6 +6,12 @@ import org.jetbrains.annotations.NotNull;
 import prefuse.util.force.AbstractForce;
 import prefuse.util.force.ForceItem;
 
+/**
+ * Pole gravity force attracts nodes to their corresponding poles.
+ * The force gets stronger as the distance from the center increases.
+ * Requires a {@link PoleClassifier} to be provided.
+ * @see GravityForce
+ */
 public class PoleGravityForce extends AbstractForce {
 
     private final PoleClassifier classifier;

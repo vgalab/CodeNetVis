@@ -76,7 +76,7 @@ public class CyActivator extends AbstractCyActivator {
 		registerService(bc,simpleMagneticLayout,CyLayoutAlgorithm.class, sLayoutProps);
 
 		// Magnetic Poles
-		PoleManager poleManager = new PoleManager(getService(bc, CyNetworkManager.class));
+		PoleManager poleManager = new PoleManager(getService(bc, CyNetworkManager.class), undo);
 		registerService(bc, poleManager, PoleManager.class);
 		registerService(bc, poleManager, NetworkAddedListener.class);
 		registerService(bc, poleManager, SetCurrentNetworkListener.class);
@@ -123,13 +123,13 @@ public class CyActivator extends AbstractCyActivator {
 
 		ExtraTasks.CopyNodeStyleToEdge copyNodeStyleToEdge = new ExtraTasks.CopyNodeStyleToEdge(am,
 				getService(bc, VisualMappingManager.class),
-				getService(bc, VisualMappingFunctionFactory.class, "(mapping.type=discrete)"));
+				getService(bc, VisualMappingFunctionFactory.class, "(mapping.type=discrete)"), undo);
 		registerService(bc, ExtraTasks.getTaskFactory(copyNodeStyleToEdge),
 				TaskFactory.class, copyNodeStyleToEdge.getDefaultProperties());
 
 		ExtraTasks.MakePoleNodesLarger makePoleNodesLarger = new ExtraTasks.MakePoleNodesLarger(am,
 				getService(bc, VisualMappingManager.class),
-				getService(bc, VisualMappingFunctionFactory.class, "(mapping.type=discrete)"));
+				getService(bc, VisualMappingFunctionFactory.class, "(mapping.type=discrete)"), undo);
 		registerService(bc, ExtraTasks.getTaskFactory(makePoleNodesLarger),
 				TaskFactory.class, makePoleNodesLarger.getDefaultProperties());
 

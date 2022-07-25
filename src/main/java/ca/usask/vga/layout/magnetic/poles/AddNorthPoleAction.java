@@ -10,9 +10,11 @@ public class AddNorthPoleAction  extends ActionOnSelected {
 
     private final PoleManager poleManager;
 
+    private static final String TASK_DESCRIPTION = "Add new outward poles";
+
     public AddNorthPoleAction(PoleManager poleManager) {
 
-        super("AddNorthPoleAction");
+        super(TASK_DESCRIPTION);
 
         this.poleManager = poleManager;
 
@@ -32,9 +34,13 @@ public class AddNorthPoleAction  extends ActionOnSelected {
     public void actionPerformed(ActionEvent e) {
         if (isSelectionActive()) {
             CyNetwork network = getNetwork();
+            poleManager.beginEdit(TASK_DESCRIPTION, network);
+
             poleManager.addPole(network, getSelectedNodes());
             poleManager.setPoleDirection(network, getSelectedNodes(), true);
             poleManager.updateTables(network);
+
+            poleManager.completeEdit();
         }
     }
 

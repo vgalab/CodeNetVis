@@ -7,14 +7,16 @@ import org.cytoscape.model.events.NetworkAddedEvent;
 import org.cytoscape.model.events.NetworkAddedListener;
 import org.cytoscape.session.events.SessionAboutToBeLoadedEvent;
 import org.cytoscape.session.events.SessionAboutToBeLoadedListener;
+import org.cytoscape.work.undo.UndoSupport;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
 public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListener, SessionAboutToBeLoadedListener {
 
-    protected Map<CyNetwork, List<CyNode>> poleList;
+    protected final UndoSupport undoSupport;
 
+    protected Map<CyNetwork, List<CyNode>> poleList;
     protected Set<CyNode> poleIsOutwards;
 
     protected Map<CyNetwork, Map<CyNode, Map<CyNode, Byte>>> cachedPoleDistances;
@@ -31,7 +33,10 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
 
     protected boolean tableInitialized;
 
-    public PoleManager(CyNetworkManager networkManager) {
+    protected PoleManagerEdit lastEdit;
+
+    public PoleManager(CyNetworkManager networkManager, UndoSupport undoSupport) {
+        this.undoSupport = undoSupport;
         poleList = new HashMap<>();
         poleIsOutwards = new HashSet<>();
         cachedPoleDistances = new HashMap<>();
@@ -183,6 +188,11 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
     protected void invalidateCache(CyNetwork network, CyNode pole) {
         if (cachedPoleDistances != null && cachedPoleDistances.containsKey(network))
             cachedPoleDistances.get(network).remove(pole);
+    }
+
+    protected void invalidateNetworkCache(CyNetwork network) {
+        if (cachedPoleDistances != null && cachedPoleDistances.containsKey(network))
+            cachedPoleDistances.get(network).clear();
     }
 
     protected Map<CyNode, Byte> getShortestDistancesFrom(CyNetwork network, CyNode pole) {
@@ -450,4 +460,18 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
         // This ensures that the user has to prompt adding poles before any new tables are added
         tableInitialized = false;
     }
+
+    public void beginEdit(String operation, CyNetwork network) {
+        if (lastEdit != null) completeEdit();
+        lastEdit = new PoleManagerEdit(operation, this, network);
+        lastEdit.setBefore();
+    }
+
+    public void completeEdit() {
+        lastEdit.setAfter();
+        if (lastEdit.changesPresent())
+            undoSupport.postEdit(lastEdit);
+        lastEdit = null;
+    }
+
 }

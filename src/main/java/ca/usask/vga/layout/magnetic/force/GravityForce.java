@@ -5,6 +5,10 @@ import org.cytoscape.view.layout.LayoutPoint;
 import prefuse.util.force.AbstractForce;
 import prefuse.util.force.ForceItem;
 
+/**
+ * Simple gravity force that attracts nodes to the center of the layout.
+ * The force gets stronger as the distance from the center increases.
+ */
 public class GravityForce extends AbstractForce {
 
     public float gravityConstant = 0.1f;
@@ -12,7 +16,7 @@ public class GravityForce extends AbstractForce {
 
     public GravityForce(LayoutPoint center, float gravityConstant) {
         this.gravityConstant = gravityConstant;
-        centerPos = new Vector((float) center.getX(), (float) center.getY());
+        centerPos = Vector.convert(center);
     }
 
     public GravityForce(Vector centerPos, float gravityConstant) {

@@ -11,6 +11,7 @@ import org.cytoscape.view.vizmap.VisualMappingManager;
 import org.cytoscape.view.vizmap.VisualStyle;
 import org.cytoscape.view.vizmap.mappings.DiscreteMapping;
 import org.cytoscape.work.*;
+import org.cytoscape.work.undo.UndoSupport;
 import org.cytoscape.work.util.ListSingleSelection;
 
 import java.awt.*;
@@ -135,10 +136,12 @@ public class ExtraTasks {
 
             if (currentNet != null) {
                 List<CyNode> topNodes = getTopNodes(currentNet, topN, edgeType);
+                pm.beginEdit(TASK_DESCRIPTION, currentNet);
                 pm.removeAllPoles(currentNet);
                 pm.addPole(currentNet, topNodes);
                 pm.setPoleDirection(currentNet, topNodes, edgeType == CyEdge.Type.OUTGOING);
                 pm.updateTables(currentNet);
+                pm.completeEdit();
                 taskMonitor.showMessage(TaskMonitor.Level.INFO, "Successfully selected " + topNodes.size() + " poles");
                 taskMonitor.showMessage(TaskMonitor.Level.INFO, pm.getPoleNameList(currentNet).toString());
             } else {
@@ -272,13 +275,20 @@ public class ExtraTasks {
             func.putMapValue(PoleManager.MULTIPLE_POLES_NAME, getMultipleColor());
             func.putMapValue(PoleManager.DISCONNECTED_NAME, getDisconnectedColor());
 
-            vmm.getVisualStyle(am.getCurrentNetworkView()).addVisualMappingFunction(func);
+            VisualStyle style = vmm.getVisualStyle(am.getCurrentNetworkView());
 
-            CopyNodeStyleToEdge copying = new CopyNodeStyleToEdge(am, vmm, vmff);
+            var edit = new VizMapEdit(TASK_DESCRIPTION, style, BasicVisualLexicon.NODE_FILL_COLOR,
+                    BasicVisualLexicon.EDGE_UNSELECTED_PAINT, BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT);
+
+            style.addVisualMappingFunction(func);
+
+            CopyNodeStyleToEdge copying = new CopyNodeStyleToEdge(am, vmm, vmff, pm.undoSupport);
             String columnName = PoleManager.EDGE_TARGET_NODE_POLE;
 
             copying.copyPoleVisualMap(BasicVisualLexicon.EDGE_UNSELECTED_PAINT, columnName);
             copying.copyPoleVisualMap(BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT, columnName);
+
+            edit.completeEdit(pm.undoSupport);
         }
     }
 
@@ -287,11 +297,13 @@ public class ExtraTasks {
         private final CyApplicationManager am;
         private final VisualMappingManager vmm;
         private final VisualMappingFunctionFactory vmff;
+        private final UndoSupport undoSupport;
 
-        public CopyNodeStyleToEdge(CyApplicationManager am, VisualMappingManager vmm, VisualMappingFunctionFactory vmff_discrete) {
+        public CopyNodeStyleToEdge(CyApplicationManager am, VisualMappingManager vmm, VisualMappingFunctionFactory vmff_discrete, UndoSupport undoSupport) {
             this.am = am;
             this.vmm = vmm;
             this.vmff = vmff_discrete;
+            this.undoSupport = undoSupport;
         }
 
         private static final String TASK_DESCRIPTION = "Copy node colors to edge colors";
@@ -329,14 +341,18 @@ public class ExtraTasks {
             CyNetwork net = am.getCurrentNetwork();
             if (net == null) return;
 
-            CopyNodeStyleToEdge copying = new CopyNodeStyleToEdge(am, vmm, vmff);
+            var edit = new VizMapEdit(TASK_DESCRIPTION, vmm.getVisualStyle(am.getCurrentNetworkView()),
+                    BasicVisualLexicon.EDGE_UNSELECTED_PAINT, BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT);
+
             String columnName = PoleManager.EDGE_TARGET_NODE_POLE;
 
-            boolean copySuccess = copying.copyPoleVisualMap(BasicVisualLexicon.EDGE_UNSELECTED_PAINT, columnName);
-            copying.copyPoleVisualMap(BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT, columnName);
+            boolean copySuccess = copyPoleVisualMap(BasicVisualLexicon.EDGE_UNSELECTED_PAINT, columnName);
+            copyPoleVisualMap(BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT, columnName);
 
             if (!copySuccess) {
                 throw new IllegalArgumentException("Incompatible visual styles, edges were left unchanged.");
+            } else {
+                edit.completeEdit(undoSupport);
             }
 
         }
@@ -348,11 +364,13 @@ public class ExtraTasks {
         private final CyApplicationManager am;
         private final VisualMappingManager vmm;
         private final VisualMappingFunctionFactory vmff;
+        private final UndoSupport undoSupport;
 
-        public MakePoleNodesLarger(CyApplicationManager am, VisualMappingManager vmm, VisualMappingFunctionFactory vmff_discrete) {
+        public MakePoleNodesLarger(CyApplicationManager am, VisualMappingManager vmm, VisualMappingFunctionFactory vmff_discrete, UndoSupport undoSupport) {
             this.am = am;
             this.vmm = vmm;
             this.vmff = vmff_discrete;
+            this.undoSupport = undoSupport;
         }
 
         private static final String TASK_DESCRIPTION = "Make pole nodes larger";
@@ -383,6 +401,8 @@ public class ExtraTasks {
 
             VisualStyle style = vmm.getVisualStyle(am.getCurrentNetworkView());
 
+            var edit = new VizMapEdit(TASK_DESCRIPTION, style, BasicVisualLexicon.NODE_SIZE);
+
             double defaultSize = style.getDefaultValue(BasicVisualLexicon.NODE_SIZE);
 
             VisualMappingFunction<?, Double> oldFunc = style.getVisualMappingFunction(BasicVisualLexicon.NODE_SIZE);
@@ -394,6 +414,8 @@ public class ExtraTasks {
             func.putMapValue(true, defaultSize*2);
 
             style.addVisualMappingFunction(func);
+
+            edit.completeEdit(undoSupport);
 
         }
     }

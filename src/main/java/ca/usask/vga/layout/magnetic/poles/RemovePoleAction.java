@@ -10,9 +10,11 @@ public class RemovePoleAction  extends ActionOnSelected {
 
     private final PoleManager poleManager;
 
+    private static final String TASK_DESCRIPTION = "Remove selected poles";
+
     public RemovePoleAction(PoleManager poleManager) {
 
-        super("RemovePoleAction");
+        super(TASK_DESCRIPTION);
 
         this.poleManager = poleManager;
 
@@ -32,8 +34,12 @@ public class RemovePoleAction  extends ActionOnSelected {
     public void actionPerformed(ActionEvent e) {
         if (isSelectionActive()) {
             CyNetwork network = getNetwork();
+            poleManager.beginEdit(TASK_DESCRIPTION, network);
+
             poleManager.removePole(network, getSelectedNodes());
             poleManager.updateTables(network);
+
+            poleManager.completeEdit();
         }
     }
 

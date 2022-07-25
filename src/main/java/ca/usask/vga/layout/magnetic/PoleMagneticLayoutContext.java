@@ -72,7 +72,11 @@ public class PoleMagneticLayoutContext extends SimpleMagneticLayoutContext {
     @Tunable(description="Hierarchy force strength", format="#.##E0", gravity=280.2, groups=HIERARCHY_GROUP, dependsOn="useHierarchyForce=true", context="both", longDescription="TODO", exampleStringValue="1e-4")
     public double hierarchyForce = 1e-4;
 
+    @Tunable(description="Ring radius", gravity=280.3, groups=HIERARCHY_GROUP, dependsOn="useHierarchyForce=true", context="both", longDescription="TODO", exampleStringValue="250")
+    public double ringRadius = 250;
 
+    @Tunable(description="AUTO LAYOUT", gravity=900.01, context="both", longDescription="TODO", exampleStringValue="true")
+    public boolean useAutoLayout = true;
 
 
 }

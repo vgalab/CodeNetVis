@@ -12,6 +12,10 @@ import prefuse.util.force.Spring;
 
 import java.util.*;
 
+/**
+ * An implementation of the {@link PoleClassifier} interface that uses PoleManager and maps
+ * to determine which nodes are connected to which poles.
+ */
 public class MapPoleClassifier implements PoleClassifier {
 
     private final CyNetwork network;

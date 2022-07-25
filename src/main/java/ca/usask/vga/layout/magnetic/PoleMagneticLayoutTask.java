@@ -9,6 +9,7 @@ import org.cytoscape.view.layout.LayoutNode;
 import org.cytoscape.view.layout.LayoutPartition;
 import org.cytoscape.view.model.CyNetworkView;
 import org.cytoscape.view.model.View;
+import org.cytoscape.work.swing.DialogTaskManager;
 import org.cytoscape.work.undo.UndoSupport;
 import prefuse.util.force.*;
 
@@ -16,13 +17,21 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+
+/**
+ * This class extends the force directed layout functionality to add the following new forces:
+ * {@link MagneticForce}, {@link GravityForce}, {@link PinForce}, {@link PoleGravityForce}, {@link HierarchyForce}.
+ * The context is used to toggle the forces on and off.
+ */
 public class PoleMagneticLayoutTask extends ForceDirectedLayoutTask {
 
+    private final PoleManager poleManager;
     protected MapPoleClassifier poleClassifier;
     private Map<LayoutPartition, ErrorCalculator> errorCalc;
 
     public PoleMagneticLayoutTask(String displayName, CyNetworkView networkView, Set<View<CyNode>> nodesToLayOut, ForceDirectedLayoutContext context, ForceDirectedLayout.Integrators integrator, String attrName, UndoSupport undo, PoleManager poleManager) {
         super(displayName, networkView, nodesToLayOut, context, integrator, attrName, undo);
+        this.poleManager = poleManager;
         poleClassifier = new MapPoleClassifier(networkView.getModel(), poleManager);
         errorCalc = new HashMap<>();
     }
@@ -38,6 +47,11 @@ public class PoleMagneticLayoutTask extends ForceDirectedLayoutTask {
     }
 
     @Override
+    protected void clearMaps() {
+        poleClassifier = new MapPoleClassifier(networkView.getModel(), poleManager);
+    }
+
+    @Override
     protected void addSimulatorForces(ForceSimulator m_fsim, LayoutPartition part) {
 
         // REGISTERING FORCES
@@ -50,8 +64,8 @@ public class PoleMagneticLayoutTask extends ForceDirectedLayoutTask {
         PoleMagneticLayoutContext context = (PoleMagneticLayoutContext) this.context;
 
         // Magnetic force
+        MagneticForce mf = null;
         if (context.magnetEnabled) {
-            MagneticForce mf;
             if (context.useMagneticPoles) {
                 // Using magnetic pole classification
                 mf = new MagneticForce(poleClassifier, (float) context.magneticFieldStrength,
@@ -62,8 +76,8 @@ public class PoleMagneticLayoutTask extends ForceDirectedLayoutTask {
                         (float) context.magneticAlpha,  (float) context.magneticBeta);
             }
             m_fsim.addForce(mf);
-            errorCalc.put(part, new ErrorCalculator(m_fsim, mf));
         }
+        errorCalc.put(part, new ErrorCalculator(m_fsim, mf));
 
         // Pole pin force
         if (context.pinPoles) {
@@ -85,15 +99,26 @@ public class PoleMagneticLayoutTask extends ForceDirectedLayoutTask {
         // Hierarchy force
         if (context.useHierarchyForce)
             m_fsim.addForce(new HierarchyForce(poleClassifier, context.hierarchyType,
-                    (float) context.hierarchyForce, HierarchyForce.getSuggestedRadius(part)));
+                    (float) context.hierarchyForce, (float) context.ringRadius));
 
     }
 
     @Override
     public void layoutPartition(LayoutPartition part) {
+        PoleMagneticLayoutContext context = (PoleMagneticLayoutContext) this.context;
+        if (context.useAutoLayout)
+            new AutoLayout(this, part, monitor).run(taskMonitor);
+
         super.layoutPartition(part);
-        if (part.edgeCount() > 1 && errorCalc.get(part) != null)
-            errorCalc.get(part).displayResults(taskMonitor);
+        if (part.edgeCount() > 1 && errorCalc.get(part) != null) {
+            var calc = errorCalc.get(part);
+            calc.recalculate();
+            calc.displayResults(taskMonitor);
+        }
+    }
+
+    public ErrorCalculator getErrorCalculator(LayoutPartition part) {
+        return errorCalc.get(part);
     }
 
 }

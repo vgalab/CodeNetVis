@@ -1,10 +1,7 @@
 package ca.usask.vga.layout.magnetic;
 
 import org.cytoscape.model.CyNode;
-import org.cytoscape.view.layout.AbstractParallelPartitionLayoutTask;
-import org.cytoscape.view.layout.LayoutEdge;
-import org.cytoscape.view.layout.LayoutNode;
-import org.cytoscape.view.layout.LayoutPartition;
+import org.cytoscape.view.layout.*;
 import org.cytoscape.view.model.CyNetworkView;
 import org.cytoscape.view.model.View;
 import org.cytoscape.work.undo.UndoSupport;
@@ -38,10 +35,12 @@ import java.util.*;
 
 /**
  * This class wraps the Prefuse force-directed layout algorithm.
+ * This is the original Cytoscape implementation of the force-directed layout.
  * 
  * @see <a href="http://prefuse.org">Prefuse web site</a>
  */
-public abstract class ForceDirectedLayoutTask extends AbstractParallelPartitionLayoutTask {
+public abstract class ForceDirectedLayoutTask extends AbstractPartitionLayoutTask {
+	// TODO: Allow for parallel computation
 
 	// private ForceSimulator m_fsim;
 	protected ForceDirectedLayout.Integrators integrator;
@@ -75,9 +74,12 @@ public abstract class ForceDirectedLayoutTask extends AbstractParallelPartitionL
 
 	protected void mapForceItem(LayoutNode ln, ForceItem fitem) {}
 	protected void mapSpring(LayoutEdge le, Spring spring) {}
+	protected void clearMaps() {}
 
 	@Override
 	public void layoutPartition(LayoutPartition part) {
+
+		clearMaps();
 
 		// Calculate our edge weights
 		part.calculateEdgeWeights();
@@ -140,11 +142,6 @@ public abstract class ForceDirectedLayoutTask extends AbstractParallelPartitionL
 		for (int i = 0; i < context.numIterations; i++) {
 			if (cancelled)
 				return;
-
-			// if (taskMonitor != null)
-			// 	taskMonitor.setStatusMessage(
-			// 			"Partition " + part.getPartitionNumber() + ": Iteration " + (i + 1)
-			// 			+ " of " + context.numIterations + "...");
 
 			timestep *= (1.0 - i / (double) context.numIterations);
 			long step = timestep + 50;
