@@ -57,7 +57,7 @@ public class PoleMagneticLayoutContext extends SimpleMagneticLayoutContext {
     public boolean useHierarchyForce = false;
 
     protected final String HIERARCHY_GROUP = "Hierarchy";
-    public HierarchyForce.Type hierarchyType = HierarchyForce.Type.NONE;
+    public HierarchyForce.Type hierarchyType = HierarchyForce.Type.SINE_FUNCTION;
 
     @Tunable(description="Choose hierarchy type", gravity=280.1, groups=HIERARCHY_GROUP, dependsOn="useHierarchyForce=true", context="both", longDescription="TODO", exampleStringValue="true")
     public ListSingleSelection<HierarchyForce.Type> getHierarchyType() {
