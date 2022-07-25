@@ -25,11 +25,13 @@ public class PoleManagerEdit extends AbstractCyEdit {
     public void setBefore() {
         poleListBefore = copyMap(poleManager.poleList);
         poleIsOutwardsBefore = copySet(poleManager.poleIsOutwards);
+        poleListBefore.computeIfAbsent(network, k -> new ArrayList<>());
     }
 
     public void setAfter() {
         poleListAfter = copyMap(poleManager.poleList);
         poleIsOutwardsAfter = copySet(poleManager.poleIsOutwards);
+        poleListAfter.computeIfAbsent(network, k -> new ArrayList<>());
     }
 
     public boolean changesPresent() {
