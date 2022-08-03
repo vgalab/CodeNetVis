@@ -146,7 +146,14 @@ public class CyActivator extends AbstractCyActivator {
 		SoftwareLayout softwareLayout = new SoftwareLayout(poleMagneticLayout, getService(bc, TaskManager.class),
 				getService(bc, CyApplicationManager.class));
 
-		SoftwarePanel sPanel = new SoftwarePanel(softwareLayout);
+		SoftwareStyle softwareStyle = new SoftwareStyle(getService(bc, CyApplicationManager.class),
+				getService(bc, TaskManager.class), getService(bc, VisualMappingManager.class),
+				getService(bc, VisualMappingFunctionFactory.class, "(mapping.type=passthrough)"),
+				getService(bc, VisualMappingFunctionFactory.class, "(mapping.type=discrete)"),
+				getService(bc, VisualMappingFunctionFactory.class, "(mapping.type=continuous)"),
+				poleManager);
+
+		SoftwarePanel sPanel = new SoftwarePanel(softwareLayout, softwareStyle);
 		registerService(bc, sPanel, CytoPanelComponent.class);
 
 	}

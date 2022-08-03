@@ -40,6 +40,15 @@ public class ExtraTasks {
         };
     }
 
+    public static TaskMonitor getBlankTaskMonitor() {
+        return new TaskMonitor() {
+            public void setTitle(String title) {}
+            public void setProgress(double progress) {}
+            public void setStatusMessage(String statusMessage) {}
+            public void showMessage(Level level, String message) {}
+        };
+    }
+
     public static int computeDegree(CyNetwork network, CyNode node, CyEdge.Type type) {
         int degree = 0;
         for(CyEdge ignored : network.getAdjacentEdgeIterable(node, type)) {
@@ -366,6 +375,8 @@ public class ExtraTasks {
         private final VisualMappingFunctionFactory vmff;
         private final UndoSupport undoSupport;
 
+        public boolean keepIncreasing = true;
+
         public MakePoleNodesLarger(CyApplicationManager am, VisualMappingManager vmm, VisualMappingFunctionFactory vmff_discrete, UndoSupport undoSupport) {
             this.am = am;
             this.vmm = vmm;
@@ -407,7 +418,7 @@ public class ExtraTasks {
 
             VisualMappingFunction<?, Double> oldFunc = style.getVisualMappingFunction(BasicVisualLexicon.NODE_SIZE);
 
-            if (oldFunc instanceof DiscreteMapping && oldFunc.getMappingColumnName().equals(columnName)) {
+            if (keepIncreasing && oldFunc instanceof DiscreteMapping && oldFunc.getMappingColumnName().equals(columnName)) {
                 defaultSize = ((DiscreteMapping<Boolean, Double>) oldFunc).getMapValue(true);
             }
 
@@ -415,8 +426,8 @@ public class ExtraTasks {
 
             style.addVisualMappingFunction(func);
 
-            edit.completeEdit(undoSupport);
-
+            if (undoSupport != null)
+                edit.completeEdit(undoSupport);
         }
     }
 

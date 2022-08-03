@@ -73,7 +73,7 @@ public class SoftwareLayout {
         c.numIterations = 50;
         c.useAnimation = true;
 
-        c.useAutoLayout = true;
+        c.useAutoLayout = false;
 
         return c;
     }
