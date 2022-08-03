@@ -9,6 +9,7 @@ import ca.usask.vga.layout.magnetic.poles.*;
 import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.application.events.SetCurrentNetworkListener;
 import org.cytoscape.application.swing.CyAction;
+import org.cytoscape.application.swing.CytoPanelComponent;
 import org.cytoscape.io.util.StreamUtil;
 import org.cytoscape.model.CyNetworkFactory;
 import org.cytoscape.model.CyNetworkManager;
@@ -139,6 +140,10 @@ public class CyActivator extends AbstractCyActivator {
 				getService(bc, CyNetworkViewFactory.class)), getService(bc, StreamUtil.class));
 
 		registerService(bc, pajekReader, pajekReader.getServiceClass(), pajekReader.getDefaultProperties());
+
+		// JPanel
+		SoftwarePanel sPanel = new SoftwarePanel();
+		registerService(bc, sPanel, CytoPanelComponent.class);
 
 	}
 }
