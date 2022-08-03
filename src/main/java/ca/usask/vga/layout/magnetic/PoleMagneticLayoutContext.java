@@ -51,6 +51,8 @@ public class PoleMagneticLayoutContext extends SimpleMagneticLayoutContext {
     @Tunable(description="Circle pin", gravity=270.21, groups=POLE_GROUP, dependsOn="pinPoles=true", context="both", longDescription="TODO", exampleStringValue="true")
     public boolean useCirclePin = true;
 
+    @Tunable(description="Circle pin radius", gravity=270.22, groups=POLE_GROUP, dependsOn="pinPoles=true", context="both", longDescription="TODO", exampleStringValue="10000")
+    public double pinRadius = 10000;
 
     // Hierarchy
     @Tunable(description="Enable hierarchy force", gravity=280.01, groups=HIERARCHY_GROUP, context="both", longDescription="TODO", exampleStringValue="true")

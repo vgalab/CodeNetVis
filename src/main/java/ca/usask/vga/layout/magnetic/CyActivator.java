@@ -25,6 +25,7 @@ import org.cytoscape.view.model.CyNetworkViewManager;
 import org.cytoscape.view.vizmap.VisualMappingFunctionFactory;
 import org.cytoscape.view.vizmap.VisualMappingManager;
 import org.cytoscape.work.TaskFactory;
+import org.cytoscape.work.TaskManager;
 import org.cytoscape.work.undo.UndoSupport;
 import org.osgi.framework.BundleContext;
 
@@ -141,8 +142,11 @@ public class CyActivator extends AbstractCyActivator {
 
 		registerService(bc, pajekReader, pajekReader.getServiceClass(), pajekReader.getDefaultProperties());
 
-		// JPanel
-		SoftwarePanel sPanel = new SoftwarePanel();
+		// Software Panel
+		SoftwareLayout softwareLayout = new SoftwareLayout(poleMagneticLayout, getService(bc, TaskManager.class),
+				getService(bc, CyApplicationManager.class));
+
+		SoftwarePanel sPanel = new SoftwarePanel(softwareLayout);
 		registerService(bc, sPanel, CytoPanelComponent.class);
 
 	}

@@ -5,36 +5,40 @@ import org.cytoscape.application.swing.CytoPanelName;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.ChangeListener;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.Hashtable;
 
 public class SoftwarePanel extends JPanel implements CytoPanelComponent2 {
 
     public static final String title = "Software Layout", identifier = "software-panel";
     private final Icon icon = new ImageIcon(getClass().getResource("/icons/add_pole_N_icon.png"));
 
-    protected SoftwarePanel() {
+    private final SoftwareLayout layout;
+
+    protected SoftwarePanel(SoftwareLayout layout) {
         super();
+        this.layout = layout;
 
         var mainLayout = new BoxLayout(this, BoxLayout.Y_AXIS);
         setLayout(mainLayout);
 
         this.setBorder(new EmptyBorder(10, 10, 10, 10));
 
-        JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.add(group(new JLabel(bold("Data"))));
+        // Temporary DATA panel
+        JPanel panel = createTitledPanel("Data");
 
-        // CONTENTS
         panel.add(group(new JLabel("GitHub Link:"), new JTextField("www.example.com")));
 
         panel.setBorder(BorderFactory.createLineBorder(Color.lightGray));
         add(panel);
 
-        panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.add(group(new JLabel(bold("Pole selection"))));
 
-        // CONTENTS
+        // Temporary POLE panel
+        panel = createTitledPanel("Pole selection");
+
         panel.add(group(new JLabel("Search:"), new JTextField("print")));
         panel.add(group(new JLabel("Found:"), new JLabel("java.io.PrintStream")));
         //panel.add(new JList<>(new String[]{"PrintStream", "PrintMode", "PrintFiles"}));
@@ -44,11 +48,10 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2 {
         panel.setBorder(BorderFactory.createLineBorder(Color.lightGray));
         add(panel);
 
-        panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.add(group(new JLabel(bold("Filtering"))));
 
-        // CONTENTS
+        // Temporary FILTERING panel
+        panel = createTitledPanel("Filtering");
+
         panel.add(group(new JRadioButton("No dependencies")));  // NOTE: Need button group
         panel.add(group(new JRadioButton("Unique dependencies")));
 
@@ -56,22 +59,12 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2 {
         add(panel);
 
 
-        panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.add(group(new JLabel(bold("Layout"))));
+        // LAYOUT panel
+        add(createLayoutPanel());
 
-        // CONTENTS
-        panel.add(group(new JLabel("Circle radius"), new JSlider()));
-        panel.add(group(new JLabel("Max rings"), new JSpinner()));
-        panel.add(group(new JButton("Run layout algorithm")));
 
-        panel.setBorder(BorderFactory.createLineBorder(Color.lightGray));
-        add(panel);
-
-        panel = new JPanel();
-        //panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.add(group(new JLabel(bold("Style"))));
+        // Temporary STYLE panel
+        panel = createTitledPanel("Style");
 
         // CONTENTS
         panel.add(group(new JLabel("Node size based on"), new JComboBox<String>(new String[]{"Fixed", "Indegree", "Outdegree"})));
@@ -82,8 +75,59 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2 {
         add(panel);
     }
 
+    protected JPanel createTitledPanel(String title) {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.add(group(new JLabel(bold(title))));
+        return panel;
+    }
+
+    protected JPanel createLayoutPanel() {
+        JPanel panel = createTitledPanel("Layout");
+
+        var radiusLabel = new JLabel("Circle radius");
+        var radiusEditor = new JSlider();
+
+        int MAX = 10000;
+
+        radiusEditor.setMinimum(0);
+        radiusEditor.setMaximum(MAX);
+        radiusEditor.setValue(MAX/4);
+        radiusEditor.setPaintTicks(true);
+        radiusEditor.setPaintLabels(true);
+        radiusEditor.setMajorTickSpacing(MAX/4);
+        radiusEditor.setMinorTickSpacing(MAX/20);
+
+        /*var labelTable = new Hashtable<Integer, JLabel>();
+        labelTable.put(0, new JLabel("0") );
+        radiusEditor.setLabelTable( labelTable );*/
+
+        radiusEditor.addChangeListener(e -> layout.setPinRadius(radiusEditor.getValue()));
+        layout.setPinRadius(radiusEditor.getValue());
+
+        panel.add(group(radiusLabel, radiusEditor));
+
+        var ringsLabel = new JLabel("Max rings");
+        var ringsEditor = new JSpinner();
+
+        ringsEditor.setModel(new SpinnerNumberModel(4, 0, 20, 1));
+        ringsEditor.addChangeListener(e -> layout.setMaxRings((Integer) ringsEditor.getValue()));
+        layout.setMaxRings((Integer) ringsEditor.getValue());
+        panel.add(group(ringsLabel, ringsEditor));
+
+        panel.add(group(addListener(new JButton("Run layout algorithm"), e -> layout.runLayout())));
+
+        panel.setBorder(BorderFactory.createLineBorder(Color.lightGray));
+        return panel;
+    }
+
     private String bold(String text) {
         return "<html><b>" + text + "</b></html>";
+    }
+
+    private AbstractButton addListener(AbstractButton object, ActionListener action) {
+        object.addActionListener(action);
+        return object;
     }
 
     private JPanel group(JComponent... components) {
