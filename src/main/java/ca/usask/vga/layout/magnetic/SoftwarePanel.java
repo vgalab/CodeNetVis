@@ -7,6 +7,8 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 
 public class SoftwarePanel extends JPanel implements CytoPanelComponent2 {
 
@@ -84,25 +86,15 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2 {
     protected JPanel createLayoutPanel() {
         JPanel panel = createTitledPanel("Layout");
 
-        var radiusEditor = new JSlider();
-
-        int MAX = 100;
-
-        radiusEditor.setMinimum(0);
-        radiusEditor.setMaximum(MAX);
-        radiusEditor.setValue(MAX/4);
-        radiusEditor.setPaintTicks(true);
-        radiusEditor.setMajorTickSpacing(MAX/4);
-        radiusEditor.setMinorTickSpacing(MAX/20);
+        var radiusEditor = createCustomSlider(0, 100, 25, 25, 5, 5);
 
         radiusEditor.addChangeListener(e -> layout.setPinRadius(radiusEditor.getValue()*100));
         layout.setPinRadius(radiusEditor.getValue());
 
-        panel.add(label("Circle radius: " + MAX/4, radiusEditor));
+        panel.add(label("Circle radius: " + 25, radiusEditor));
 
-        var ringsEditor = new JSpinner();
+        var ringsEditor = createCustomSpinner(0, 100, 4, 1);
 
-        ringsEditor.setModel(new SpinnerNumberModel(4, 0, 100, 1));
         ringsEditor.addChangeListener(e -> layout.setMaxRings((Integer) ringsEditor.getValue()));
         layout.setMaxRings((Integer) ringsEditor.getValue());
         panel.add(label("Max rings:", ringsEditor));
@@ -120,19 +112,13 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2 {
         // CONTENTS
         panel.add(group(new JLabel("Node size based on"), new JComboBox<String>(new String[]{"Fixed"/*, "Indegree", "Outdegree"*/})));
 
-        var sizeEditor = new JSlider(0, 100, 50);
-        sizeEditor.setPaintTicks(true);
-        sizeEditor.setMajorTickSpacing(50);
-        sizeEditor.setMinorTickSpacing(10);
+        var sizeEditor = createCustomSlider(0, 100, 50, 25, 5, 1);
 
         sizeEditor.addChangeListener(e -> style.setNodeSize(sizeEditor.getValue()));
 
         panel.add(label("Node size: 50", sizeEditor));
 
-        var transparencyEditor = new JSlider(0, 255, 100);
-        transparencyEditor.setPaintTicks(true);
-        transparencyEditor.setMajorTickSpacing(50);
-        transparencyEditor.setMinorTickSpacing(10);
+        var transparencyEditor = createCustomSlider(0, 255, 105, 60, 15, 15);
 
         transparencyEditor.addChangeListener(e -> style.setEdgeTransparency(transparencyEditor.getValue()));
 
@@ -141,6 +127,35 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2 {
         panel.add(group(new JButton("Choose colors...")));
 
         return panel;
+    }
+
+    protected JSlider createCustomSlider(int min, int max, int value, int majorTicks, int minorTicks, int scrollAmount) {
+        var slider = new JSlider(min, max, value);
+        slider.setPaintTicks(true);
+        slider.setMajorTickSpacing(majorTicks);
+        slider.setMinorTickSpacing(minorTicks);
+        // Add ability to change using scroll wheel
+        slider.addMouseWheelListener(e -> {
+            int notches = e.getWheelRotation();
+            if (notches < 0)
+                slider.setValue(slider.getValue() + scrollAmount);
+            else if (notches > 0)
+                slider.setValue(slider.getValue() - scrollAmount);
+        });
+        return slider;
+    }
+
+    protected JSpinner createCustomSpinner(int min, int max, int value, int step) {
+        var spinner = new JSpinner(new SpinnerNumberModel(value, min, max, step));
+        // Add ability to change using scroll wheel
+        spinner.addMouseWheelListener(e -> {
+            int notches = e.getWheelRotation();
+            if (notches < 0)
+                spinner.setValue(spinner.getModel().getNextValue());
+            else if (notches > 0)
+                spinner.setValue(spinner.getModel().getPreviousValue());
+        });
+        return spinner;
     }
 
     private String bold(String text) {
