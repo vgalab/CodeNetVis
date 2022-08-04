@@ -3,6 +3,9 @@ package ca.usask.vga.layout.magnetic;
 import ca.usask.vga.layout.magnetic.poles.ExtraTasks;
 import ca.usask.vga.layout.magnetic.poles.PoleManager;
 import org.cytoscape.application.CyApplicationManager;
+import org.cytoscape.model.CyNode;
+import org.cytoscape.task.hide.HideTaskFactory;
+import org.cytoscape.task.hide.UnHideAllTaskFactory;
 import org.cytoscape.view.presentation.annotations.AnnotationFactory;
 import org.cytoscape.view.presentation.annotations.AnnotationManager;
 import org.cytoscape.view.presentation.annotations.ShapeAnnotation;
@@ -28,16 +31,21 @@ public class SoftwareStyle {
     private final PoleManager pm;
     private final AnnotationManager anm;
     private final AnnotationFactory<ShapeAnnotation> anf;
+    private final HideTaskFactory htf;
+    private final UnHideAllTaskFactory utf;
 
     public boolean keepPolesLarger = true;
 
     protected final PinRadiusAnnotation pinRadiusAnnotation;
     protected final RingsAnnotation ringsAnnotation;
+    private boolean showUnique;
 
     public SoftwareStyle(CyApplicationManager am, TaskManager tm, VisualMappingManager vmm,
                          VisualMappingFunctionFactory vmff_passthrough,
                          VisualMappingFunctionFactory vmff_discrete,
-                         VisualMappingFunctionFactory vmff_continuous, PoleManager pm, AnnotationManager anm, AnnotationFactory anf) {
+                         VisualMappingFunctionFactory vmff_continuous, PoleManager pm,
+                         AnnotationManager anm, AnnotationFactory anf,
+                         HideTaskFactory htf, UnHideAllTaskFactory utf) {
         this.am = am;
         this.tm = tm;
         this.vmm = vmm;
@@ -47,6 +55,8 @@ public class SoftwareStyle {
         this.pm = pm;
         this.anm = anm;
         this.anf = anf;
+        this.htf = htf;
+        this.utf = utf;
         pinRadiusAnnotation = new PinRadiusAnnotation();
         ringsAnnotation = new RingsAnnotation();
     }
@@ -83,6 +93,30 @@ public class SoftwareStyle {
             t.run(ExtraTasks.getBlankTaskMonitor());
         }
 
+    }
+
+    public void setShowUnique(boolean showUnique) {
+        if (this.showUnique == showUnique)
+            return;
+
+        this.showUnique = showUnique;
+
+        var net = am.getCurrentNetwork();
+        var view = am.getCurrentNetworkView();
+
+        if (showUnique) {
+            List<CyNode> nodesToHide = new ArrayList<>();
+
+            for (CyNode n : net.getNodeList()) {
+                if (pm.isClosestToMultiple(net, n) || pm.isDisconnected(net, n)) {
+                    nodesToHide.add(n);
+                }
+            }
+
+            tm.execute(htf.createTaskIterator(view, nodesToHide, new ArrayList<>()));
+        } else {
+            tm.execute(utf.createTaskIterator(view));
+        }
     }
 
     public PinRadiusAnnotation getRadiusAnnotation() {
@@ -202,19 +236,17 @@ public class SoftwareStyle {
 
         public void setMaxRings(int maxRings) {
             this.maxRings = maxRings;
-            init();
             if (visible) show();
         }
 
         public void setVisible(boolean visible) {
-            if (!polesPresent())
-                return;
             this.visible = visible;
             if (visible) show();
             else hide();
         }
 
         public void show() {
+            if (!polesPresent()) return;
             init();
             reposition();
             anm.addAnnotations(annotations.subList(0, maxRings));

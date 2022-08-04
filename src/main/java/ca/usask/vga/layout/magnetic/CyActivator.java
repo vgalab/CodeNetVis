@@ -19,6 +19,8 @@ import org.cytoscape.model.subnetwork.CyRootNetworkManager;
 import org.cytoscape.service.util.AbstractCyActivator;
 import org.cytoscape.session.CyNetworkNaming;
 import org.cytoscape.session.events.SessionAboutToBeLoadedListener;
+import org.cytoscape.task.hide.HideTaskFactory;
+import org.cytoscape.task.hide.UnHideAllTaskFactory;
 import org.cytoscape.view.layout.CyLayoutAlgorithm;
 import org.cytoscape.view.model.CyNetworkViewFactory;
 import org.cytoscape.view.model.CyNetworkViewManager;
@@ -154,7 +156,9 @@ public class CyActivator extends AbstractCyActivator {
 				getService(bc, VisualMappingFunctionFactory.class, "(mapping.type=discrete)"),
 				getService(bc, VisualMappingFunctionFactory.class, "(mapping.type=continuous)"),
 				poleManager,
-				getService(bc, AnnotationManager.class), getService(bc, AnnotationFactory.class, "(type=ShapeAnnotation.class)"));
+				getService(bc, AnnotationManager.class),
+				getService(bc, AnnotationFactory.class, "(type=ShapeAnnotation.class)"),
+				getService(bc, HideTaskFactory.class), getService(bc, UnHideAllTaskFactory.class));
 
 		SoftwarePanel sPanel = new SoftwarePanel(softwareLayout, softwareStyle);
 		registerService(bc, sPanel, CytoPanelComponent.class);

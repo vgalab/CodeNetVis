@@ -45,12 +45,8 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2 {
         panel.add(group(new JLabel("Poles:"), new JLabel("String, Object...")));
         innerPanel.add(panel);
 
-        // Temporary FILTERING panel
-        panel = createTitledPanel("Filtering");
-        panel.add(group(new JRadioButton("No dependencies")));  // NOTE: Need button group
-        panel.add(group(new JRadioButton("Unique dependencies")));
-        innerPanel.add(panel);
-
+        // FILTERING panel
+        innerPanel.add(createFilterPanel());
 
         // LAYOUT panel
         innerPanel.add(createLayoutPanel());
@@ -82,6 +78,24 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2 {
         return panel;
     }
 
+
+    protected JPanel createFilterPanel() {
+        JPanel panel = createTitledPanel("Filtering");
+
+        var b1 = new JRadioButton("Any dependencies", true);
+        var b2 = new JRadioButton("Unique dependencies", false);
+
+        var group = new ButtonGroup();
+        group.add(b1);
+        group.add(b2);
+
+        b2.addChangeListener(e -> style.setShowUnique(b2.isSelected()));
+
+        panel.add(group(b1, b2));
+
+        return panel;
+    }
+
     protected JPanel createLayoutPanel() {
         JPanel panel = createTitledPanel("Layout");
 
@@ -93,7 +107,7 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2 {
 
         layout.setPinRadius(radiusEditor.getValue()*100);
 
-        panel.add(label("Circle radius: " + 25, radiusEditor));
+        panel.add(label("Pin radius: " + 25, radiusEditor));
 
         var ringsEditor = createCustomSpinner(0, 100, 4, 1);
 
@@ -104,7 +118,7 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2 {
         ((JSpinner.NumberEditor)ringsEditor.getEditor()).getTextField()
                 .addMouseListener(annotationOnMouse(style.getRingsAnnotation()));
 
-        panel.add(label("Max rings:", ringsEditor));
+        panel.add(label("Number of rings:", ringsEditor));
 
         panel.add(group(addListener(new JButton("Run layout algorithm"), e ->
                 layout.runLayout(() -> {
@@ -130,11 +144,11 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2 {
 
         panel.add(label("Node size: 50", sizeEditor));
 
-        var transparencyEditor = createCustomSlider(0, 255, 105, 60, 15, 15);
+        var transparencyEditor = createCustomSlider(0, 255, 255, 60, 15, 15);
 
         transparencyEditor.addChangeListener(e -> style.setEdgeTransparency(transparencyEditor.getValue()));
 
-        panel.add(label("Edge visibility: 100", transparencyEditor));
+        panel.add(label("Edge visibility: 255", transparencyEditor));
 
         panel.add(group(new JButton("Choose colors...")));
 
