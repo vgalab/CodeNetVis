@@ -91,7 +91,7 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2 {
         radiusEditor.addChangeListener(e -> style.getRadiusAnnotation().setRadius(radiusEditor.getValue()*100));
         radiusEditor.addMouseListener(annotationOnMouse(style.getRadiusAnnotation()));
 
-        layout.setPinRadius(radiusEditor.getValue());
+        layout.setPinRadius(radiusEditor.getValue()*100);
 
         panel.add(label("Circle radius: " + 25, radiusEditor));
 
