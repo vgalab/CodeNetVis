@@ -3,14 +3,19 @@ package ca.usask.vga.layout.magnetic;
 import ca.usask.vga.layout.magnetic.poles.ExtraTasks;
 import ca.usask.vga.layout.magnetic.poles.PoleManager;
 import org.cytoscape.application.CyApplicationManager;
-import org.cytoscape.view.model.VisualProperty;
+import org.cytoscape.view.presentation.annotations.AnnotationFactory;
+import org.cytoscape.view.presentation.annotations.AnnotationManager;
+import org.cytoscape.view.presentation.annotations.ShapeAnnotation;
 import org.cytoscape.view.presentation.property.BasicVisualLexicon;
 import org.cytoscape.view.vizmap.VisualMappingFunctionFactory;
 import org.cytoscape.view.vizmap.VisualMappingManager;
 import org.cytoscape.view.vizmap.VisualStyle;
-import org.cytoscape.work.TaskIterator;
 import org.cytoscape.work.TaskManager;
-import org.cytoscape.work.TaskMonitor;
+
+import java.awt.geom.Point2D;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 public class SoftwareStyle {
 
@@ -21,13 +26,18 @@ public class SoftwareStyle {
     private final VisualMappingFunctionFactory vmff_discrete;
     private final VisualMappingFunctionFactory vmff_continuous;
     private final PoleManager pm;
+    private final AnnotationManager anm;
+    private final AnnotationFactory<ShapeAnnotation> anf;
 
     public boolean keepPolesLarger = true;
+
+    protected final PinRadiusAnnotation pinRadiusAnnotation;
+    protected final RingsAnnotation ringsAnnotation;
 
     public SoftwareStyle(CyApplicationManager am, TaskManager tm, VisualMappingManager vmm,
                          VisualMappingFunctionFactory vmff_passthrough,
                          VisualMappingFunctionFactory vmff_discrete,
-                         VisualMappingFunctionFactory vmff_continuous, PoleManager pm) {
+                         VisualMappingFunctionFactory vmff_continuous, PoleManager pm, AnnotationManager anm, AnnotationFactory anf) {
         this.am = am;
         this.tm = tm;
         this.vmm = vmm;
@@ -35,6 +45,10 @@ public class SoftwareStyle {
         this.vmff_discrete = vmff_discrete;
         this.vmff_continuous = vmff_continuous;
         this.pm = pm;
+        this.anm = anm;
+        this.anf = anf;
+        pinRadiusAnnotation = new PinRadiusAnnotation();
+        ringsAnnotation = new RingsAnnotation();
     }
 
     public void setNodeSize(float size) {
@@ -69,6 +83,183 @@ public class SoftwareStyle {
             t.run(ExtraTasks.getBlankTaskMonitor());
         }
 
+    }
+
+    public PinRadiusAnnotation getRadiusAnnotation() {
+        return pinRadiusAnnotation;
+    }
+
+    public RingsAnnotation getRingsAnnotation() {
+        return ringsAnnotation;
+    }
+
+    public class PinRadiusAnnotation implements TooltipAnnotation {
+
+        protected boolean visible;
+        protected ShapeAnnotation annotation;
+        protected float radius = 2500;
+
+        public PinRadiusAnnotation() {
+        }
+
+        protected void init() {
+            if (annotation != null) return;
+            var argMap = new HashMap<String, String>();
+            annotation = anf.createAnnotation(ShapeAnnotation.class, am.getCurrentNetworkView(), argMap);
+            annotation.setShapeType(ShapeAnnotation.ShapeType.ELLIPSE.shapeName());
+            annotation.setBorderWidth(20);
+            reposition();
+        }
+
+        protected void checkNetwork() {
+            if (annotation != null && annotation.getNetworkView() != am.getCurrentNetworkView()) {
+                anm.removeAnnotation(annotation);
+                annotation = null;
+                init();
+            }
+        }
+
+        public void reposition() {
+            init();
+            checkNetwork();
+            annotation.setSize(radius*2, radius*2);
+            annotation.moveAnnotation(getAveragePolePos(-radius, -radius));
+            annotation.update();
+        }
+
+        public void setRadius(float radius) {
+            this.radius = radius;
+            reposition();
+        }
+
+        public void show() {
+            reposition();
+            anm.addAnnotation(annotation);
+        }
+
+        public void hide() {
+            anm.removeAnnotation(annotation);
+        }
+
+        public void setVisible(boolean visible) {
+            this.visible = visible;
+            if (visible) show();
+            else hide();
+        }
+    }
+
+    public class RingsAnnotation implements TooltipAnnotation {
+
+        protected boolean visible;
+        protected int maxRings = 4;
+
+        protected List<ShapeAnnotation> annotations;
+
+        public RingsAnnotation() {
+            annotations = new ArrayList<>(maxRings);
+        }
+
+        private float getPinRadius() {
+            return getRadiusAnnotation().radius;
+        }
+
+        protected float getRingRadius(int i) {
+            return (i+1) * (getPinRadius() / (maxRings + 1));
+        }
+
+        protected void init() {
+            for (int i = 0; i < maxRings; i++) {
+                if (annotations.size() <= i) {
+                    var argMap = new HashMap<String, String>();
+                    var a = anf.createAnnotation(ShapeAnnotation.class, am.getCurrentNetworkView(), argMap);
+                    a.setShapeType(ShapeAnnotation.ShapeType.ELLIPSE.shapeName());
+                    a.setBorderWidth(10);
+                    a.setBorderOpacity(50);
+                    annotations.add(a);
+                }
+            }
+            hide();
+        }
+
+        protected void checkNetwork() {
+            if (annotations.size() > 0 && annotations.get(0).getNetworkView() != am.getCurrentNetworkView()) {
+                anm.removeAnnotations(annotations);
+                annotations.clear();
+                init();
+            }
+        }
+
+        public void reposition() {
+            checkNetwork();
+            for (int i = 0; i < maxRings; i++) {
+                ShapeAnnotation a = annotations.get(i);
+                var radius = getRingRadius(i);
+                a.setSize(radius * 2, radius * 2);
+                a.moveAnnotation(getAtPolePos(-radius, -radius));
+                a.update();
+            }
+        }
+
+        public void setMaxRings(int maxRings) {
+            this.maxRings = maxRings;
+            init();
+            if (visible) show();
+        }
+
+        public void setVisible(boolean visible) {
+            if (!polesPresent())
+                return;
+            this.visible = visible;
+            if (visible) show();
+            else hide();
+        }
+
+        public void show() {
+            init();
+            reposition();
+            anm.addAnnotations(annotations.subList(0, maxRings));
+        }
+
+        public void hide() {
+            anm.removeAnnotations(annotations);
+        }
+    }
+
+    public interface TooltipAnnotation {
+        void setVisible(boolean visible);
+    }
+
+    protected Point2D getAveragePolePos(float offsetX, float offsetY) {
+        var view = am.getCurrentNetworkView();
+        var list = pm.getPoleList(am.getCurrentNetwork());
+        double x = 0, y = 0;
+        int count = list.size();
+        if (count > 0) {
+            for (var node : list) {
+                var nodeV = view.getNodeView(node);
+                x += nodeV.getVisualProperty(BasicVisualLexicon.NODE_X_LOCATION);
+                y += nodeV.getVisualProperty(BasicVisualLexicon.NODE_Y_LOCATION);
+            }
+            x /= count;
+            y /= count;
+        }
+        return new Point2D.Double(x+offsetX, y+offsetY);
+    }
+
+    protected Point2D getAtPolePos(float offsetX, float offsetY) {
+        var view = am.getCurrentNetworkView();
+        var list = pm.getPoleList(am.getCurrentNetwork());
+        double x = 0, y = 0;
+        if (list.size() > 0) {
+            var nodeV = view.getNodeView(list.get(0));
+            x = nodeV.getVisualProperty(BasicVisualLexicon.NODE_X_LOCATION);
+            y = nodeV.getVisualProperty(BasicVisualLexicon.NODE_Y_LOCATION);
+        }
+        return new Point2D.Double(x+offsetX, y+offsetY);
+    }
+
+    protected boolean polesPresent() {
+        return am.getCurrentNetwork() != null && pm.getPoleList(am.getCurrentNetwork()).size() > 0;
     }
 
 

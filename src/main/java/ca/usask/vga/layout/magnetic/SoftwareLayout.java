@@ -2,7 +2,10 @@ package ca.usask.vga.layout.magnetic;
 
 import ca.usask.vga.layout.magnetic.force.HierarchyForce;
 import org.cytoscape.application.CyApplicationManager;
+import org.cytoscape.work.FinishStatus;
+import org.cytoscape.work.ObservableTask;
 import org.cytoscape.work.TaskManager;
+import org.cytoscape.work.TaskObserver;
 
 import java.util.HashSet;
 
@@ -22,6 +25,10 @@ public class SoftwareLayout {
     }
 
     public void runLayout() {
+        runLayout(null);
+    }
+
+    public void runLayout(Runnable onFinished) {
 
         var context = getContext();
 
@@ -29,8 +36,10 @@ public class SoftwareLayout {
 
         var task = pml.createTaskIterator(netView, context, new HashSet<>(netView.getNodeViews()), null);
 
-        tm.execute(task);
-
+        tm.execute(task, new TaskObserver() {
+            public void taskFinished(ObservableTask task) {}
+            public void allFinished(FinishStatus finishStatus) {if (onFinished!=null) onFinished.run();}
+        });
     }
 
     protected PoleMagneticLayoutContext getContext() {

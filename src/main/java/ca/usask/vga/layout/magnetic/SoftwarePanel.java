@@ -6,9 +6,8 @@ import org.cytoscape.application.swing.CytoPanelName;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseWheelEvent;
-import java.awt.event.MouseWheelListener;
+import java.awt.event.*;
+import java.util.Arrays;
 
 public class SoftwarePanel extends JPanel implements CytoPanelComponent2 {
 
@@ -89,6 +88,9 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2 {
         var radiusEditor = createCustomSlider(0, 100, 25, 25, 5, 5);
 
         radiusEditor.addChangeListener(e -> layout.setPinRadius(radiusEditor.getValue()*100));
+        radiusEditor.addChangeListener(e -> style.getRadiusAnnotation().setRadius(radiusEditor.getValue()*100));
+        radiusEditor.addMouseListener(annotationOnMouse(style.getRadiusAnnotation()));
+
         layout.setPinRadius(radiusEditor.getValue());
 
         panel.add(label("Circle radius: " + 25, radiusEditor));
@@ -96,10 +98,20 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2 {
         var ringsEditor = createCustomSpinner(0, 100, 4, 1);
 
         ringsEditor.addChangeListener(e -> layout.setMaxRings((Integer) ringsEditor.getValue()));
+        ringsEditor.addChangeListener(e -> style.getRingsAnnotation().setMaxRings((Integer) ringsEditor.getValue()));
         layout.setMaxRings((Integer) ringsEditor.getValue());
+
+        ((JSpinner.NumberEditor)ringsEditor.getEditor()).getTextField()
+                .addMouseListener(annotationOnMouse(style.getRingsAnnotation()));
+
         panel.add(label("Max rings:", ringsEditor));
 
-        panel.add(group(addListener(new JButton("Run layout algorithm"), e -> layout.runLayout())));
+        panel.add(group(addListener(new JButton("Run layout algorithm"), e ->
+                layout.runLayout(() -> {
+                    // On layout complete
+                    style.getRadiusAnnotation().reposition();
+                    style.getRingsAnnotation().reposition();
+                }))));
 
         return panel;
     }
@@ -150,9 +162,9 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2 {
         // Add ability to change using scroll wheel
         spinner.addMouseWheelListener(e -> {
             int notches = e.getWheelRotation();
-            if (notches < 0)
+            if (notches < 0 && spinner.getModel().getNextValue() != null)
                 spinner.setValue(spinner.getModel().getNextValue());
-            else if (notches > 0)
+            else if (notches > 0 && spinner.getModel().getPreviousValue() != null)
                 spinner.setValue(spinner.getModel().getPreviousValue());
         });
         return spinner;
@@ -201,6 +213,24 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2 {
             panel.add(c);
         }
         return panel;
+    }
+
+    private MouseListener annotationOnMouse(SoftwareStyle.TooltipAnnotation annotation) {
+        return new MouseAdapter() {
+            boolean pressed, entered;
+            public void mousePressed(MouseEvent e) {
+                pressed = true; annotation.setVisible(true);
+            }
+            public void mouseReleased(MouseEvent e) {
+                pressed = false; if (!entered) annotation.setVisible(false);
+            }
+            public void mouseEntered(MouseEvent e) {
+                entered = true; annotation.setVisible(true);
+            }
+            public void mouseExited(MouseEvent e) {
+                entered = false; if (!pressed) annotation.setVisible(false);
+            }
+        };
     }
 
     @Override
