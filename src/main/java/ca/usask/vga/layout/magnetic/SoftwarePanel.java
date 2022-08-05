@@ -122,7 +122,7 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         radiusEditor.addMouseListener(annotationOnMouse(style.getRadiusAnnotation()));
         fireChangeListeners(radiusEditor);
 
-        panel.add(label("Pin radius: " + initialRadius, radiusEditor));
+        panel.add(label("Pin radius:", radiusEditor));
 
         onSessionLoaded.add(e -> {
             radiusEditor.setValue(Math.round(style.getSuggestedRadius()) / 100);
@@ -162,7 +162,7 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         var sizeEditor = createCustomSlider(0, 100, initialSize, 25, 5, 1);
 
         sizeEditor.addChangeListener(e -> style.setNodeSize(sizeEditor.getValue()));
-        panel.add(label("Node size: " + initialSize, sizeEditor));
+        panel.add(label("Node size:", sizeEditor));
 
         onSessionLoaded.add(e -> sizeEditor.setValue(Math.round(style.getInitialNodeSizeValue())));
 
@@ -170,7 +170,7 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         var transparencyEditor = createCustomSlider(0, 255, initialTransparency, 60, 15, 15);
 
         transparencyEditor.addChangeListener(e -> style.setEdgeTransparency(transparencyEditor.getValue()));
-        panel.add(label("Edge visibility: "+initialTransparency, transparencyEditor));
+        panel.add(label("Edge visibility:", transparencyEditor));
 
         onSessionLoaded.add(e -> transparencyEditor.setValue(Math.round(style.getInitialEdgeTransparency())));
 
@@ -224,6 +224,7 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
     private JPanel label(String text, JSlider component) {
         var label = new JLabel(text);
         component.addChangeListener(e -> updateLabelValue(label, component.getValue()));
+        updateLabelValue(label, component.getValue());
         if (component.getPaintLabels())
             return group(50, label, component);
         return group(label, component);

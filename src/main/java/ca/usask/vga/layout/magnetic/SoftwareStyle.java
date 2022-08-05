@@ -103,7 +103,7 @@ public class SoftwareStyle {
     }
 
     public float getInitialNodeSizeValue() {
-        return (float) nodeSizeFuncReverse(getCurrentNodeSize());
+        return (float) Math.max(0, Math.min(nodeSizeFuncReverse(getCurrentNodeSize()), 100));
     }
 
     public void setEdgeTransparency(float value) {
@@ -337,7 +337,7 @@ public class SoftwareStyle {
         double scale = view.getVisualProperty(BasicVisualLexicon.NETWORK_SCALE_FACTOR);
         double width = view.getVisualProperty(BasicVisualLexicon.NETWORK_WIDTH) / scale;
         double height = view.getVisualProperty(BasicVisualLexicon.NETWORK_HEIGHT) / scale;
-        return (float) Math.min(width, height) / 2;
+        return Math.min((float) Math.min(width, height) / 2, 10000);
     }
 
 
