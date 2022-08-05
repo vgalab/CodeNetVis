@@ -70,6 +70,9 @@
 						<Export-Package>!${bundle.namespace}.*,!prefuse.*</Export-Package>
 						<Private-Package>${bundle.namespace}.*,prefuse.*</Private-Package>
 						<Bundle-Activator>${bundle.namespace}.CyActivator</Bundle-Activator>
+                        <Embed-Dependency>*;scope=!provided</Embed-Dependency>
+                        <Embed-Transitive>true</Embed-Transitive>
+                        <Import-Package>*;resolution:=optional</Import-Package>
 					</instructions>
 				</configuration>
 			</plugin>
@@ -96,36 +99,55 @@
 			<groupId>org.cytoscape</groupId>
 			<artifactId>work-api</artifactId>
             <version>${cytoscape.api.version}</version>
+            <scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.cytoscape</groupId>
 			<artifactId>model-api</artifactId>
             <version>${cytoscape.api.version}</version>
+            <scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.cytoscape</groupId>
 			<artifactId>layout-api</artifactId>
             <version>${cytoscape.api.version}</version>
+            <scope>provided</scope>
 		</dependency>
         <dependency>
             <groupId>org.cytoscape</groupId>
             <artifactId>swing-application-api</artifactId>
             <version>${cytoscape.api.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.cytoscape</groupId>
             <artifactId>io-api</artifactId>
             <version>${cytoscape.api.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.cytoscape</groupId>
             <artifactId>presentation-api</artifactId>
             <version>${cytoscape.api.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.cytoscape</groupId>
             <artifactId>core-task-api</artifactId>
             <version>${cytoscape.api.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.cytoscape</groupId>
+            <artifactId>util-api</artifactId>
+            <version>${cytoscape.api.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.cytoscape</groupId>
+            <artifactId>swing-util-api</artifactId>
+            <version>${cytoscape.api.version}</version>
+            <scope>provided</scope>
         </dependency>
 
 
@@ -156,6 +178,7 @@
             <groupId>org.cytoscape</groupId>
             <artifactId>opencl-cycl</artifactId>
             <version>3.6.1</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
