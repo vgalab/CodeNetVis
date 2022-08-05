@@ -9,6 +9,7 @@ import ca.usask.vga.layout.magnetic.poles.*;
 import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.application.events.SetCurrentNetworkListener;
 import org.cytoscape.application.swing.CyAction;
+import org.cytoscape.application.swing.CySwingApplication;
 import org.cytoscape.application.swing.CytoPanelComponent;
 import org.cytoscape.io.util.StreamUtil;
 import org.cytoscape.model.CyNetworkFactory;
@@ -167,7 +168,7 @@ public class CyActivator extends AbstractCyActivator {
 				getService(bc, AnnotationFactory.class, "(type=ShapeAnnotation.class)"),
 				getService(bc, HideTaskFactory.class), getService(bc, UnHideAllTaskFactory.class));
 
-		SoftwarePanel sPanel = new SoftwarePanel(softwareLayout, softwareStyle);
+		SoftwarePanel sPanel = new SoftwarePanel(getService(bc, CySwingApplication.class), softwareLayout, softwareStyle);
 		registerService(bc, sPanel, CytoPanelComponent.class);
 		registerService(bc, sPanel, SessionLoadedListener.class);
 

@@ -1,7 +1,9 @@
 package ca.usask.vga.layout.magnetic;
 
+import org.cytoscape.application.swing.CySwingApplication;
 import org.cytoscape.application.swing.CytoPanelComponent2;
 import org.cytoscape.application.swing.CytoPanelName;
+import org.cytoscape.application.swing.CytoPanelState;
 import org.cytoscape.session.events.SessionLoadedEvent;
 import org.cytoscape.session.events.SessionLoadedListener;
 
@@ -13,19 +15,24 @@ import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 public class SoftwarePanel extends JPanel implements CytoPanelComponent2, SessionLoadedListener {
 
     public static final String title = "Software Layout", identifier = "software-panel";
     private final Icon icon = new ImageIcon(getClass().getResource("/icons/add_pole_N_icon.png"));
 
+    private final CySwingApplication swingApp;
     private final SoftwareLayout layout;
     private final SoftwareStyle style;
 
+    private final int ENTRY_HEIGHT = 35;
+
     private List<SessionLoadedListener> onSessionLoaded;
 
-    protected SoftwarePanel(SoftwareLayout layout, SoftwareStyle style) {
+    protected SoftwarePanel(CySwingApplication swingApp, SoftwareLayout layout, SoftwareStyle style) {
         super();
+        this.swingApp = swingApp;
         this.layout = layout;
         this.style = style;
         onSessionLoaded = new ArrayList<>();
@@ -44,14 +51,8 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         innerPanel.add(panel);
 
 
-        // Temporary POLE panel
-        panel = createTitledPanel("Pole selection");
-        panel.add(group(new JLabel("Search:"), new JTextField("print")));
-        panel.add(group(new JLabel("Found:"), new JLabel("java.io.PrintStream")));
-        //panel.add(new JList<>(new String[]{"PrintStream", "PrintMode", "PrintFiles"}));
-        panel.add(group(new JButton("Add poles"), new JButton("Remove poles")));
-        panel.add(group(new JLabel("Poles:"), new JLabel("String, Object...")));
-        innerPanel.add(panel);
+        // SEARCH panel
+        innerPanel.add(createSearchPanel());
 
         // FILTERING panel
         innerPanel.add(createFilterPanel());
@@ -86,13 +87,30 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
     protected JPanel createTitledPanel(String title) {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.add(group(new JLabel(bold(title))));
+        if (title != null && !title.equals(""))
+            panel.add(group(new JLabel(bold(title))));
         //panel.setBorder(BorderFactory.createLineBorder(Color.lightGray));
         panel.setBorder(BorderFactory.createCompoundBorder(new EmptyBorder(0,0,10,0),
                 BorderFactory.createLineBorder(Color.lightGray)));
         return panel;
     }
 
+    protected JPanel createSearchPanel() {
+        var panel = createTitledPanel(null);
+
+        panel.add(groupBox(new JLabel(bold("Pole selection")),
+                new JLabel("See the \"NodeTable\" tab for search results")));
+
+        var searchField = new JTextField();
+
+        var button = new JButton("Search");
+        searchField.addActionListener(e -> searchNetworkFor(searchField.getText().strip()));
+        button.addActionListener(e -> searchNetworkFor(searchField.getText().strip()));
+
+        panel.add(groupBox(searchField, button));
+
+        return panel;
+    }
 
     protected JPanel createFilterPanel() {
         JPanel panel = createTitledPanel("Filtering");
@@ -239,7 +257,7 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
     }
 
     private JPanel group(JComponent... components) {
-        return group(35, components);
+        return group(ENTRY_HEIGHT, components);
     }
 
     private JPanel group(int height, JComponent... components) {
@@ -252,6 +270,19 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
             panel.add(c);
         }
         return panel;
+    }
+
+    private JPanel groupBox(int height, JComponent... components) {
+        JPanel panel = group(height, components);
+        panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
+        for (int i = 0; i < components.length-1; i++) {
+            panel.add(Box.createRigidArea(new Dimension(10, height)), 1+i*2);
+        }
+        return panel;
+    }
+
+    private JPanel groupBox(JComponent... components) {
+        return groupBox(ENTRY_HEIGHT, components);
     }
 
     private void fireChangeListeners(JSlider component) {
@@ -278,6 +309,24 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
                 entered = false; if (!pressed) annotation.setVisible(false);
             }
         };
+    }
+
+    private void searchNetworkFor(String prompt) {
+        Component[] components = swingApp.getJToolBar().getComponents();
+        var result =
+                Arrays.stream(components).filter(c -> c.getClass().getName().contains("EnhancedSearchPanel")).findFirst();
+        if (result.isEmpty()) return;
+        var searchPanel = (JPanel) result.get();
+
+        for (Component inner : searchPanel.getComponents()) {
+            if (inner instanceof JTextField) {
+                var textField = (JTextField) inner;
+                textField.setText("*" + prompt + "*");
+                textField.postActionEvent();
+                textField.setText("");
+                return;
+            }
+        }
     }
 
     @Override
