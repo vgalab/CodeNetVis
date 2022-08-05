@@ -161,6 +161,7 @@ public class SoftwareStyle {
         }
 
         protected void init() {
+            if (am.getCurrentNetworkView() == null) return;
             if (annotation != null) return;
             var argMap = new HashMap<String, String>();
             annotation = anf.createAnnotation(ShapeAnnotation.class, am.getCurrentNetworkView(), argMap);
@@ -178,6 +179,7 @@ public class SoftwareStyle {
         }
 
         public void reposition() {
+            if (am.getCurrentNetworkView() == null) return;
             init();
             checkNetwork();
             annotation.setSize(radius*2, radius*2);
@@ -232,6 +234,7 @@ public class SoftwareStyle {
         }
 
         protected void init() {
+            if (am.getCurrentNetworkView() == null) return;
             for (int i = 0; i < maxRings; i++) {
                 if (annotations.size() <= i) {
                     var argMap = new HashMap<String, String>();
@@ -254,6 +257,7 @@ public class SoftwareStyle {
         }
 
         public void reposition() {
+            if (am.getCurrentNetworkView() == null) return;
             checkNetwork();
             for (int i = 0; i < maxRings; i++) {
                 ShapeAnnotation a = annotations.get(i);

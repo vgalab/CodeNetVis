@@ -20,8 +20,12 @@ import org.cytoscape.service.util.AbstractCyActivator;
 import org.cytoscape.session.CyNetworkNaming;
 import org.cytoscape.session.events.SessionAboutToBeLoadedListener;
 import org.cytoscape.session.events.SessionLoadedListener;
+import org.cytoscape.task.NetworkViewTaskFactory;
+import org.cytoscape.task.NodeViewTaskFactory;
+import org.cytoscape.task.TableCellTaskFactory;
 import org.cytoscape.task.hide.HideTaskFactory;
 import org.cytoscape.task.hide.UnHideAllTaskFactory;
+import org.cytoscape.util.swing.IconManager;
 import org.cytoscape.view.layout.CyLayoutAlgorithm;
 import org.cytoscape.view.model.CyNetworkViewFactory;
 import org.cytoscape.view.model.CyNetworkViewManager;
@@ -89,17 +93,20 @@ public class CyActivator extends AbstractCyActivator {
 		registerService(bc, poleManager, SetCurrentNetworkListener.class);
 		registerService(bc, poleManager, SessionAboutToBeLoadedListener.class);
 
-		AddNorthPoleAction addNPole = new AddNorthPoleAction(poleManager);
-		registerService(bc, addNPole, CyAction.class);
-		registerService(bc, addNPole, SelectedNodesAndEdgesListener.class);
+		var am = getService(bc, CyApplicationManager.class);
+		var im = getService(bc, IconManager.class);
 
-		AddSouthPoleAction addSPole = new AddSouthPoleAction(poleManager);
-		registerService(bc, addSPole, CyAction.class);
-		registerService(bc, addSPole, SelectedNodesAndEdgesListener.class);
+		AddNorthPoleAction addNPole = new AddNorthPoleAction(am, im, poleManager);
+		AddSouthPoleAction addSPole = new AddSouthPoleAction(am, im, poleManager);
+		RemovePoleAction removePole = new RemovePoleAction(am, im, poleManager);
 
-		RemovePoleAction removePole = new RemovePoleAction(poleManager);
-		registerService(bc, removePole, CyAction.class);
-		registerService(bc, removePole, SelectedNodesAndEdgesListener.class);
+		for (ActionOnSelected action : new ActionOnSelected[] {addNPole, addSPole, removePole}) {
+			registerService(bc, action, CyAction.class);
+			registerService(bc, action, SelectedNodesAndEdgesListener.class);
+			registerService(bc, action.getNetworkTaskFactory(), NetworkViewTaskFactory.class, action.getNetworkTaskProperties());
+			registerService(bc, action.getNodeViewTaskFactory(), NodeViewTaskFactory.class, action.getNetworkTaskProperties());
+			registerService(bc, action.getTableCellTaskFactory(), TableCellTaskFactory.class, action.getTableTaskProperties());
+		}
 
 		// Pole Magnetic Layout
 		PoleMagneticLayout poleMagneticLayout = new PoleMagneticLayout(poleManager, undo);
@@ -112,7 +119,6 @@ public class CyActivator extends AbstractCyActivator {
 		registerService(bc,poleMagneticLayout,CyLayoutAlgorithm.class, pLayoutProps);
 
 		// Extra pole tasks
-		CyApplicationManager am = getService(bc, CyApplicationManager.class);
 
 		ExtraTasks.MakeTopDegreePoles makeTopDegreePoles = new ExtraTasks.MakeTopDegreePoles(am, poleManager);
 		registerService(bc, ExtraTasks.getTaskFactory(makeTopDegreePoles),
