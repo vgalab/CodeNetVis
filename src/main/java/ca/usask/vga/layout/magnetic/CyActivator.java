@@ -19,6 +19,7 @@ import org.cytoscape.model.subnetwork.CyRootNetworkManager;
 import org.cytoscape.service.util.AbstractCyActivator;
 import org.cytoscape.session.CyNetworkNaming;
 import org.cytoscape.session.events.SessionAboutToBeLoadedListener;
+import org.cytoscape.session.events.SessionLoadedListener;
 import org.cytoscape.task.hide.HideTaskFactory;
 import org.cytoscape.task.hide.UnHideAllTaskFactory;
 import org.cytoscape.view.layout.CyLayoutAlgorithm;
@@ -162,6 +163,7 @@ public class CyActivator extends AbstractCyActivator {
 
 		SoftwarePanel sPanel = new SoftwarePanel(softwareLayout, softwareStyle);
 		registerService(bc, sPanel, CytoPanelComponent.class);
+		registerService(bc, sPanel, SessionLoadedListener.class);
 
 	}
 }

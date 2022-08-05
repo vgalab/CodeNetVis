@@ -6,6 +6,7 @@ import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.model.CyNode;
 import org.cytoscape.task.hide.HideTaskFactory;
 import org.cytoscape.task.hide.UnHideAllTaskFactory;
+import org.cytoscape.view.layout.LayoutPartition;
 import org.cytoscape.view.presentation.annotations.AnnotationFactory;
 import org.cytoscape.view.presentation.annotations.AnnotationManager;
 import org.cytoscape.view.presentation.annotations.ShapeAnnotation;
@@ -61,21 +62,21 @@ public class SoftwareStyle {
         ringsAnnotation = new RingsAnnotation();
     }
 
-    public void setNodeSize(float size) {
-        double calculated = Math.round(Math.pow(10, 1+(size / 50)));
+    public void setNodeSize(float value) {
+        setNodeLabelSize(nodeSizeFunc(value));
+    }
 
+    private double nodeSizeFunc(double value) {
+        double calculated = Math.round(Math.pow(10, 1+(value / 50)));
         if (calculated == 10) {
             calculated = 0.1;
         }
-
-        setNodeLabelSize(calculated);
+        return calculated;
     }
 
-    public void setEdgeTransparency(float value) {
-        int calculated = Math.round(value);
-
-        VisualStyle style = vmm.getVisualStyle(am.getCurrentNetworkView());
-        style.setDefaultValue(BasicVisualLexicon.EDGE_TRANSPARENCY, calculated);
+    private double nodeSizeFuncReverse(double size) {
+        if (size == 0.1) size = 10;
+        return 50*(Math.log10(size) - 1);
     }
 
     private void setNodeLabelSize(double size) {
@@ -93,6 +94,29 @@ public class SoftwareStyle {
             t.run(ExtraTasks.getBlankTaskMonitor());
         }
 
+    }
+
+    private double getCurrentNodeSize() {
+        if (am.getCurrentNetworkView() == null) return 30;
+        VisualStyle style = vmm.getVisualStyle(am.getCurrentNetworkView());
+        return style.getDefaultValue(BasicVisualLexicon.NODE_SIZE);
+    }
+
+    public float getInitialNodeSizeValue() {
+        return (float) nodeSizeFuncReverse(getCurrentNodeSize());
+    }
+
+    public void setEdgeTransparency(float value) {
+        int calculated = Math.round(value);
+
+        VisualStyle style = vmm.getVisualStyle(am.getCurrentNetworkView());
+        style.setDefaultValue(BasicVisualLexicon.EDGE_TRANSPARENCY, calculated);
+    }
+
+    public float getInitialEdgeTransparency() {
+        if (am.getCurrentNetworkView() == null) return 120;
+        VisualStyle style = vmm.getVisualStyle(am.getCurrentNetworkView());
+        return style.getDefaultValue(BasicVisualLexicon.EDGE_TRANSPARENCY);
     }
 
     public void setShowUnique(boolean showUnique) {
@@ -175,10 +199,16 @@ public class SoftwareStyle {
             anm.removeAnnotation(annotation);
         }
 
+        @Override
         public void setVisible(boolean visible) {
             this.visible = visible;
             if (visible) show();
             else hide();
+        }
+
+        @Override
+        public void reset() {
+            annotation = null;
         }
     }
 
@@ -239,6 +269,7 @@ public class SoftwareStyle {
             if (visible) show();
         }
 
+        @Override
         public void setVisible(boolean visible) {
             this.visible = visible;
             if (visible) show();
@@ -255,10 +286,16 @@ public class SoftwareStyle {
         public void hide() {
             anm.removeAnnotations(annotations);
         }
+
+        @Override
+        public void reset() {
+            annotations.clear();
+        }
     }
 
     public interface TooltipAnnotation {
         void setVisible(boolean visible);
+        void reset();
     }
 
     protected Point2D getAveragePolePos(float offsetX, float offsetY) {
@@ -292,6 +329,15 @@ public class SoftwareStyle {
 
     protected boolean polesPresent() {
         return am.getCurrentNetwork() != null && pm.getPoleList(am.getCurrentNetwork()).size() > 0;
+    }
+
+    public float getSuggestedRadius() {
+        var view = am.getCurrentNetworkView();
+        if (view == null) return 2500;
+        double scale = view.getVisualProperty(BasicVisualLexicon.NETWORK_SCALE_FACTOR);
+        double width = view.getVisualProperty(BasicVisualLexicon.NETWORK_WIDTH) / scale;
+        double height = view.getVisualProperty(BasicVisualLexicon.NETWORK_HEIGHT) / scale;
+        return (float) Math.min(width, height) / 2;
     }
 
 

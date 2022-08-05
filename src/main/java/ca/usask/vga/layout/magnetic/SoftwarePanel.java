@@ -2,14 +2,19 @@ package ca.usask.vga.layout.magnetic;
 
 import org.cytoscape.application.swing.CytoPanelComponent2;
 import org.cytoscape.application.swing.CytoPanelName;
+import org.cytoscape.session.events.SessionLoadedEvent;
+import org.cytoscape.session.events.SessionLoadedListener;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.ChangeEvent;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
-public class SoftwarePanel extends JPanel implements CytoPanelComponent2 {
+public class SoftwarePanel extends JPanel implements CytoPanelComponent2, SessionLoadedListener {
 
     public static final String title = "Software Layout", identifier = "software-panel";
     private final Icon icon = new ImageIcon(getClass().getResource("/icons/add_pole_N_icon.png"));
@@ -17,10 +22,13 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2 {
     private final SoftwareLayout layout;
     private final SoftwareStyle style;
 
+    private List<SessionLoadedListener> onSessionLoaded;
+
     protected SoftwarePanel(SoftwareLayout layout, SoftwareStyle style) {
         super();
         this.layout = layout;
         this.style = style;
+        onSessionLoaded = new ArrayList<>();
 
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
@@ -68,6 +76,13 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2 {
         add(scrollPane);
     }
 
+    @Override
+    public void handleEvent(SessionLoadedEvent sessionLoadedEvent) {
+        style.getRingsAnnotation().reset();
+        style.getRadiusAnnotation().reset();
+        for (var l : onSessionLoaded) l.handleEvent(sessionLoadedEvent);
+    }
+
     protected JPanel createTitledPanel(String title) {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
@@ -99,15 +114,20 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2 {
     protected JPanel createLayoutPanel() {
         JPanel panel = createTitledPanel("Layout");
 
-        var radiusEditor = createCustomSlider(0, 100, 25, 25, 5, 5);
+        var initialRadius = Math.round(style.getSuggestedRadius())/100;
+        var radiusEditor = createCustomSlider(0, 100, initialRadius, 25, 5, 5);
 
         radiusEditor.addChangeListener(e -> layout.setPinRadius(radiusEditor.getValue()*100));
         radiusEditor.addChangeListener(e -> style.getRadiusAnnotation().setRadius(radiusEditor.getValue()*100));
         radiusEditor.addMouseListener(annotationOnMouse(style.getRadiusAnnotation()));
+        fireChangeListeners(radiusEditor);
 
-        layout.setPinRadius(radiusEditor.getValue()*100);
+        panel.add(label("Pin radius: " + initialRadius, radiusEditor));
 
-        panel.add(label("Pin radius: " + 25, radiusEditor));
+        onSessionLoaded.add(e -> {
+            radiusEditor.setValue(Math.round(style.getSuggestedRadius()) / 100);
+            fireChangeListeners(radiusEditor);
+        });
 
         var ringsEditor = createCustomSpinner(0, 100, 4, 1);
 
@@ -138,17 +158,21 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2 {
         // CONTENTS
         panel.add(group(new JLabel("Node size based on"), new JComboBox<String>(new String[]{"Fixed"/*, "Indegree", "Outdegree"*/})));
 
-        var sizeEditor = createCustomSlider(0, 100, 50, 25, 5, 1);
+        var initialSize = Math.round(style.getInitialNodeSizeValue());
+        var sizeEditor = createCustomSlider(0, 100, initialSize, 25, 5, 1);
 
         sizeEditor.addChangeListener(e -> style.setNodeSize(sizeEditor.getValue()));
+        panel.add(label("Node size: " + initialSize, sizeEditor));
 
-        panel.add(label("Node size: 50", sizeEditor));
+        onSessionLoaded.add(e -> sizeEditor.setValue(Math.round(style.getInitialNodeSizeValue())));
 
-        var transparencyEditor = createCustomSlider(0, 255, 255, 60, 15, 15);
+        var initialTransparency = Math.round(style.getInitialEdgeTransparency());
+        var transparencyEditor = createCustomSlider(0, 255, initialTransparency, 60, 15, 15);
 
         transparencyEditor.addChangeListener(e -> style.setEdgeTransparency(transparencyEditor.getValue()));
+        panel.add(label("Edge visibility: "+initialTransparency, transparencyEditor));
 
-        panel.add(label("Edge visibility: 255", transparencyEditor));
+        onSessionLoaded.add(e -> transparencyEditor.setValue(Math.round(style.getInitialEdgeTransparency())));
 
         panel.add(group(new JButton("Choose colors...")));
 
@@ -227,6 +251,14 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2 {
             panel.add(c);
         }
         return panel;
+    }
+
+    private void fireChangeListeners(JSlider component) {
+        Arrays.stream(component.getChangeListeners()).forEach(l -> l.stateChanged(new ChangeEvent(component)));
+    }
+
+    private void fireChangeListeners(JSpinner component) {
+        Arrays.stream(component.getChangeListeners()).forEach(l -> l.stateChanged(new ChangeEvent(component)));
     }
 
     private MouseListener annotationOnMouse(SoftwareStyle.TooltipAnnotation annotation) {
