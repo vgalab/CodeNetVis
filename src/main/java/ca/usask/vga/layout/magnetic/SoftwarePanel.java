@@ -3,7 +3,6 @@ package ca.usask.vga.layout.magnetic;
 import org.cytoscape.application.swing.CySwingApplication;
 import org.cytoscape.application.swing.CytoPanelComponent2;
 import org.cytoscape.application.swing.CytoPanelName;
-import org.cytoscape.application.swing.CytoPanelState;
 import org.cytoscape.session.events.SessionLoadedEvent;
 import org.cytoscape.session.events.SessionLoadedListener;
 
@@ -12,10 +11,8 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.*;
 import java.util.List;
-import java.util.Optional;
 
 public class SoftwarePanel extends JPanel implements CytoPanelComponent2, SessionLoadedListener {
 
@@ -174,7 +171,9 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         // TODO: Other mappings
 
         // CONTENTS
-        panel.add(group(new JLabel("Node size based on"), new JComboBox<String>(new String[]{"Fixed"/*, "Indegree", "Outdegree"*/})));
+        var comboBox = new JComboBox<>(SoftwareStyle.SizeEquation.getAllowedList());
+        comboBox.addItemListener(e -> style.setSizeEquation((SoftwareStyle.SizeEquation) e.getItem()));
+        panel.add(group(new JLabel("Node size based on"), comboBox));
 
         var initialSize = Math.round(style.getInitialNodeSizeValue());
         var sizeEditor = createCustomSlider(0, 100, initialSize, 25, 5, 1);

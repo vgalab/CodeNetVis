@@ -149,7 +149,12 @@
             <version>${cytoscape.api.version}</version>
             <scope>provided</scope>
         </dependency>
-
+        <dependency>
+            <groupId>org.cytoscape</groupId>
+            <artifactId>equations-api</artifactId>
+            <version>${cytoscape.api.version}</version>
+            <scope>provided</scope>
+        </dependency>
 
 
 

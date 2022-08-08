@@ -11,6 +11,7 @@ import org.cytoscape.application.events.SetCurrentNetworkListener;
 import org.cytoscape.application.swing.CyAction;
 import org.cytoscape.application.swing.CySwingApplication;
 import org.cytoscape.application.swing.CytoPanelComponent;
+import org.cytoscape.equations.EquationCompiler;
 import org.cytoscape.io.util.StreamUtil;
 import org.cytoscape.model.CyNetworkFactory;
 import org.cytoscape.model.CyNetworkManager;
@@ -166,7 +167,8 @@ public class CyActivator extends AbstractCyActivator {
 				poleManager,
 				getService(bc, AnnotationManager.class),
 				getService(bc, AnnotationFactory.class, "(type=ShapeAnnotation.class)"),
-				getService(bc, HideTaskFactory.class), getService(bc, UnHideAllTaskFactory.class));
+				getService(bc, HideTaskFactory.class), getService(bc, UnHideAllTaskFactory.class),
+				getService(bc, EquationCompiler.class));
 
 		SoftwarePanel sPanel = new SoftwarePanel(getService(bc, CySwingApplication.class), softwareLayout, softwareStyle);
 		registerService(bc, sPanel, CytoPanelComponent.class);
