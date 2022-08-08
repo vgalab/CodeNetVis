@@ -96,7 +96,7 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         var panel = createTitledPanel(null);
 
         panel.add(groupBox(new JLabel(bold("Pole selection")),
-                new JLabel("See the \"NodeTable\" tab for search results")));
+                new JLabel("See the \"Node Table\" tab for search results")));
 
         var searchField = new JTextField();
 
@@ -105,6 +105,12 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         button.addActionListener(e -> searchNetworkFor(searchField.getText().strip()));
 
         panel.add(groupBox(searchField, button));
+
+        var poleCountText = "Total number of poles: ";
+
+        var poleCount = new JLabel(poleCountText + style.pm.getPoleCount(style.am.getCurrentNetwork()));
+        style.pm.addChangeListener(() -> poleCount.setText(poleCountText+style.pm.getPoleCount(style.am.getCurrentNetwork())));
+        panel.add(group(poleCount));
 
         return panel;
     }
@@ -168,8 +174,6 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
     protected JPanel createStylePanel() {
         JPanel panel = createTitledPanel("Style");
 
-        // TODO: Other mappings
-
         // CONTENTS
         var comboBox = new JComboBox<>(SoftwareStyle.SizeEquation.getAllowedList());
         comboBox.addItemListener(e -> style.setSizeEquation((SoftwareStyle.SizeEquation) e.getItem()));
@@ -190,6 +194,12 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         panel.add(label("Edge visibility:", transparencyEditor));
 
         onSessionLoaded.add(e -> transparencyEditor.setValue(Math.round(style.getInitialEdgeTransparency())));
+
+        var togglePoleColors = new JCheckBox();
+        togglePoleColors.setSelected(true);
+        togglePoleColors.setHorizontalTextPosition(SwingConstants.LEFT);
+        togglePoleColors.addActionListener(l -> style.setShowPoleColors(togglePoleColors.isSelected()));
+        panel.add(group(new JLabel("Show poles in different colors"), togglePoleColors));
 
         panel.add(group(new JButton("Choose colors...")));
 

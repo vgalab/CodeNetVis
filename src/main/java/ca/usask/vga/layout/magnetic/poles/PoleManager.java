@@ -35,11 +35,14 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
 
     protected PoleManagerEdit lastEdit;
 
+    private List<Runnable> changeListeners;
+
     public PoleManager(CyNetworkManager networkManager, UndoSupport undoSupport) {
         this.undoSupport = undoSupport;
         poleList = new HashMap<>();
         poleIsOutwards = new HashSet<>();
         cachedPoleDistances = new HashMap<>();
+        changeListeners = new ArrayList<>();
         for (CyNetwork net : networkManager.getNetworkSet()) {
             readPoleListFromTable(net);
         }
@@ -435,6 +438,7 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
         }
 
         tableInitialized = true;
+        for (var l : changeListeners) l.run();
     }
 
     @Override
@@ -472,6 +476,19 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
         if (lastEdit.changesPresent())
             undoSupport.postEdit(lastEdit);
         lastEdit = null;
+    }
+
+    public void addChangeListener(Runnable r) {
+        changeListeners.add(r);
+    }
+
+    public void removeChangeListener(Runnable r) {
+        changeListeners.remove(r);
+    }
+
+    public int getPoleCount(CyNetwork net) {
+        if (net == null) return 0;
+        return poleList.get(net).size();
     }
 
 }

@@ -10,11 +10,13 @@ import org.cytoscape.task.hide.UnHideAllTaskFactory;
 import org.cytoscape.view.presentation.annotations.AnnotationFactory;
 import org.cytoscape.view.presentation.annotations.AnnotationManager;
 import org.cytoscape.view.presentation.annotations.ShapeAnnotation;
+import org.cytoscape.view.presentation.property.BasicVisualLexicon;
 import org.cytoscape.view.vizmap.VisualMappingFunctionFactory;
 import org.cytoscape.view.vizmap.VisualMappingManager;
 import org.cytoscape.view.vizmap.VisualStyle;
 import org.cytoscape.view.vizmap.mappings.BoundaryRangeValues;
 import org.cytoscape.view.vizmap.mappings.ContinuousMapping;
+import org.cytoscape.work.TaskIterator;
 import org.cytoscape.work.TaskManager;
 
 import java.awt.geom.Point2D;
@@ -26,13 +28,13 @@ import static org.cytoscape.view.presentation.property.BasicVisualLexicon.*;
 
 public class SoftwareStyle {
 
-    private final CyApplicationManager am;
+    protected final CyApplicationManager am;
     private final TaskManager tm;
     private final VisualMappingManager vmm;
     private final VisualMappingFunctionFactory vmff_passthrough;
     private final VisualMappingFunctionFactory vmff_discrete;
     private final VisualMappingFunctionFactory vmff_continuous;
-    private final PoleManager pm;
+    protected final PoleManager pm;
     private final AnnotationManager anm;
     private final AnnotationFactory<ShapeAnnotation> anf;
     private final HideTaskFactory htf;
@@ -49,7 +51,9 @@ public class SoftwareStyle {
 
     private SizeEquation currentSizeEquation = SizeEquation.FIXED;
     private int hideLabelsLessThan = 10;
-    private double lastSetNodeSize;
+    private double lastSetNodeSize = 30;
+
+    private boolean usePoleColors = true;
 
     public SoftwareStyle(CyApplicationManager am, TaskManager tm, VisualMappingManager vmm,
                          VisualMappingFunctionFactory vmff_passthrough,
@@ -73,6 +77,25 @@ public class SoftwareStyle {
         pinRadiusAnnotation = new PinRadiusAnnotation();
         ringsAnnotation = new RingsAnnotation();
         lastSetNodeSize = 30;
+        usePoleColors = true;
+        pm.addChangeListener(this::updatePoleColors);
+    }
+
+    public void setShowPoleColors(boolean value) {
+        usePoleColors = value;
+        updatePoleColors();
+    }
+
+    private void updatePoleColors() {
+        if (usePoleColors) {
+            var coloring = new ExtraTasks.LegacyPoleColoring(am, pm, vmm, vmff_discrete);
+            tm.execute(new TaskIterator(coloring));
+        } else {
+            VisualStyle style = vmm.getVisualStyle(am.getCurrentNetworkView());
+            style.removeVisualMappingFunction(NODE_FILL_COLOR);
+            style.removeVisualMappingFunction(EDGE_UNSELECTED_PAINT);
+            style.removeVisualMappingFunction(EDGE_STROKE_UNSELECTED_PAINT);
+        }
     }
 
     public void setNodeSize(float value) {
