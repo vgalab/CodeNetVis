@@ -4,6 +4,7 @@ import ca.usask.vga.layout.magnetic.poles.ExtraTasks;
 import ca.usask.vga.layout.magnetic.poles.PoleManager;
 import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.equations.EquationCompiler;
+import org.cytoscape.model.CyEdge;
 import org.cytoscape.model.CyNode;
 import org.cytoscape.task.hide.HideTaskFactory;
 import org.cytoscape.task.hide.UnHideAllTaskFactory;
@@ -96,6 +97,13 @@ public class SoftwareStyle {
             style.removeVisualMappingFunction(EDGE_UNSELECTED_PAINT);
             style.removeVisualMappingFunction(EDGE_STROKE_UNSELECTED_PAINT);
         }
+    }
+
+    public void setTopNasPoles(int n, boolean incoming) {
+        var makeTop = new ExtraTasks.MakeTopDegreePoles(am, pm);
+        makeTop.topN = n;
+        makeTop.edgeType = incoming ? CyEdge.Type.INCOMING : CyEdge.Type.OUTGOING;
+        tm.execute(new TaskIterator(makeTop));
     }
 
     public void setNodeSize(float value) {

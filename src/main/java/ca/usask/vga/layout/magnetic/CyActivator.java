@@ -37,6 +37,7 @@ import org.cytoscape.view.vizmap.VisualMappingFunctionFactory;
 import org.cytoscape.view.vizmap.VisualMappingManager;
 import org.cytoscape.work.TaskFactory;
 import org.cytoscape.work.TaskManager;
+import org.cytoscape.work.swing.DialogTaskManager;
 import org.cytoscape.work.undo.UndoSupport;
 import org.osgi.framework.BundleContext;
 
@@ -170,7 +171,9 @@ public class CyActivator extends AbstractCyActivator {
 				getService(bc, HideTaskFactory.class), getService(bc, UnHideAllTaskFactory.class),
 				getService(bc, EquationCompiler.class));
 
-		SoftwarePanel sPanel = new SoftwarePanel(getService(bc, CySwingApplication.class), softwareLayout, softwareStyle);
+		SoftwarePanel sPanel = new SoftwarePanel(getService(bc, CySwingApplication.class),
+				getService(bc, DialogTaskManager.class),
+				softwareLayout, softwareStyle);
 		registerService(bc, sPanel, CytoPanelComponent.class);
 		registerService(bc, sPanel, SessionLoadedListener.class);
 

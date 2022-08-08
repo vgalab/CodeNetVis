@@ -1,10 +1,13 @@
 package ca.usask.vga.layout.magnetic;
 
+import ca.usask.vga.layout.magnetic.poles.ExtraTasks;
 import org.cytoscape.application.swing.CySwingApplication;
 import org.cytoscape.application.swing.CytoPanelComponent2;
 import org.cytoscape.application.swing.CytoPanelName;
 import org.cytoscape.session.events.SessionLoadedEvent;
 import org.cytoscape.session.events.SessionLoadedListener;
+import org.cytoscape.work.TaskIterator;
+import org.cytoscape.work.swing.DialogTaskManager;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -22,14 +25,16 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
     private final CySwingApplication swingApp;
     private final SoftwareLayout layout;
     private final SoftwareStyle style;
+    private final DialogTaskManager dtm;
 
     private final int ENTRY_HEIGHT = 35;
 
     private List<SessionLoadedListener> onSessionLoaded;
 
-    protected SoftwarePanel(CySwingApplication swingApp, SoftwareLayout layout, SoftwareStyle style) {
+    protected SoftwarePanel(CySwingApplication swingApp, DialogTaskManager dtm, SoftwareLayout layout, SoftwareStyle style) {
         super();
         this.swingApp = swingApp;
+        this.dtm = dtm;
         this.layout = layout;
         this.style = style;
         onSessionLoaded = new ArrayList<>();
@@ -110,7 +115,9 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
 
         var poleCount = new JLabel(poleCountText + style.pm.getPoleCount(style.am.getCurrentNetwork()));
         style.pm.addChangeListener(() -> poleCount.setText(poleCountText+style.pm.getPoleCount(style.am.getCurrentNetwork())));
-        panel.add(group(poleCount));
+
+        panel.add(group(poleCount, addListener(new JButton("Set poles by top degree..."), e ->
+                dtm.execute(new TaskIterator(new ExtraTasks.MakeTopDegreePoles(style.am, style.pm))))));
 
         return panel;
     }
@@ -201,7 +208,7 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         togglePoleColors.addActionListener(l -> style.setShowPoleColors(togglePoleColors.isSelected()));
         panel.add(group(new JLabel("Show poles in different colors"), togglePoleColors));
 
-        panel.add(group(new JButton("Choose colors...")));
+        //panel.add(group(new JButton("Choose colors...")));
 
         return panel;
     }
