@@ -108,6 +108,7 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         var button = new JButton("Search");
         searchField.addActionListener(e -> searchNetworkFor(searchField.getText().strip()));
         button.addActionListener(e -> searchNetworkFor(searchField.getText().strip()));
+        onSessionLoaded.add(e -> searchField.setText(""));
 
         panel.add(groupBox(searchField, button));
 
@@ -133,6 +134,7 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         group.add(b2);
 
         b2.addChangeListener(e -> style.setShowUnique(b2.isSelected()));
+        onSessionLoaded.add(e -> b1.setSelected(true));
 
         panel.add(group(b1, b2));
 

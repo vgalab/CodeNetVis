@@ -88,7 +88,7 @@ public class SoftwareStyle {
     }
 
     private void updatePoleColors() {
-        if (usePoleColors) {
+        if (usePoleColors && pm.getPoleCount(am.getCurrentNetwork()) > 0) {
             var coloring = new ExtraTasks.LegacyPoleColoring(am, pm, vmm, vmff_discrete);
             tm.execute(new TaskIterator(coloring));
         } else {
