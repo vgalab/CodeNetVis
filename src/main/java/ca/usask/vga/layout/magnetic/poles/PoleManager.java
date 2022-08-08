@@ -314,9 +314,23 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
     }
 
     public CyNode getTargetPole(CyNetwork network, CyEdge edge) {
-        if (isClosestToOne(network, edge.getTarget()))
-            return getClosestPole(network, edge.getTarget());
-        return null;
+        CyNode inwardPole = null, outwardPole = null;
+        if (isClosestToOne(network, edge.getTarget())) {
+            var pole = getClosestPole(network, edge.getTarget());
+            if (!isPoleOutwards(network, pole))
+                inwardPole = pole;
+        }
+        if (isClosestToOne(network, edge.getSource())) {
+            var pole = getClosestPole(network, edge.getSource());
+            if (isPoleOutwards(network, pole))
+                outwardPole = pole;
+        }
+        if ((inwardPole == null) == (outwardPole == null))
+            return null;
+        if (inwardPole != null)
+            return inwardPole;
+        else
+            return outwardPole;
     }
 
     public boolean isDisconnected(CyNetwork network, CyEdge edge) {
