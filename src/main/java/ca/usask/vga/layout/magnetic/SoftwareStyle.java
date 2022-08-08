@@ -111,7 +111,7 @@ public class SoftwareStyle {
     }
 
     private double nodeSizeFunc(double value) {
-        double calculated = Math.round(Math.pow(10, 1+(value / 50)));
+        double calculated = Math.round(Math.pow(10, 1+(value / 50))/2);
         if (value == 0) {
             calculated = 0.1;
         }
@@ -120,7 +120,7 @@ public class SoftwareStyle {
 
     private double nodeSizeFuncReverse(double size) {
         if (size == 0.1) return 0;
-        return 50*(Math.log10(size) - 1);
+        return 50*(Math.log10(size*2) - 1);
     }
 
     private void setNodeLabelSize(double size) {
@@ -422,8 +422,8 @@ public class SoftwareStyle {
             var nodeSizeFunc = (ContinuousMapping<Integer, Double>) vmff_continuous.createVisualMappingFunction(currentSizeEquation.getColumnName(), Integer.class, NODE_SIZE);
             var fontSizeFunc = (ContinuousMapping<Integer, Integer>) vmff_continuous.createVisualMappingFunction(currentSizeEquation.getColumnName(), Integer.class, NODE_LABEL_FONT_SIZE);
 
-            double s = lastSetNodeSize;
-            int i = (int) Math.max(1, Math.ceil(s)/4);
+            double s = lastSetNodeSize/2;
+            int i = (int) Math.max(1, Math.ceil(s)/2);
 
             setPoints(nodeSizeFunc, s, 5*s, 10*s, 0, 100, 1000);
             style.addVisualMappingFunction(nodeSizeFunc);

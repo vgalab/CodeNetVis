@@ -125,7 +125,7 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
     protected JPanel createFilterPanel() {
         JPanel panel = createTitledPanel("Filtering");
 
-        var b1 = new JRadioButton("Any dependencies", true);
+        var b1 = new JRadioButton("All dependencies", true);
         var b2 = new JRadioButton("Unique dependencies", false);
 
         var group = new ButtonGroup();
