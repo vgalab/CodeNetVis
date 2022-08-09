@@ -4,6 +4,7 @@ import ca.usask.vga.layout.magnetic.highlight.ChangeHopDistanceAction;
 import ca.usask.vga.layout.magnetic.highlight.CopyHighlightedAction;
 import ca.usask.vga.layout.magnetic.highlight.EdgeHighlighting;
 import ca.usask.vga.layout.magnetic.highlight.ToggleHighlightAction;
+import ca.usask.vga.layout.magnetic.io.JarReader;
 import ca.usask.vga.layout.magnetic.io.PajekReader;
 import ca.usask.vga.layout.magnetic.poles.*;
 import org.cytoscape.application.CyApplicationManager;
@@ -155,6 +156,13 @@ public class CyActivator extends AbstractCyActivator {
 				getService(bc, CyNetworkViewFactory.class)), getService(bc, StreamUtil.class));
 
 		registerService(bc, pajekReader, pajekReader.getServiceClass(), pajekReader.getDefaultProperties());
+
+		// JAR File input
+		JarReader jarReader = JarReader.create(new JarReader.CyAccess(getService(bc, CyNetworkFactory.class),
+				getService(bc, CyNetworkViewFactory.class), getService(bc, EquationCompiler.class)), getService(bc, StreamUtil.class));
+
+		registerService(bc, jarReader, jarReader.getServiceClass(), jarReader.getDefaultProperties());
+
 
 		// Software Panel
 		SoftwareLayout softwareLayout = new SoftwareLayout(poleMagneticLayout, getService(bc, TaskManager.class),

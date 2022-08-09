@@ -69,8 +69,8 @@ public class PajekReader extends AbstractInputStreamTaskFactory {
 
     public Properties getDefaultProperties() {
         Properties props = new Properties();
-        props.setProperty("readerDescription","TC file reader");
-        props.setProperty("readerId","tcNetworkReader");
+        props.setProperty("readerDescription","Pajek NET file reader");
+        props.setProperty("readerId","pajekNetworkReader");
         return props;
     }
 

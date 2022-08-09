@@ -35,7 +35,9 @@ import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.ConstantPoolGen;
 import org.apache.bcel.generic.MethodGen;
+import org.lwjgl.Sys;
 
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -50,11 +52,12 @@ public class ClassVisitor extends EmptyVisitor {
     private String classReferenceFormat;
     private final DynamicCallManager DCManager = new DynamicCallManager();
     private List<String> methodCalls = new ArrayList<>();
+    private PrintStream ps = System.out;
 
     public ClassVisitor(JavaClass jc) {
         clazz = jc;
         constants = new ConstantPoolGen(clazz.getConstantPool());
-        classReferenceFormat = "C:" + clazz.getClassName() + " %s";
+        classReferenceFormat = /*"C:" +*/ clazz.getClassName() + " %s";
     }
 
     public void visitJavaClass(JavaClass jc) {
@@ -67,7 +70,8 @@ public class ClassVisitor extends EmptyVisitor {
                 DCManager.linkCalls(method);
                 method.accept(this);
             } catch (Exception e) {
-                e.printStackTrace();
+                // Ignore erroneous classes
+                //e.printStackTrace();
             }
         }
     }
@@ -80,7 +84,12 @@ public class ClassVisitor extends EmptyVisitor {
             if (constant.getTag() == 7) {
                 String referencedClass = 
                     constantPool.constantToString(constant);
-                System.out.println(String.format(classReferenceFormat, referencedClass));
+                // Skip self references and malformed class names
+                if (referencedClass.equals(clazz.getClassName()))
+                    continue;
+                if (referencedClass.startsWith("["))
+                    continue;
+                ps.println(String.format(classReferenceFormat, referencedClass));
             }
         }
     }
@@ -98,5 +107,9 @@ public class ClassVisitor extends EmptyVisitor {
 
     public List<String> methodCalls() {
         return this.methodCalls;
+    }
+
+    public void setPrintStream(PrintStream ps) {
+        this.ps = ps;
     }
 }

@@ -501,7 +501,7 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
     }
 
     public int getPoleCount(CyNetwork net) {
-        if (net == null) return 0;
+        if (net == null || poleList == null|| poleList.get(net) == null) return 0;
         return poleList.get(net).size();
     }
 
