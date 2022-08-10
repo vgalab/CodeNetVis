@@ -13,6 +13,7 @@ import org.cytoscape.io.util.StreamUtil;
 import org.cytoscape.model.*;
 import org.cytoscape.view.model.CyNetworkView;
 import org.cytoscape.view.model.CyNetworkViewFactory;
+import org.cytoscape.work.ProvidesTitle;
 import org.cytoscape.work.TaskIterator;
 import org.cytoscape.work.TaskMonitor;
 import org.cytoscape.work.Tunable;
@@ -99,6 +100,11 @@ public class JarReader extends AbstractInputStreamTaskFactory {
         private final List<CyNetwork> newNetworks;
 
         public String[] packagesToIgnore = {"java.", "javax.", "com.sun.", "jdk."};
+
+        @ProvidesTitle
+        public String getTitle() {
+            return "JAR file import properties";
+        }
 
         @Tunable(description="Root package of interest:")
         public String userPackage = "";

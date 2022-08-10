@@ -5,27 +5,25 @@ import ca.usask.vga.layout.magnetic.poles.PoleManager;
 import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.equations.EquationCompiler;
 import org.cytoscape.model.CyEdge;
-import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNode;
 import org.cytoscape.task.hide.HideTaskFactory;
 import org.cytoscape.task.hide.UnHideAllTaskFactory;
 import org.cytoscape.view.model.CyNetworkView;
 import org.cytoscape.view.model.events.NetworkViewAboutToBeDestroyedEvent;
 import org.cytoscape.view.model.events.NetworkViewAboutToBeDestroyedListener;
-import org.cytoscape.view.model.events.NetworkViewDestroyedEvent;
-import org.cytoscape.view.model.events.NetworkViewDestroyedListener;
 import org.cytoscape.view.presentation.annotations.AnnotationFactory;
 import org.cytoscape.view.presentation.annotations.AnnotationManager;
 import org.cytoscape.view.presentation.annotations.ShapeAnnotation;
-import org.cytoscape.view.presentation.property.BasicVisualLexicon;
-import org.cytoscape.view.vizmap.VisualMappingFunctionFactory;
-import org.cytoscape.view.vizmap.VisualMappingManager;
-import org.cytoscape.view.vizmap.VisualStyle;
+import org.cytoscape.view.presentation.property.ArrowShapeVisualProperty;
+import org.cytoscape.view.presentation.property.NodeShapeVisualProperty;
+import org.cytoscape.view.vizmap.*;
 import org.cytoscape.view.vizmap.mappings.BoundaryRangeValues;
 import org.cytoscape.view.vizmap.mappings.ContinuousMapping;
+import org.cytoscape.view.vizmap.mappings.PassthroughMapping;
 import org.cytoscape.work.TaskIterator;
 import org.cytoscape.work.TaskManager;
 
+import java.awt.*;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -41,6 +39,7 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
     private final VisualMappingFunctionFactory vmff_passthrough;
     private final VisualMappingFunctionFactory vmff_discrete;
     private final VisualMappingFunctionFactory vmff_continuous;
+    private final VisualStyleFactory vsf;
     protected final PoleManager pm;
     private final AnnotationManager anm;
     private final AnnotationFactory<ShapeAnnotation> anf;
@@ -65,7 +64,7 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
     public SoftwareStyle(CyApplicationManager am, TaskManager tm, VisualMappingManager vmm,
                          VisualMappingFunctionFactory vmff_passthrough,
                          VisualMappingFunctionFactory vmff_discrete,
-                         VisualMappingFunctionFactory vmff_continuous, PoleManager pm,
+                         VisualMappingFunctionFactory vmff_continuous, VisualStyleFactory vsf, PoleManager pm,
                          AnnotationManager anm, AnnotationFactory anf,
                          HideTaskFactory htf, UnHideAllTaskFactory utf,
                          EquationCompiler eq) {
@@ -75,6 +74,7 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
         this.vmff_passthrough = vmff_passthrough;
         this.vmff_discrete = vmff_discrete;
         this.vmff_continuous = vmff_continuous;
+        this.vsf = vsf;
         this.pm = pm;
         this.anm = anm;
         this.anf = anf;
@@ -494,5 +494,52 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
         }
     }
 
+    public VisualStyle applyDirectedStyle() {
+        if (am.getCurrentNetworkView() == null) return null;
+        var style = vsf.createVisualStyle(vmm.getDefaultVisualStyle());
+
+        style.setDefaultValue(NODE_SHAPE, NodeShapeVisualProperty.ELLIPSE);
+        style.setDefaultValue(EDGE_TARGET_ARROW_SHAPE, ArrowShapeVisualProperty.ARROW);
+        style.setDefaultValue(EDGE_TARGET_ARROW_SIZE, 12d);
+
+        style.setDefaultValue(NODE_SIZE, 30d);
+        style.setDefaultValue(NODE_LABEL_FONT_SIZE, 15);
+
+        style.removeVisualMappingFunction(EDGE_LABEL);
+        style.setDefaultValue(EDGE_UNSELECTED_PAINT, Color.LIGHT_GRAY);
+
+        for (var d : style.getAllVisualPropertyDependencies()) {
+            d.setDependency(d.getIdString().equals("arrowColorMatchesEdge") ||
+                    d.getIdString().equals("nodeSizeLocked"));
+        }
+
+        vmm.setVisualStyle(style, am.getCurrentNetworkView());
+        return style;
+    }
+
+    public void setLabelsPassthrough(String column) {
+        PassthroughMapping<String, String> func = (PassthroughMapping<String, String>)
+                vmff_passthrough.createVisualMappingFunction(column, String.class, NODE_LABEL);
+        vmm.getVisualStyle(am.getCurrentNetworkView()).addVisualMappingFunction(func);
+    }
+
+    public void setTooltipsPassthrough(String column) {
+        PassthroughMapping<String, String> func = (PassthroughMapping<String, String>)
+                vmff_passthrough.createVisualMappingFunction(column, String.class, NODE_TOOLTIP);
+        vmm.getVisualStyle(am.getCurrentNetworkView()).addVisualMappingFunction(func);
+    }
+
+    public void onFileLoaded(String fileFormat) {
+        if (am.getCurrentNetworkView() == null) return;
+
+        var style = applyDirectedStyle();
+
+        if (fileFormat.equals("jar")) {
+            // Set class as the labels
+            setLabelsPassthrough("Class");
+            setTooltipsPassthrough("Package");
+        }
+
+    }
 
 }

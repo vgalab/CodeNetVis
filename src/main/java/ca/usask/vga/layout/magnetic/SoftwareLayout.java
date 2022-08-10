@@ -1,5 +1,6 @@
 package ca.usask.vga.layout.magnetic;
 
+import ca.usask.vga.layout.magnetic.force.FieldType;
 import ca.usask.vga.layout.magnetic.force.HierarchyForce;
 import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.work.FinishStatus;
@@ -87,12 +88,50 @@ public class SoftwareLayout {
         return c;
     }
 
+    protected PoleMagneticLayoutContext getLinearContext() {
+
+        var c = getContext();
+
+        c.repulsionCoefficient = 5;
+        c.defaultSpringLength = 50;
+        c.defaultSpringCoefficient = 1e-5;
+
+        c.useCentralGravity = false;
+        c.pinPoles = false;
+
+        c.usePoleAttraction = false;
+        c.useHierarchyForce = false;
+
+        c.magnetEnabled = true;
+        c.magneticAlpha = 0;
+        c.magneticBeta = 2;
+        c.useMagneticPoles = false;
+        c.fieldType = FieldType.HORIZONTAL;
+        c.magneticFieldStrength = 1e-3;
+
+        c.numIterations = 50;
+        c.useAnimation = true;
+
+        c.useAutoLayout = false;
+
+        return c;
+    }
+
     public void setPinRadius(float newValue) {
         this.pinRadius = newValue;
     }
 
     public void setMaxRings(int newValue) {
         this.maxRings = newValue;
+    }
+
+    public void layoutOnLoad() {
+
+        var context = getLinearContext();
+        var netView = am.getCurrentNetworkView();
+        var task = pml.createTaskIterator(netView, context, new HashSet<>(netView.getNodeViews()), null);
+
+        tm.execute(task);
     }
 
 }

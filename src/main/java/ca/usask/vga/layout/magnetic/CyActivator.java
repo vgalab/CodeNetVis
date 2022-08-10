@@ -11,7 +11,6 @@ import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.application.events.SetCurrentNetworkListener;
 import org.cytoscape.application.swing.CyAction;
 import org.cytoscape.application.swing.CySwingApplication;
-import org.cytoscape.application.swing.CytoPanelComponent;
 import org.cytoscape.equations.EquationCompiler;
 import org.cytoscape.io.util.StreamUtil;
 import org.cytoscape.model.CyNetworkFactory;
@@ -22,22 +21,23 @@ import org.cytoscape.model.subnetwork.CyRootNetworkManager;
 import org.cytoscape.service.util.AbstractCyActivator;
 import org.cytoscape.session.CyNetworkNaming;
 import org.cytoscape.session.events.SessionAboutToBeLoadedListener;
-import org.cytoscape.session.events.SessionLoadedListener;
 import org.cytoscape.task.NetworkViewTaskFactory;
 import org.cytoscape.task.NodeViewTaskFactory;
 import org.cytoscape.task.TableCellTaskFactory;
 import org.cytoscape.task.hide.HideTaskFactory;
 import org.cytoscape.task.hide.UnHideAllTaskFactory;
+import org.cytoscape.task.read.LoadNetworkFileTaskFactory;
+import org.cytoscape.util.swing.FileUtil;
 import org.cytoscape.util.swing.IconManager;
 import org.cytoscape.view.layout.CyLayoutAlgorithm;
 import org.cytoscape.view.model.CyNetworkViewFactory;
 import org.cytoscape.view.model.CyNetworkViewManager;
-import org.cytoscape.view.model.events.NetworkViewAboutToBeDestroyedEvent;
 import org.cytoscape.view.model.events.NetworkViewAboutToBeDestroyedListener;
 import org.cytoscape.view.presentation.annotations.AnnotationFactory;
 import org.cytoscape.view.presentation.annotations.AnnotationManager;
 import org.cytoscape.view.vizmap.VisualMappingFunctionFactory;
 import org.cytoscape.view.vizmap.VisualMappingManager;
+import org.cytoscape.view.vizmap.VisualStyleFactory;
 import org.cytoscape.work.TaskFactory;
 import org.cytoscape.work.TaskManager;
 import org.cytoscape.work.swing.DialogTaskManager;
@@ -175,16 +175,21 @@ public class CyActivator extends AbstractCyActivator {
 				getService(bc, VisualMappingFunctionFactory.class, "(mapping.type=passthrough)"),
 				getService(bc, VisualMappingFunctionFactory.class, "(mapping.type=discrete)"),
 				getService(bc, VisualMappingFunctionFactory.class, "(mapping.type=continuous)"),
-				poleManager,
+				getService(bc, VisualStyleFactory.class), poleManager,
 				getService(bc, AnnotationManager.class),
 				getService(bc, AnnotationFactory.class, "(type=ShapeAnnotation.class)"),
 				getService(bc, HideTaskFactory.class), getService(bc, UnHideAllTaskFactory.class),
 				getService(bc, EquationCompiler.class));
 		registerService(bc, softwareStyle, NetworkViewAboutToBeDestroyedListener.class);
 
+		SoftwareImport softwareImport = new SoftwareImport(getService(bc, DialogTaskManager.class),
+				getService(bc, FileUtil.class),
+				getService(bc, LoadNetworkFileTaskFactory.class));
+
 		SoftwarePanel sPanel = new SoftwarePanel(getService(bc, CySwingApplication.class),
 				getService(bc, DialogTaskManager.class),
-				softwareLayout, softwareStyle);
+				softwareLayout, softwareStyle, softwareImport);
+
 		//registerService(bc, sPanel, CytoPanelComponent.class);
 		//registerService(bc, sPanel, SessionLoadedListener.class);
 		registerAllServices(bc, sPanel);

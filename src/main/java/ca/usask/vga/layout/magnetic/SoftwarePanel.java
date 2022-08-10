@@ -8,6 +8,7 @@ import org.cytoscape.application.swing.CytoPanelComponent2;
 import org.cytoscape.application.swing.CytoPanelName;
 import org.cytoscape.session.events.SessionLoadedEvent;
 import org.cytoscape.session.events.SessionLoadedListener;
+import org.cytoscape.work.FinishStatus;
 import org.cytoscape.work.TaskIterator;
 import org.cytoscape.work.swing.DialogTaskManager;
 
@@ -27,6 +28,7 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
     private final CySwingApplication swingApp;
     private final SoftwareLayout layout;
     private final SoftwareStyle style;
+    private final SoftwareImport importS;
     private final DialogTaskManager dtm;
 
     private final int ENTRY_HEIGHT = 35;
@@ -34,12 +36,13 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
     private final List<SessionLoadedListener> onSessionLoaded = new ArrayList<>();
     private final List<SetCurrentNetworkViewListener> onNewView = new ArrayList<>();
 
-    protected SoftwarePanel(CySwingApplication swingApp, DialogTaskManager dtm, SoftwareLayout layout, SoftwareStyle style) {
+    protected SoftwarePanel(CySwingApplication swingApp, DialogTaskManager dtm, SoftwareLayout layout, SoftwareStyle style, SoftwareImport importS) {
         super();
         this.swingApp = swingApp;
         this.dtm = dtm;
         this.layout = layout;
         this.style = style;
+        this.importS = importS;
 
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
@@ -49,11 +52,8 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
             }
         };
 
-        // Temporary DATA panel
-        JPanel panel = createTitledPanel("Data");
-        panel.add(group(new JLabel("GitHub Link:"), new JTextField("www.example.com")));
-        innerPanel.add(panel);
-
+        // IMPORT panel
+        innerPanel.add(createImportPanel());
 
         // SEARCH panel
         innerPanel.add(createSearchPanel());
@@ -64,10 +64,8 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         // LAYOUT panel
         innerPanel.add(createLayoutPanel());
 
-
         // STYLE panel
         innerPanel.add(createStylePanel());
-
 
         // Scroll Pane
         innerPanel.setLayout(new BoxLayout(innerPanel, BoxLayout.Y_AXIS));
@@ -102,6 +100,23 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         panel.setBorder(BorderFactory.createCompoundBorder(new EmptyBorder(0,0,10,0),
                 BorderFactory.createLineBorder(Color.lightGray)));
         return panel;
+    }
+
+    protected JPanel createImportPanel() {
+        var panel = createTitledPanel("Data");
+
+        panel.add(group(new JLabel("GitHub Link:"), new JTextField("www.example.com")));
+
+        panel.add(group(addListener(new JButton("Load data from file (txt, csv, net, jar)"),
+                e -> importS.loadFromFile(swingApp.getJFrame(), this::onFileLoaded))));
+
+        return panel;
+    }
+
+    protected void onFileLoaded(String filename) {
+        var format = filename.substring(filename.lastIndexOf('.') + 1).toLowerCase();
+        layout.layoutOnLoad();
+        style.onFileLoaded(format);
     }
 
     protected JPanel createSearchPanel() {
