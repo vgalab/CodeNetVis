@@ -5,9 +5,15 @@ import ca.usask.vga.layout.magnetic.poles.PoleManager;
 import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.equations.EquationCompiler;
 import org.cytoscape.model.CyEdge;
+import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNode;
 import org.cytoscape.task.hide.HideTaskFactory;
 import org.cytoscape.task.hide.UnHideAllTaskFactory;
+import org.cytoscape.view.model.CyNetworkView;
+import org.cytoscape.view.model.events.NetworkViewAboutToBeDestroyedEvent;
+import org.cytoscape.view.model.events.NetworkViewAboutToBeDestroyedListener;
+import org.cytoscape.view.model.events.NetworkViewDestroyedEvent;
+import org.cytoscape.view.model.events.NetworkViewDestroyedListener;
 import org.cytoscape.view.presentation.annotations.AnnotationFactory;
 import org.cytoscape.view.presentation.annotations.AnnotationManager;
 import org.cytoscape.view.presentation.annotations.ShapeAnnotation;
@@ -27,7 +33,7 @@ import java.util.List;
 
 import static org.cytoscape.view.presentation.property.BasicVisualLexicon.*;
 
-public class SoftwareStyle {
+public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
 
     protected final CyApplicationManager am;
     private final TaskManager tm;
@@ -192,11 +198,19 @@ public class SoftwareStyle {
         return ringsAnnotation;
     }
 
+    @Override
+    public void handleEvent(NetworkViewAboutToBeDestroyedEvent e) {
+        System.out.println("ABOUT TO BE DESTROYED");
+        try {pinRadiusAnnotation.onViewDestroyed(e);} catch (Exception ignored) {};
+        try {ringsAnnotation.onViewDestroyed(e);} catch (Exception ignored) {};
+    }
+
     public class PinRadiusAnnotation implements TooltipAnnotation {
 
         protected boolean visible;
         protected ShapeAnnotation annotation;
         protected float radius = 2500;
+        protected CyNetworkView lastView;
 
         public PinRadiusAnnotation() {
         }
@@ -204,16 +218,17 @@ public class SoftwareStyle {
         protected void init() {
             if (am.getCurrentNetworkView() == null) return;
             if (annotation != null) return;
+            lastView = am.getCurrentNetworkView();
             var argMap = new HashMap<String, String>();
-            annotation = anf.createAnnotation(ShapeAnnotation.class, am.getCurrentNetworkView(), argMap);
+            annotation = anf.createAnnotation(ShapeAnnotation.class, lastView, argMap);
             annotation.setShapeType(ShapeAnnotation.ShapeType.ELLIPSE.shapeName());
             annotation.setBorderWidth(20);
             reposition();
         }
 
         protected void checkNetwork() {
-            if (annotation != null && annotation.getNetworkView() != am.getCurrentNetworkView()) {
-                anm.removeAnnotation(annotation);
+            if (annotation != null && lastView != am.getCurrentNetworkView()) {
+                try {anm.removeAnnotation(annotation);} catch (Exception ex) {ex.printStackTrace();}
                 annotation = null;
                 init();
             }
@@ -239,12 +254,13 @@ public class SoftwareStyle {
         }
 
         public void hide() {
-            anm.removeAnnotation(annotation);
+            if (annotation != null) anm.removeAnnotation(annotation);
         }
 
         @Override
         public void setVisible(boolean visible) {
             this.visible = visible;
+            if (am.getCurrentNetworkView() == null) return;
             if (visible) show();
             else hide();
         }
@@ -252,6 +268,13 @@ public class SoftwareStyle {
         @Override
         public void reset() {
             annotation = null;
+            lastView = null;
+        }
+
+        public void onViewDestroyed(NetworkViewAboutToBeDestroyedEvent e) {
+            if (lastView != e.getNetworkView()) return;
+            hide();
+            reset();
         }
     }
 
@@ -259,6 +282,7 @@ public class SoftwareStyle {
 
         protected boolean visible;
         protected int maxRings = 4;
+        protected CyNetworkView lastView;
 
         protected List<ShapeAnnotation> annotations;
 
@@ -276,10 +300,11 @@ public class SoftwareStyle {
 
         protected void init() {
             if (am.getCurrentNetworkView() == null) return;
+            lastView = am.getCurrentNetworkView();
             for (int i = 0; i < maxRings; i++) {
                 if (annotations.size() <= i) {
                     var argMap = new HashMap<String, String>();
-                    var a = anf.createAnnotation(ShapeAnnotation.class, am.getCurrentNetworkView(), argMap);
+                    var a = anf.createAnnotation(ShapeAnnotation.class, lastView, argMap);
                     a.setShapeType(ShapeAnnotation.ShapeType.ELLIPSE.shapeName());
                     a.setBorderWidth(10);
                     a.setBorderOpacity(50);
@@ -290,7 +315,7 @@ public class SoftwareStyle {
         }
 
         protected void checkNetwork() {
-            if (annotations.size() > 0 && annotations.get(0).getNetworkView() != am.getCurrentNetworkView()) {
+            if (annotations.size() > 0 && lastView != am.getCurrentNetworkView()) {
                 anm.removeAnnotations(annotations);
                 annotations.clear();
                 init();
@@ -317,6 +342,7 @@ public class SoftwareStyle {
         @Override
         public void setVisible(boolean visible) {
             this.visible = visible;
+            if (am.getCurrentNetworkView() == null) return;
             if (visible) show();
             else hide();
         }
@@ -329,12 +355,18 @@ public class SoftwareStyle {
         }
 
         public void hide() {
-            anm.removeAnnotations(annotations);
+            if(annotations.size()>0) anm.removeAnnotations(annotations);
         }
 
         @Override
         public void reset() {
             annotations.clear();
+            lastView = null;
+        }
+
+        public void onViewDestroyed(NetworkViewAboutToBeDestroyedEvent e) {
+            if (lastView != e.getNetworkView()) return;
+            reset();
         }
     }
 

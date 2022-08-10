@@ -32,6 +32,8 @@ import org.cytoscape.util.swing.IconManager;
 import org.cytoscape.view.layout.CyLayoutAlgorithm;
 import org.cytoscape.view.model.CyNetworkViewFactory;
 import org.cytoscape.view.model.CyNetworkViewManager;
+import org.cytoscape.view.model.events.NetworkViewAboutToBeDestroyedEvent;
+import org.cytoscape.view.model.events.NetworkViewAboutToBeDestroyedListener;
 import org.cytoscape.view.presentation.annotations.AnnotationFactory;
 import org.cytoscape.view.presentation.annotations.AnnotationManager;
 import org.cytoscape.view.vizmap.VisualMappingFunctionFactory;
@@ -178,6 +180,7 @@ public class CyActivator extends AbstractCyActivator {
 				getService(bc, AnnotationFactory.class, "(type=ShapeAnnotation.class)"),
 				getService(bc, HideTaskFactory.class), getService(bc, UnHideAllTaskFactory.class),
 				getService(bc, EquationCompiler.class));
+		registerService(bc, softwareStyle, NetworkViewAboutToBeDestroyedListener.class);
 
 		SoftwarePanel sPanel = new SoftwarePanel(getService(bc, CySwingApplication.class),
 				getService(bc, DialogTaskManager.class),

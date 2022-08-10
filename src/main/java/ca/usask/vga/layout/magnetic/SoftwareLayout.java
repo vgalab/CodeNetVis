@@ -70,7 +70,7 @@ public class SoftwareLayout {
             c.useHierarchyForce = true;
             c.hierarchyType = HierarchyForce.Type.SINE_FUNCTION;
             c.ringRadius = pinRadius / (maxRings + 1);
-            c.hierarchyForce = 1e0;
+            c.hierarchyForce = 2e-1;
         }
 
         c.magnetEnabled = true;
