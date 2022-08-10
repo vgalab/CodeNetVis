@@ -1,6 +1,8 @@
 package ca.usask.vga.layout.magnetic;
 
 import ca.usask.vga.layout.magnetic.poles.ExtraTasks;
+import org.cytoscape.application.events.SetCurrentNetworkViewEvent;
+import org.cytoscape.application.events.SetCurrentNetworkViewListener;
 import org.cytoscape.application.swing.CySwingApplication;
 import org.cytoscape.application.swing.CytoPanelComponent2;
 import org.cytoscape.application.swing.CytoPanelName;
@@ -17,7 +19,7 @@ import java.awt.event.*;
 import java.util.*;
 import java.util.List;
 
-public class SoftwarePanel extends JPanel implements CytoPanelComponent2, SessionLoadedListener {
+public class SoftwarePanel extends JPanel implements CytoPanelComponent2, SessionLoadedListener, SetCurrentNetworkViewListener {
 
     public static final String title = "Software Layout", identifier = "software-panel";
     private final Icon icon = new ImageIcon(getClass().getResource("/icons/add_pole_N_icon.png"));
@@ -29,7 +31,8 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
 
     private final int ENTRY_HEIGHT = 35;
 
-    private List<SessionLoadedListener> onSessionLoaded;
+    private final List<SessionLoadedListener> onSessionLoaded = new ArrayList<>();
+    private final List<SetCurrentNetworkViewListener> onNewView = new ArrayList<>();
 
     protected SoftwarePanel(CySwingApplication swingApp, DialogTaskManager dtm, SoftwareLayout layout, SoftwareStyle style) {
         super();
@@ -37,7 +40,6 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         this.dtm = dtm;
         this.layout = layout;
         this.style = style;
-        onSessionLoaded = new ArrayList<>();
 
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
@@ -86,6 +88,11 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         for (var l : onSessionLoaded) l.handleEvent(sessionLoadedEvent);
     }
 
+    @Override
+    public void handleEvent(SetCurrentNetworkViewEvent e) {
+        for (var l : onNewView) l.handleEvent(e);
+    }
+
     protected JPanel createTitledPanel(String title) {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
@@ -120,7 +127,7 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         panel.add(group(poleCount, addListener(new JButton("Set poles by top degree..."), e ->
                 dtm.execute(new TaskIterator(new ExtraTasks.MakeTopDegreePoles(style.am, style.pm))))));
 
-        return panel;
+        return autoDisable(panel);
     }
 
     protected JPanel createFilterPanel() {
@@ -138,7 +145,7 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
 
         panel.add(group(b1, b2));
 
-        return panel;
+        return autoDisable(panel);
     }
 
     protected JPanel createLayoutPanel() {
@@ -177,7 +184,7 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
                     style.getRingsAnnotation().reposition();
                 }))));
 
-        return panel;
+        return autoDisable(panel);
     }
 
     protected JPanel createStylePanel() {
@@ -212,7 +219,7 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
 
         //panel.add(group(new JButton("Choose colors...")));
 
-        return panel;
+        return autoDisable(panel);
     }
 
     protected JSlider createCustomSlider(int min, int max, int value, int majorTicks, int minorTicks, int scrollAmount) {
@@ -223,6 +230,7 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         // Add ability to change using scroll wheel
         slider.addMouseWheelListener(e -> {
             int notches = e.getWheelRotation();
+            if (!slider.isEnabled()) return;
             if (notches < 0)
                 slider.setValue(slider.getValue() + scrollAmount);
             else if (notches > 0)
@@ -236,6 +244,7 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         // Add ability to change using scroll wheel
         spinner.addMouseWheelListener(e -> {
             int notches = e.getWheelRotation();
+            if (!spinner.isEnabled()) return;
             if (notches < 0 && spinner.getModel().getNextValue() != null)
                 spinner.setValue(spinner.getModel().getNextValue());
             else if (notches > 0 && spinner.getModel().getPreviousValue() != null)
@@ -264,6 +273,14 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         if (component.getPaintLabels())
             return group(50, label, component);
         return group(label, component);
+    }
+
+    private <T extends Component> T autoDisable(T component) {
+        if (component instanceof JPanel)
+            for (var c : ((JPanel) component).getComponents())
+                autoDisable(c);
+        onNewView.add(e -> component.setEnabled(style.am.getCurrentNetworkView() != null));
+        return component;
     }
 
     private void updateLabelValue(JLabel label, float value) {

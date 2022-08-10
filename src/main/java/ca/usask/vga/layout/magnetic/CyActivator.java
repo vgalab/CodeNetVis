@@ -185,8 +185,9 @@ public class CyActivator extends AbstractCyActivator {
 		SoftwarePanel sPanel = new SoftwarePanel(getService(bc, CySwingApplication.class),
 				getService(bc, DialogTaskManager.class),
 				softwareLayout, softwareStyle);
-		registerService(bc, sPanel, CytoPanelComponent.class);
-		registerService(bc, sPanel, SessionLoadedListener.class);
+		//registerService(bc, sPanel, CytoPanelComponent.class);
+		//registerService(bc, sPanel, SessionLoadedListener.class);
+		registerAllServices(bc, sPanel);
 
 	}
 }
