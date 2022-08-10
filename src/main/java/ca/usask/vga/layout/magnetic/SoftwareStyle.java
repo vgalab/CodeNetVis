@@ -19,14 +19,16 @@ import org.cytoscape.view.presentation.property.NodeShapeVisualProperty;
 import org.cytoscape.view.vizmap.*;
 import org.cytoscape.view.vizmap.mappings.BoundaryRangeValues;
 import org.cytoscape.view.vizmap.mappings.ContinuousMapping;
+import org.cytoscape.view.vizmap.mappings.DiscreteMapping;
 import org.cytoscape.view.vizmap.mappings.PassthroughMapping;
+import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskIterator;
 import org.cytoscape.work.TaskManager;
+import org.cytoscape.work.TaskMonitor;
 
 import java.awt.*;
 import java.awt.geom.Point2D;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
 
 import static org.cytoscape.view.presentation.property.BasicVisualLexicon.*;
@@ -91,6 +93,10 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
     public void setShowPoleColors(boolean value) {
         usePoleColors = value;
         updatePoleColors();
+    }
+
+    public void setShowPoleColorsNoUpdate(boolean value) {
+        usePoleColors = value;
     }
 
     private void updatePoleColors() {
@@ -529,6 +535,34 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
         vmm.getVisualStyle(am.getCurrentNetworkView()).addVisualMappingFunction(func);
     }
 
+    public void applyDiscreteColoring(String column) {
+        // Allows for parallel computation
+        VisualStyle style = vmm.getVisualStyle(am.getCurrentNetworkView());
+        style.removeVisualMappingFunction(EDGE_UNSELECTED_PAINT);
+        style.removeVisualMappingFunction(EDGE_STROKE_UNSELECTED_PAINT);
+        tm.execute(new TaskIterator(new ApplyDiscreteColoringTask(column, String.class)));
+    }
+
+    private <T> void applyDiscreteColoring(String column, Class<T> type) {
+        var view = am.getCurrentNetworkView();
+        var net = am.getCurrentNetwork();
+        if (view == null) return;
+
+        var func = (DiscreteMapping<T, Paint>)
+                vmff_discrete.createVisualMappingFunction(column, type, NODE_FILL_COLOR);
+
+        var table = net.getDefaultNodeTable();
+        var values = new TreeSet<>(table.getColumn(column).getValues(type));
+
+        int i = 0;
+        for (var v : values) {
+            func.putMapValue(v, COLOR_BREWER_SET3[i%12]);
+            i++;
+        }
+
+        vmm.getVisualStyle(view).addVisualMappingFunction(func);
+    }
+
     public void onFileLoaded(String fileFormat) {
         if (am.getCurrentNetworkView() == null) return;
 
@@ -538,8 +572,42 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
             // Set class as the labels
             setLabelsPassthrough("Class");
             setTooltipsPassthrough("Package");
+            applyDiscreteColoring("Package");
         }
 
+    }
+
+    // From https://colorbrewer2.org/
+    public final static Color[] COLOR_BREWER_SET3 = {
+            new Color(141,211,199),
+            new Color(255,255,179),
+            new Color(190,186,218),
+            new Color(251,128,114),
+            new Color(128,177,211),
+            new Color(253,180,98),
+            new Color(179,222,105),
+            new Color(252,205,229),
+            new Color(217,217,217),
+            new Color(188,128,189),
+            new Color(204,235,197),
+            new Color(255,237,111)
+    };
+
+    private class ApplyDiscreteColoringTask extends AbstractTask {
+
+        private final String column;
+        private final Class<?> type;
+
+        public ApplyDiscreteColoringTask(String column, Class<?> type) {
+            this.column = column;
+            this.type = type;
+        }
+
+        @Override
+        public void run(TaskMonitor taskMonitor) throws Exception {
+            taskMonitor.setTitle("Apply coloring by " + column);
+            applyDiscreteColoring(column, type);
+        }
     }
 
 }

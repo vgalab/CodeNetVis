@@ -206,6 +206,20 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         JPanel panel = createTitledPanel("Style");
 
         // CONTENTS
+        var b1 = new JRadioButton("Package");
+        var b2 = new JRadioButton("Closest pole");
+        var group = new ButtonGroup();
+        group.add(b1);
+        group.add(b2);
+        b1.setSelected(true);
+
+        b1.addChangeListener(l -> {
+            style.setShowPoleColorsNoUpdate(!b1.isSelected());
+            if (b1.isSelected()) style.applyDiscreteColoring("Package");
+            else style.setShowPoleColors(true);
+        });
+        panel.add(groupBox(new JLabel("Color nodes by"), Box.createHorizontalGlue(), b1, b2));
+
         var comboBox = new JComboBox<>(SoftwareStyle.SizeEquation.getAllowedList());
         comboBox.addItemListener(e -> style.setSizeEquation((SoftwareStyle.SizeEquation) e.getItem()));
         panel.add(group(new JLabel("Node size based on"), comboBox));
@@ -226,11 +240,11 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
 
         onSessionLoaded.add(e -> transparencyEditor.setValue(Math.round(style.getInitialEdgeTransparency())));
 
-        var togglePoleColors = new JCheckBox();
+        /*var togglePoleColors = new JCheckBox();
         togglePoleColors.setSelected(true);
         togglePoleColors.setHorizontalTextPosition(SwingConstants.LEFT);
         togglePoleColors.addActionListener(l -> style.setShowPoleColors(togglePoleColors.isSelected()));
-        panel.add(group(new JLabel("Show poles in different colors"), togglePoleColors));
+        panel.add(group(new JLabel("Show poles in different colors"), togglePoleColors));*/
 
         //panel.add(group(new JButton("Choose colors...")));
 
@@ -306,23 +320,23 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         label.setText(text + ": " + valString);
     }
 
-    private JPanel group(JComponent... components) {
+    private JPanel group(Component... components) {
         return group(ENTRY_HEIGHT, components);
     }
 
-    private JPanel group(int height, JComponent... components) {
+    private JPanel group(int height, Component... components) {
         JPanel panel = new JPanel();
         panel.setLayout(new GridLayout(1, components.length, 10, 10));
         panel.setBorder(new EmptyBorder(5, 5,5,5));
         panel.setMaximumSize(new Dimension(10000, height));
         panel.setPreferredSize(new Dimension(panel.getPreferredSize().width, height));
-        for (JComponent c : components) {
+        for (Component c : components) {
             panel.add(c);
         }
         return panel;
     }
 
-    private JPanel groupBox(int height, JComponent... components) {
+    private JPanel groupBox(int height, Component... components) {
         JPanel panel = group(height, components);
         panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
         for (int i = 0; i < components.length-1; i++) {
@@ -331,7 +345,7 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         return panel;
     }
 
-    private JPanel groupBox(JComponent... components) {
+    private JPanel groupBox(Component... components) {
         return groupBox(ENTRY_HEIGHT, components);
     }
 
