@@ -99,17 +99,17 @@ public class JarReader extends AbstractInputStreamTaskFactory {
 
         private final List<CyNetwork> newNetworks;
 
-        public String[] packagesToIgnore = {"java.", "javax.", "com.sun.", "jdk."};
+        public String[] packagesToIgnore = {"java.", "javax.", "com.sun.", "jdk.", "scala."};
 
         @ProvidesTitle
         public String getTitle() {
             return "JAR file import properties";
         }
 
-        @Tunable(description="Root package of interest:")
+        // @Tunable(description="Root package of interest:")
         public String userPackage = "";
 
-        @Tunable(description="Ignore java.*, javax.*, jdk.*, com.sun.*")
+        // @Tunable(description="Ignore java.*, javax.*, jdk.*, com.sun.*")
         public boolean ignoreJavaLibraries = true;
 
         @Tunable(description="Hide inner classes:")
@@ -148,6 +148,7 @@ public class JarReader extends AbstractInputStreamTaskFactory {
             taskMonitor.setTitle("Importing a JAR file: " + inputName);
 
             Set<String> edges = new HashSet<>();
+            Set<String> nodes = new HashSet<>();
 
             PrintStream ps = new PrintStream(new OutputStream() {
                 public void write(int b) {}
@@ -186,6 +187,8 @@ public class JarReader extends AbstractInputStreamTaskFactory {
                         }
                     }
 
+                    // Only add source nodes
+                    nodes.add(s.split(" ")[0]);
                     edges.add(s);
                 }
             };
@@ -213,6 +216,10 @@ public class JarReader extends AbstractInputStreamTaskFactory {
 
             // Create network
             CyNetwork network = cy.nf.createNetwork();
+
+            for (var n : nodes) {
+                newNode(network, n);
+            }
 
             for (var e : edges) {
                 var split = e.split(" ");
@@ -255,7 +262,8 @@ public class JarReader extends AbstractInputStreamTaskFactory {
             Collection<Long> toMatches = nodeTable.getMatchingKeys(NODE_NAME, to, Long.class);
             long toS;
             if (toMatches.size() == 0)
-                toS = newNode(network, to).getSUID();
+                return null; // Skip classes outside the domain
+                //toS = newNode(network, to).getSUID();
             else
                 toS = toMatches.iterator().next();
 

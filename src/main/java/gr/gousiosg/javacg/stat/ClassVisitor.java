@@ -84,9 +84,7 @@ public class ClassVisitor extends EmptyVisitor {
             if (constant.getTag() == 7) {
                 String referencedClass = 
                     constantPool.constantToString(constant);
-                // Skip self references and malformed class names
-                if (referencedClass.equals(clazz.getClassName()))
-                    continue;
+                // Skip array class names
                 if (referencedClass.startsWith("["))
                     continue;
                 ps.println(String.format(classReferenceFormat, referencedClass));
