@@ -15,6 +15,8 @@ import org.cytoscape.work.swing.DialogTaskManager;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
@@ -157,8 +159,20 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
 
         b2.addChangeListener(e -> style.setShowUnique(b2.isSelected()));
         onSessionLoaded.add(e -> b1.setSelected(true));
-
         panel.add(group(b1, b2));
+
+        var input = new JTextField();
+        input.getDocument().addDocumentListener(new DocumentListener() {
+            public void insertUpdate(DocumentEvent e) {
+                style.setFilterPrefix(input.getText());
+            }
+            public void removeUpdate(DocumentEvent e) {
+                style.setFilterPrefix(input.getText());
+            }
+            public void changedUpdate(DocumentEvent e) {}
+        });
+
+        panel.add(groupBox(new JLabel("Prefix:"), input));
 
         return autoDisable(panel);
     }

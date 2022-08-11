@@ -21,10 +21,7 @@ import org.cytoscape.view.vizmap.mappings.BoundaryRangeValues;
 import org.cytoscape.view.vizmap.mappings.ContinuousMapping;
 import org.cytoscape.view.vizmap.mappings.DiscreteMapping;
 import org.cytoscape.view.vizmap.mappings.PassthroughMapping;
-import org.cytoscape.work.AbstractTask;
-import org.cytoscape.work.TaskIterator;
-import org.cytoscape.work.TaskManager;
-import org.cytoscape.work.TaskMonitor;
+import org.cytoscape.work.*;
 
 import java.awt.*;
 import java.awt.geom.Point2D;
@@ -53,7 +50,9 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
 
     protected final PinRadiusAnnotation pinRadiusAnnotation;
     protected final RingsAnnotation ringsAnnotation;
-    private boolean showUnique;
+
+    private boolean showUnique = false;
+    private String filterPrefix = "";
 
     public static String INDEGREE = "Indegree", OUTDEGREE = "Outdegree", DEGREE = "Degree";
 
@@ -176,24 +175,58 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
         if (this.showUnique == showUnique)
             return;
 
-        this.showUnique = showUnique;
+        // If filter softened unhide nodes first
+        if (!showUnique) {
+            this.showUnique = false;
+            tm.execute(utf.createTaskIterator(am.getCurrentNetworkView()), afterFinished(this::reapplyFilters));
+            return;
+        }
+
+        this.showUnique = true;
+        reapplyFilters();
+    }
+
+    public void setFilterPrefix(String filterPrefix) {
+        if (this.filterPrefix.equals(filterPrefix))
+            return;
+
+        // If filter reduced unhide nodes first
+        if (filterPrefix.length() < this.filterPrefix.length()) {
+            this.filterPrefix = filterPrefix;
+            tm.execute(utf.createTaskIterator(am.getCurrentNetworkView()), afterFinished(this::reapplyFilters));
+            return;
+        }
+
+        this.filterPrefix = filterPrefix;
+        reapplyFilters();
+    }
+
+    public void reapplyFilters() {
 
         var net = am.getCurrentNetwork();
         var view = am.getCurrentNetworkView();
+        var table = net.getDefaultNodeTable();
 
-        if (showUnique) {
-            List<CyNode> nodesToHide = new ArrayList<>();
-
-            for (CyNode n : net.getNodeList()) {
-                if (pm.isClosestToMultiple(net, n) || pm.isDisconnected(net, n)) {
-                    nodesToHide.add(n);
-                }
-            }
-
-            tm.execute(htf.createTaskIterator(view, nodesToHide, new ArrayList<>()));
-        } else {
+        // No filters -> show all
+        if (!showUnique && filterPrefix.isEmpty()) {
             tm.execute(utf.createTaskIterator(view));
+            return;
         }
+
+        Set<CyNode> nodesToHide = new HashSet<>();
+
+        // Hide nodes without prefix and not unique
+        for (CyNode n : net.getNodeList()) {
+            String name = table.getRow(n.getSUID()).get("name", String.class);
+            if (showUnique && (pm.isClosestToMultiple(net, n) || pm.isDisconnected(net, n))) {
+                nodesToHide.add(n);
+            }
+            else if (!filterPrefix.isEmpty() && (!name.startsWith(filterPrefix)) || name.length() < filterPrefix.length()) {
+                nodesToHide.add(n);
+            }
+        }
+
+        tm.execute(htf.createTaskIterator(view, nodesToHide, new ArrayList<>()));
     }
 
     public PinRadiusAnnotation getRadiusAnnotation() {
@@ -608,6 +641,16 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
             taskMonitor.setTitle("Apply coloring by " + column);
             applyDiscreteColoring(column, type);
         }
+    }
+
+    protected TaskObserver afterFinished(Runnable r) {
+        return new TaskObserver() {
+            public void taskFinished(ObservableTask task) {}
+            @Override
+            public void allFinished(FinishStatus finishStatus) {
+                r.run();
+            }
+        };
     }
 
 }
