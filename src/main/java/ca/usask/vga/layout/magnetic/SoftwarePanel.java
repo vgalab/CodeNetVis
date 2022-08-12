@@ -8,15 +8,13 @@ import org.cytoscape.application.swing.CytoPanelComponent2;
 import org.cytoscape.application.swing.CytoPanelName;
 import org.cytoscape.session.events.SessionLoadedEvent;
 import org.cytoscape.session.events.SessionLoadedListener;
-import org.cytoscape.work.FinishStatus;
 import org.cytoscape.work.TaskIterator;
 import org.cytoscape.work.swing.DialogTaskManager;
+import org.jdesktop.swingx.combobox.ListComboBoxModel;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
@@ -161,16 +159,19 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         onSessionLoaded.add(e -> b1.setSelected(true));
         panel.add(group(b1, b2));
 
-        var input = new JTextField();
-        input.getDocument().addDocumentListener(new DocumentListener() {
-            public void insertUpdate(DocumentEvent e) {
-                style.setFilterPrefix(input.getText());
-            }
-            public void removeUpdate(DocumentEvent e) {
-                style.setFilterPrefix(input.getText());
-            }
-            public void changedUpdate(DocumentEvent e) {}
+        var input = new JComboBox<String>(new ListComboBoxModel<String>(style.getPackageFilterOptions()));
+
+        onNewView.add(e -> {
+            input.setModel(new ListComboBoxModel<String>(style.getPackageFilterOptions()));
         });
+
+        onSessionLoaded.add(e -> {
+            input.setModel(new ListComboBoxModel<String>(style.getPackageFilterOptions()));
+        });
+
+        input.setEditable(true);
+
+        input.addActionListener(e -> style.setFilterPrefix(input.getSelectedItem() == null ? "" : input.getSelectedItem().toString()));
 
         panel.add(groupBox(new JLabel("Prefix:"), input));
 
@@ -220,19 +221,26 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         JPanel panel = createTitledPanel("Style");
 
         // CONTENTS
+        var b0 = new JRadioButton("None");
         var b1 = new JRadioButton("Package");
         var b2 = new JRadioButton("Closest pole");
         var group = new ButtonGroup();
+        group.add(b0);
         group.add(b1);
         group.add(b2);
-        b1.setSelected(true);
+        b0.setSelected(true);
 
-        b1.addChangeListener(l -> {
-            style.setShowPoleColorsNoUpdate(!b1.isSelected());
-            if (b1.isSelected()) style.applyDiscreteColoring("Package");
-            else style.setShowPoleColors(true);
+        b0.addChangeListener(l -> {
+            if (b0.isSelected()) style.setCurrentColoring(SoftwareStyle.Coloring.NONE);
         });
-        panel.add(groupBox(new JLabel("Color nodes by"), Box.createHorizontalGlue(), b1, b2));
+        b1.addChangeListener(l -> {
+            if (b1.isSelected()) style.setCurrentColoring(SoftwareStyle.Coloring.PACKAGE);
+        });
+        b2.addChangeListener(l -> {
+            if (b2.isSelected()) style.setCurrentColoring(SoftwareStyle.Coloring.CLOSEST_POLE);
+        });
+
+        panel.add(groupBox(new JLabel("Color nodes by"), Box.createHorizontalGlue(), b0, b1, b2));
 
         var comboBox = new JComboBox<>(SoftwareStyle.SizeEquation.getAllowedList());
         comboBox.addItemListener(e -> style.setSizeEquation((SoftwareStyle.SizeEquation) e.getItem()));
@@ -253,12 +261,6 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         panel.add(label("Edge visibility:", transparencyEditor));
 
         onSessionLoaded.add(e -> transparencyEditor.setValue(Math.round(style.getInitialEdgeTransparency())));
-
-        /*var togglePoleColors = new JCheckBox();
-        togglePoleColors.setSelected(true);
-        togglePoleColors.setHorizontalTextPosition(SwingConstants.LEFT);
-        togglePoleColors.addActionListener(l -> style.setShowPoleColors(togglePoleColors.isSelected()));
-        panel.add(group(new JLabel("Show poles in different colors"), togglePoleColors));*/
 
         //panel.add(group(new JButton("Choose colors...")));
 

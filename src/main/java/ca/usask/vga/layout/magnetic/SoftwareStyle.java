@@ -61,6 +61,7 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
     private double lastSetNodeSize = 30;
 
     private boolean usePoleColors = true;
+    private Coloring currentColoring = Coloring.NONE;
 
     public SoftwareStyle(CyApplicationManager am, TaskManager tm, VisualMappingManager vmm,
                          VisualMappingFunctionFactory vmff_passthrough,
@@ -89,25 +90,23 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
         pm.addChangeListener(this::updatePoleColors);
     }
 
-    public void setShowPoleColors(boolean value) {
+    private void setShowPoleColors(boolean value) {
         usePoleColors = value;
         updatePoleColors();
-    }
-
-    public void setShowPoleColorsNoUpdate(boolean value) {
-        usePoleColors = value;
     }
 
     private void updatePoleColors() {
         if (usePoleColors && pm.getPoleCount(am.getCurrentNetwork()) > 0) {
             var coloring = new ExtraTasks.LegacyPoleColoring(am, pm, vmm, vmff_discrete);
             tm.execute(new TaskIterator(coloring));
-        } else {
-            VisualStyle style = vmm.getVisualStyle(am.getCurrentNetworkView());
-            style.removeVisualMappingFunction(NODE_FILL_COLOR);
-            style.removeVisualMappingFunction(EDGE_UNSELECTED_PAINT);
-            style.removeVisualMappingFunction(EDGE_STROKE_UNSELECTED_PAINT);
         }
+    }
+
+    private void clearNodeColorMappings() {
+        VisualStyle style = vmm.getVisualStyle(am.getCurrentNetworkView());
+        style.removeVisualMappingFunction(NODE_FILL_COLOR);
+        style.removeVisualMappingFunction(EDGE_UNSELECTED_PAINT);
+        style.removeVisualMappingFunction(EDGE_STROKE_UNSELECTED_PAINT);
     }
 
     public void setTopNasPoles(int n, boolean incoming) {
@@ -174,29 +173,13 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
     public void setShowUnique(boolean showUnique) {
         if (this.showUnique == showUnique)
             return;
-
-        // If filter softened unhide nodes first
-        if (!showUnique) {
-            this.showUnique = false;
-            tm.execute(utf.createTaskIterator(am.getCurrentNetworkView()), afterFinished(this::reapplyFilters));
-            return;
-        }
-
-        this.showUnique = true;
+        this.showUnique = showUnique;
         reapplyFilters();
     }
 
     public void setFilterPrefix(String filterPrefix) {
         if (this.filterPrefix.equals(filterPrefix))
             return;
-
-        // If filter reduced unhide nodes first
-        if (filterPrefix.length() < this.filterPrefix.length()) {
-            this.filterPrefix = filterPrefix;
-            tm.execute(utf.createTaskIterator(am.getCurrentNetworkView()), afterFinished(this::reapplyFilters));
-            return;
-        }
-
         this.filterPrefix = filterPrefix;
         reapplyFilters();
     }
@@ -207,26 +190,30 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
         var view = am.getCurrentNetworkView();
         var table = net.getDefaultNodeTable();
 
-        // No filters -> show all
-        if (!showUnique && filterPrefix.isEmpty()) {
-            tm.execute(utf.createTaskIterator(view));
-            return;
-        }
-
         Set<CyNode> nodesToHide = new HashSet<>();
 
         // Hide nodes without prefix and not unique
         for (CyNode n : net.getNodeList()) {
+            clearNodeVisible(n);
             String name = table.getRow(n.getSUID()).get("name", String.class);
             if (showUnique && (pm.isClosestToMultiple(net, n) || pm.isDisconnected(net, n))) {
-                nodesToHide.add(n);
-            }
-            else if (!filterPrefix.isEmpty() && (!name.startsWith(filterPrefix)) || name.length() < filterPrefix.length()) {
-                nodesToHide.add(n);
+                setNodeVisible(n, false);
+            } else if (!filterPrefix.isEmpty() && (!name.startsWith(filterPrefix)) || name.length() < filterPrefix.length()) {
+                setNodeVisible(n, false);
+            } else {
+                clearNodeVisible(n);
             }
         }
+    }
 
-        tm.execute(htf.createTaskIterator(view, nodesToHide, new ArrayList<>()));
+    protected void setNodeVisible(CyNode node, boolean visible) {
+        var view = am.getCurrentNetworkView();
+        view.getNodeView(node).setLockedValue(NODE_VISIBLE, visible);
+    }
+
+    protected void clearNodeVisible(CyNode node) {
+        var view = am.getCurrentNetworkView();
+        view.getNodeView(node).clearValueLock(NODE_VISIBLE);
     }
 
     public PinRadiusAnnotation getRadiusAnnotation() {
@@ -239,7 +226,6 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
 
     @Override
     public void handleEvent(NetworkViewAboutToBeDestroyedEvent e) {
-        System.out.println("ABOUT TO BE DESTROYED");
         try {pinRadiusAnnotation.onViewDestroyed(e);} catch (Exception ignored) {};
         try {ringsAnnotation.onViewDestroyed(e);} catch (Exception ignored) {};
     }
@@ -568,7 +554,31 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
         vmm.getVisualStyle(am.getCurrentNetworkView()).addVisualMappingFunction(func);
     }
 
-    public void applyDiscreteColoring(String column) {
+    public enum Coloring {
+        NONE, PACKAGE, CLOSEST_POLE;
+        public void apply(SoftwareStyle s) {
+            s.setShowPoleColors(false);
+            switch (this) {
+                case PACKAGE:
+                    s.applyDiscreteColoring("Package");
+                    return;
+                case CLOSEST_POLE:
+                    s.setShowPoleColors(true);
+                    return;
+                default:
+                    s.clearNodeColorMappings();
+            }
+        }
+    }
+
+    public void setCurrentColoring(Coloring c) {
+        if (currentColoring != c) {
+            currentColoring = c;
+            c.apply(this);
+        }
+    }
+
+    protected void applyDiscreteColoring(String column) {
         // Allows for parallel computation
         VisualStyle style = vmm.getVisualStyle(am.getCurrentNetworkView());
         style.removeVisualMappingFunction(EDGE_UNSELECTED_PAINT);
@@ -579,7 +589,7 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
     private <T> void applyDiscreteColoring(String column, Class<T> type) {
         var view = am.getCurrentNetworkView();
         var net = am.getCurrentNetwork();
-        if (view == null) return;
+        if (view == null || net == null) return;
 
         var func = (DiscreteMapping<T, Paint>)
                 vmff_discrete.createVisualMappingFunction(column, type, NODE_FILL_COLOR);
@@ -651,6 +661,45 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
                 r.run();
             }
         };
+    }
+
+    public List<String> getPackageFilterOptions() {
+
+        var net = am.getCurrentNetwork();
+        if (net == null) return Collections.emptyList();
+
+        var table = net.getDefaultNodeTable();
+
+        // First sort by number of dots
+        var packages = new TreeSet<String>(Comparator.comparingInt((String s) -> s.split("\\.").length).thenComparing(s -> s));
+
+        var secondary = new HashSet<String>();
+
+        packages.add("");
+
+        for (var r : table.getAllRows()) {
+            var p = r.get("Package", String.class);
+            if (p != null) {
+                if (packages.contains(p)) {
+                    continue;
+                }
+                packages.add(p);
+                while (p.contains(".")) {
+                    p = p.substring(0, p.lastIndexOf("."));
+                    if (p.contains(".")) {
+                        if (!secondary.contains(p)) {
+                            secondary.add(p);
+                        } else {
+                            packages.add(p);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        return new ArrayList<>(packages);
+
     }
 
 }
