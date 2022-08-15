@@ -89,11 +89,13 @@ public class JarReader extends AbstractInputStreamTaskFactory {
         return new TaskIterator(new JarReader.ReaderTask(inputStream, inputName, cy));
     }
 
-    public class ReaderTask implements CyNetworkReader {
+    public static class ReaderTask implements CyNetworkReader {
 
         private final InputStream inputStream;
         private final String inputName;
         private final JarReader.CyAccess cy;
+        private Set<String> nodes = null;
+        private Set<String> edges = null;
 
         private boolean cancelled;
 
@@ -132,6 +134,15 @@ public class JarReader extends AbstractInputStreamTaskFactory {
             newNetworks = new ArrayList<>();
         }
 
+        public ReaderTask(Set<String> nodes, Set<String> edges, JarReader.CyAccess dependencies) throws FileNotFoundException {
+            this.nodes = nodes;
+            this.edges = edges;
+            this.inputStream = null;
+            this.inputName = "Other";
+            cy = dependencies;
+            newNetworks = new ArrayList<>();
+        }
+
         @Override
         public CyNetwork[] getNetworks() {
             return newNetworks.toArray(new CyNetwork[0]);
@@ -147,71 +158,76 @@ public class JarReader extends AbstractInputStreamTaskFactory {
 
             taskMonitor.setTitle("Importing a JAR file: " + inputName);
 
-            Set<String> edges = new HashSet<>();
-            Set<String> nodes = new HashSet<>();
+            if (edges == null || nodes == null) {
 
-            PrintStream ps = new PrintStream(new OutputStream() {
-                public void write(int b) {}
-            }) {
-                public void print(String s) {
-                    if (s == null) return;
+                edges = new HashSet<>();
+                nodes = new HashSet<>();
 
-                    if (!userPackage.equals("")) {
-                        if (!s.startsWith(userPackage) || !s.split(" ")[1].startsWith(userPackage)) {
-                            return;
-                        }
+                PrintStream ps = new PrintStream(new OutputStream() {
+                    public void write(int b) {
                     }
+                }) {
+                    public void print(String s) {
+                        if (s == null) return;
 
-                    if (ignoreJavaLibraries)
-                        for (String p : packagesToIgnore)
-                            if (s.startsWith(p) || s.split(" ")[1].startsWith(p))
+                        if (!userPackage.equals("")) {
+                            if (!s.startsWith(userPackage) || !s.split(" ")[1].startsWith(userPackage)) {
                                 return;
-
-                    if (hideInnerClasses && hideAnonymousClasses) {
-                        // Ignore all inner members
-                        s = s.replaceAll("\\$[\\dA-Za-z$]*", "");
-                    } else {
-                        // Ignore unnamed inner references / static references
-                        s = s.replaceAll("\\$(?![\\dA-Za-z$])", "");
-                        s = s.replaceAll("\\$class(?![\\dA-Za-z$])", "");
-
-                        if (hideInnerClasses) {
-                            // Ignore named inner classes
-                            s = s.replaceAll("\\$[a-zA-Z][\\da-zA-Z$]*.*?", "");
+                            }
                         }
 
-                        if (hideAnonymousClasses) {
-                            // Ignore anonymous classes and functions
-                            s = s.replaceAll("\\$\\d[\\da-zA-Z$]*.*?", "");
-                            s = s.replaceAll("\\$\\$[\\da-zA-Z$]*.*?", "");
+                        if (ignoreJavaLibraries)
+                            for (String p : packagesToIgnore)
+                                if (s.startsWith(p) || s.split(" ")[1].startsWith(p))
+                                    return;
+
+                        if (hideInnerClasses && hideAnonymousClasses) {
+                            // Ignore all inner members
+                            s = s.replaceAll("\\$[\\dA-Za-z$]*", "");
+                        } else {
+                            // Ignore unnamed inner references / static references
+                            s = s.replaceAll("\\$(?![\\dA-Za-z$])", "");
+                            s = s.replaceAll("\\$class(?![\\dA-Za-z$])", "");
+
+                            if (hideInnerClasses) {
+                                // Ignore named inner classes
+                                s = s.replaceAll("\\$[a-zA-Z][\\da-zA-Z$]*.*?", "");
+                            }
+
+                            if (hideAnonymousClasses) {
+                                // Ignore anonymous classes and functions
+                                s = s.replaceAll("\\$\\d[\\da-zA-Z$]*.*?", "");
+                                s = s.replaceAll("\\$\\$[\\da-zA-Z$]*.*?", "");
+                            }
                         }
+
+                        // Only add source nodes
+                        nodes.add(s.split(" ")[0]);
+                        edges.add(s);
                     }
-
-                    // Only add source nodes
-                    nodes.add(s.split(" ")[0]);
-                    edges.add(s);
-                }
-            };
+                };
 
 
-            try (var jar = new JarInputStream(inputStream)) {
-                var e = jar.getNextJarEntry();
-                while (e != null) {
+                try (var jar = new JarInputStream(inputStream)) {
+                    var e = jar.getNextJarEntry();
+                    while (e != null) {
 
-                    if (cancelled) return;
+                        if (cancelled) return;
 
-                    if (!e.isDirectory() && e.getName().endsWith(".class")) {
+                        if (!e.isDirectory() && e.getName().endsWith(".class")) {
 
-                        ClassParser cp = new ClassParser(jar, e.getName());
-                        var classVisitor = new ClassVisitor(cp.parse());
-                        classVisitor.setPrintStream(ps);
-                        classVisitor.start();
+                            ClassParser cp = new ClassParser(jar, e.getName());
+                            var classVisitor = new ClassVisitor(cp.parse());
+                            classVisitor.setPrintStream(ps);
+                            classVisitor.start();
+                        }
+
+                        e = jar.getNextJarEntry();
                     }
-
-                    e = jar.getNextJarEntry();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
                 }
-            } catch (Exception ex) {
-                ex.printStackTrace();
+
             }
 
             // Create network

@@ -160,8 +160,10 @@ public class CyActivator extends AbstractCyActivator {
 		registerService(bc, pajekReader, pajekReader.getServiceClass(), pajekReader.getDefaultProperties());
 
 		// JAR File input
-		JarReader jarReader = JarReader.create(new JarReader.CyAccess(getService(bc, CyNetworkFactory.class),
-				getService(bc, CyNetworkViewFactory.class), getService(bc, EquationCompiler.class)), getService(bc, StreamUtil.class));
+		var jarReaderAccess = new JarReader.CyAccess(getService(bc, CyNetworkFactory.class),
+				getService(bc, CyNetworkViewFactory.class), getService(bc, EquationCompiler.class));
+
+		JarReader jarReader = JarReader.create(jarReaderAccess, getService(bc, StreamUtil.class));
 
 		registerService(bc, jarReader, jarReader.getServiceClass(), jarReader.getDefaultProperties());
 
@@ -184,7 +186,7 @@ public class CyActivator extends AbstractCyActivator {
 
 		SoftwareImport softwareImport = new SoftwareImport(getService(bc, DialogTaskManager.class),
 				getService(bc, FileUtil.class),
-				getService(bc, LoadNetworkFileTaskFactory.class));
+				getService(bc, LoadNetworkFileTaskFactory.class), jarReaderAccess);
 
 		SoftwarePanel sPanel = new SoftwarePanel(getService(bc, CySwingApplication.class),
 				getService(bc, DialogTaskManager.class),

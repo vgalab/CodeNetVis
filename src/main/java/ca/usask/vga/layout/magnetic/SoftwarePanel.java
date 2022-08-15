@@ -10,7 +10,8 @@ import org.cytoscape.session.events.SessionLoadedEvent;
 import org.cytoscape.session.events.SessionLoadedListener;
 import org.cytoscape.work.TaskIterator;
 import org.cytoscape.work.swing.DialogTaskManager;
-import org.jdesktop.swingx.combobox.ListComboBoxModel;
+import org.kohsuke.github.GitHub;
+import org.kohsuke.github.GitHubBuilder;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -107,6 +108,10 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
 
         panel.add(group(new JLabel("GitHub Link:"), new JTextField("www.example.com")));
 
+        panel.add(group(addListener(new JButton("Load from github"), l -> {
+            importS.loadFromGitHub();
+        })));
+
         panel.add(group(addListener(new JButton("Load data from file (txt, csv, net, jar)"),
                 e -> importS.loadFromFile(swingApp.getJFrame(), this::onFileLoaded))));
 
@@ -159,7 +164,7 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         onSessionLoaded.add(e -> b1.setSelected(true));
         panel.add(group(b1, b2));
 
-        var input = new JComboBox<String>(new ListComboBoxModel<String>(style.getPackageFilterOptions()));
+        /*var input = new JComboBox<String>(new ListComboBoxModel<String>(style.getPackageFilterOptions()));
 
         onNewView.add(e -> {
             input.setModel(new ListComboBoxModel<String>(style.getPackageFilterOptions()));
@@ -173,7 +178,7 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
 
         input.addActionListener(e -> style.setFilterPrefix(input.getSelectedItem() == null ? "" : input.getSelectedItem().toString()));
 
-        panel.add(groupBox(new JLabel("Prefix:"), input));
+        panel.add(groupBox(new JLabel("Prefix:"), input));*/
 
         return autoDisable(panel);
     }
