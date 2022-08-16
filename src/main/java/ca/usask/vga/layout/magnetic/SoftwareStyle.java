@@ -663,10 +663,10 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
         };
     }
 
-    public List<String> getPackageFilterOptions() {
+    public String[] getPackageFilterOptions() {
 
         var net = am.getCurrentNetwork();
-        if (net == null) return Collections.emptyList();
+        if (net == null) return new String[0];
 
         var table = net.getDefaultNodeTable();
 
@@ -698,7 +698,7 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
             }
         }
 
-        return new ArrayList<>(packages);
+        return packages.toArray(new String[0]);
 
     }
 

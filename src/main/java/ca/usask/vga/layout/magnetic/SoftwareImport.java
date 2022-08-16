@@ -1,8 +1,10 @@
 package ca.usask.vga.layout.magnetic;
 
-import ca.usask.vga.layout.magnetic.io.JarReader;
+import ca.usask.vga.layout.magnetic.io.JavaReader;
+import org.cytoscape.model.CyNetworkManager;
 import org.cytoscape.task.read.LoadNetworkFileTaskFactory;
 import org.cytoscape.util.swing.FileUtil;
+import org.cytoscape.view.model.CyNetworkViewManager;
 import org.cytoscape.work.FinishStatus;
 import org.cytoscape.work.ObservableTask;
 import org.cytoscape.work.TaskIterator;
@@ -26,13 +28,18 @@ public class SoftwareImport {
     private final DialogTaskManager dtm;
     private final FileUtil fu;
     private final LoadNetworkFileTaskFactory nftf;
-    private final JarReader.CyAccess readerAccess;
+    private final JavaReader.CyAccess readerAccess;
+    private final CyNetworkManager nm;
+    private final CyNetworkViewManager vm;
 
-    public SoftwareImport(DialogTaskManager dtm, FileUtil fu, LoadNetworkFileTaskFactory nftf, JarReader.CyAccess readerAccess) {
+    public SoftwareImport(DialogTaskManager dtm, FileUtil fu, LoadNetworkFileTaskFactory nftf, JavaReader.CyAccess readerAccess,
+                          CyNetworkManager nm, CyNetworkViewManager vm) {
         this.dtm = dtm;
         this.fu = fu;
         this.nftf = nftf;
         this.readerAccess = readerAccess;
+        this.nm = nm;
+        this.vm = vm;
     }
 
     public void loadFromFile(Component parent, Consumer<String> onSuccess) {
@@ -51,12 +58,21 @@ public class SoftwareImport {
 
     }
 
+    public void loadFromSrcFolder(String path, Consumer<String> onSuccess) {
+        System.out.println(path);
+        if (path.equals("")) return;
+        dtm.execute(new TaskIterator(new JavaReader.ReaderTask(path, readerAccess, rt -> {
+            rt.loadIntoView(nm, vm);
+            onSuccess.accept(path);
+        })));
+    }
+
     // LOAD FROM GITHUB FUNCTIONS:
 
     public void loadFromGitHub() {
         try {
 
-            GitHub github = new GitHubBuilder().withPassword("BJNick", "335622git").build();
+            GitHub github = new GitHubBuilder().withPassword("XXXXXX", "XXXXXX").build();
             var repo = github.getRepository("BJNick/CytoscapeMagneticLayout");
 
             System.out.println("Repo: " + repo.getName());
@@ -187,7 +203,9 @@ public class SoftwareImport {
                 edges.add(javaFile.fullName + " " + importStatement);
             }
         }
-        dtm.execute(new TaskIterator(new JarReader.ReaderTask(nodes, edges, readerAccess)));
+        dtm.execute(new TaskIterator(new JavaReader.ReaderTask(nodes, edges, readerAccess, rt -> {
+            rt.loadIntoView(nm, vm);
+        })));
     }
 
 }

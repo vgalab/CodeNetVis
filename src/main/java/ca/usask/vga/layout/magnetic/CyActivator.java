@@ -4,7 +4,7 @@ import ca.usask.vga.layout.magnetic.highlight.ChangeHopDistanceAction;
 import ca.usask.vga.layout.magnetic.highlight.CopyHighlightedAction;
 import ca.usask.vga.layout.magnetic.highlight.EdgeHighlighting;
 import ca.usask.vga.layout.magnetic.highlight.ToggleHighlightAction;
-import ca.usask.vga.layout.magnetic.io.JarReader;
+import ca.usask.vga.layout.magnetic.io.JavaReader;
 import ca.usask.vga.layout.magnetic.io.PajekReader;
 import ca.usask.vga.layout.magnetic.poles.*;
 import org.cytoscape.application.CyApplicationManager;
@@ -160,12 +160,12 @@ public class CyActivator extends AbstractCyActivator {
 		registerService(bc, pajekReader, pajekReader.getServiceClass(), pajekReader.getDefaultProperties());
 
 		// JAR File input
-		var jarReaderAccess = new JarReader.CyAccess(getService(bc, CyNetworkFactory.class),
+		var jarReaderAccess = new JavaReader.CyAccess(getService(bc, CyNetworkFactory.class),
 				getService(bc, CyNetworkViewFactory.class), getService(bc, EquationCompiler.class));
 
-		JarReader jarReader = JarReader.create(jarReaderAccess, getService(bc, StreamUtil.class));
+		JavaReader javaReader = JavaReader.create(jarReaderAccess, getService(bc, StreamUtil.class));
 
-		registerService(bc, jarReader, jarReader.getServiceClass(), jarReader.getDefaultProperties());
+		registerService(bc, javaReader, javaReader.getServiceClass(), javaReader.getDefaultProperties());
 
 
 		// Software Panel
@@ -186,7 +186,9 @@ public class CyActivator extends AbstractCyActivator {
 
 		SoftwareImport softwareImport = new SoftwareImport(getService(bc, DialogTaskManager.class),
 				getService(bc, FileUtil.class),
-				getService(bc, LoadNetworkFileTaskFactory.class), jarReaderAccess);
+				getService(bc, LoadNetworkFileTaskFactory.class), jarReaderAccess,
+				getService(bc, CyNetworkManager.class),
+				getService(bc, CyNetworkViewManager.class));
 
 		SoftwarePanel sPanel = new SoftwarePanel(getService(bc, CySwingApplication.class),
 				getService(bc, DialogTaskManager.class),

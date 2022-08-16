@@ -13,6 +13,7 @@ import org.cytoscape.io.util.StreamUtil;
 import org.cytoscape.model.*;
 import org.cytoscape.view.model.CyNetworkView;
 import org.cytoscape.view.model.CyNetworkViewFactory;
+import org.cytoscape.view.model.CyNetworkViewManager;
 import org.cytoscape.work.ProvidesTitle;
 import org.cytoscape.work.TaskIterator;
 import org.cytoscape.work.TaskMonitor;
@@ -20,14 +21,16 @@ import org.cytoscape.work.Tunable;
 
 import java.io.*;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.jar.JarInputStream;
+import java.util.stream.Collectors;
 
-public class JarReader extends AbstractInputStreamTaskFactory {
+public class JavaReader extends AbstractInputStreamTaskFactory {
 
     public static final String NODE_NAME = "name", NODE_CLASS = "Class", NODE_PACKAGE = "Package",
             NODE_INNER_CLASS = "Simple class";
 
-    public static final String EDGE_NAME = "name";
+    public static final String EDGE_NAME = "name", EDGE_INTERACTION = "interaction";
 
     public static final String CLASS_FORMULA = "=LAST(SPLIT(${"+NODE_NAME+"},\".\"))";
     public static final String PACKAGE_FORMULA = "=SUBSTITUTE($name, CONCATENATE(\".\",${"+NODE_CLASS+"}), \"\")";
@@ -46,14 +49,14 @@ public class JarReader extends AbstractInputStreamTaskFactory {
         }
     }
 
-    private final JarReader.CyAccess cy;
+    private final JavaReader.CyAccess cy;
 
-    protected JarReader(CyFileFilter fileFilter, JarReader.CyAccess dependencies) {
+    protected JavaReader(CyFileFilter fileFilter, JavaReader.CyAccess dependencies) {
         super(fileFilter);
         this.cy = dependencies;
     }
 
-    public static JarReader create(JarReader.CyAccess dependencies, StreamUtil streamUtil) {
+    public static JavaReader create(JavaReader.CyAccess dependencies, StreamUtil streamUtil) {
 
         //1. define a file filter (BasicCyFileFilter), to support the reader to read the file with extension '.tc'
         HashSet<String> extensions = new HashSet<>();
@@ -68,7 +71,7 @@ public class JarReader extends AbstractInputStreamTaskFactory {
         //2. Create an instance of the ReaderFactory
         // Note that extends TCReaderFactory  must implement the interface InputStreamTaskFactory or extends the class  AbstractInputStreamTaskFactory.
         // And the defined task must implement CyNetworkReader
-        return new JarReader(filter, dependencies);
+        return new JavaReader(filter, dependencies);
 
         //3. register the ReaderFactory as an InputStreamTaskFactory.
     }
@@ -86,16 +89,19 @@ public class JarReader extends AbstractInputStreamTaskFactory {
 
     @Override
     public TaskIterator createTaskIterator(InputStream inputStream, String inputName) {
-        return new TaskIterator(new JarReader.ReaderTask(inputStream, inputName, cy));
+        return new TaskIterator(new JavaReader.ReaderTask(inputStream, inputName, cy));
     }
 
     public static class ReaderTask implements CyNetworkReader {
 
-        private final InputStream inputStream;
-        private final String inputName;
-        private final JarReader.CyAccess cy;
+        private InputStream inputStream = null;
+        private String inputName = null;
+        private String srcFolder = null;
+
+        private final JavaReader.CyAccess cy;
         private Set<String> nodes = null;
         private Set<String> edges = null;
+        private Consumer<ReaderTask> afterComplete = c -> {};
 
         private boolean cancelled;
 
@@ -120,23 +126,31 @@ public class JarReader extends AbstractInputStreamTaskFactory {
         @Tunable(description="Hide anonymous classes:")
         public boolean hideAnonymousClasses = true;
 
-        public ReaderTask(InputStream inputStream, String inputName, JarReader.CyAccess dependencies) {
+        public ReaderTask(InputStream inputStream, String inputName, JavaReader.CyAccess dependencies) {
             this.inputStream = inputStream;
             this.inputName = inputName;
             cy = dependencies;
             newNetworks = new ArrayList<>();
         }
 
-        public ReaderTask(String filename, JarReader.CyAccess dependencies) throws FileNotFoundException {
-            this.inputStream = new FileInputStream(filename);
+        public ReaderTask(String filename, JavaReader.CyAccess dependencies, Consumer<ReaderTask> afterComplete)  {
             this.inputName = filename;
+            this.afterComplete = afterComplete;
+            if (filename.endsWith(".jar")) {
+                try {
+                    this.inputStream = new FileInputStream(filename);
+                } catch (FileNotFoundException e) {throw new RuntimeException(e);}
+            } else {
+                srcFolder = filename;
+            }
             cy = dependencies;
             newNetworks = new ArrayList<>();
         }
 
-        public ReaderTask(Set<String> nodes, Set<String> edges, JarReader.CyAccess dependencies) throws FileNotFoundException {
+        public ReaderTask(Set<String> nodes, Set<String> edges, JavaReader.CyAccess dependencies, Consumer<ReaderTask> afterComplete) {
             this.nodes = nodes;
             this.edges = edges;
+            this.afterComplete = afterComplete;
             this.inputStream = null;
             this.inputName = "Other";
             cy = dependencies;
@@ -156,78 +170,15 @@ public class JarReader extends AbstractInputStreamTaskFactory {
         @Override
         public void run(TaskMonitor taskMonitor) throws Exception {
 
-            taskMonitor.setTitle("Importing a JAR file: " + inputName);
+            taskMonitor.setTitle("Importing Java files: " + inputName);
 
             if (edges == null || nodes == null) {
-
-                edges = new HashSet<>();
                 nodes = new HashSet<>();
-
-                PrintStream ps = new PrintStream(new OutputStream() {
-                    public void write(int b) {
-                    }
-                }) {
-                    public void print(String s) {
-                        if (s == null) return;
-
-                        if (!userPackage.equals("")) {
-                            if (!s.startsWith(userPackage) || !s.split(" ")[1].startsWith(userPackage)) {
-                                return;
-                            }
-                        }
-
-                        if (ignoreJavaLibraries)
-                            for (String p : packagesToIgnore)
-                                if (s.startsWith(p) || s.split(" ")[1].startsWith(p))
-                                    return;
-
-                        if (hideInnerClasses && hideAnonymousClasses) {
-                            // Ignore all inner members
-                            s = s.replaceAll("\\$[\\dA-Za-z$]*", "");
-                        } else {
-                            // Ignore unnamed inner references / static references
-                            s = s.replaceAll("\\$(?![\\dA-Za-z$])", "");
-                            s = s.replaceAll("\\$class(?![\\dA-Za-z$])", "");
-
-                            if (hideInnerClasses) {
-                                // Ignore named inner classes
-                                s = s.replaceAll("\\$[a-zA-Z][\\da-zA-Z$]*.*?", "");
-                            }
-
-                            if (hideAnonymousClasses) {
-                                // Ignore anonymous classes and functions
-                                s = s.replaceAll("\\$\\d[\\da-zA-Z$]*.*?", "");
-                                s = s.replaceAll("\\$\\$[\\da-zA-Z$]*.*?", "");
-                            }
-                        }
-
-                        // Only add source nodes
-                        nodes.add(s.split(" ")[0]);
-                        edges.add(s);
-                    }
-                };
-
-
-                try (var jar = new JarInputStream(inputStream)) {
-                    var e = jar.getNextJarEntry();
-                    while (e != null) {
-
-                        if (cancelled) return;
-
-                        if (!e.isDirectory() && e.getName().endsWith(".class")) {
-
-                            ClassParser cp = new ClassParser(jar, e.getName());
-                            var classVisitor = new ClassVisitor(cp.parse());
-                            classVisitor.setPrintStream(ps);
-                            classVisitor.start();
-                        }
-
-                        e = jar.getNextJarEntry();
-                    }
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-
+                edges = new HashSet<>();
+                if (srcFolder == null)
+                    readFromJar(nodes, edges);
+                else
+                    readFromSource(nodes, edges);
             }
 
             // Create network
@@ -239,11 +190,99 @@ public class JarReader extends AbstractInputStreamTaskFactory {
 
             for (var e : edges) {
                 var split = e.split(" ");
-                newEdge(network, split[0], split[1]);
+                newEdge(network, split[0], split[1], split.length >= 3 ? split[2] : null);
             }
 
             initJavaColumns(network);
             newNetworks.add(network);
+
+            afterComplete.accept(this);
+        }
+
+        public void loadIntoView(CyNetworkManager nm, CyNetworkViewManager vm) {
+            for (var n : getNetworks()) {
+                nm.addNetwork(n, true);
+                var view = buildCyNetworkView(n);
+                vm.addNetworkView(view, true);
+            }
+        }
+
+        private String formatEdgeString(String s) {
+            if (s == null) return null;
+
+            if (hideInnerClasses && hideAnonymousClasses) {
+                // Ignore all inner members
+                s = s.replaceAll("\\$[\\dA-Za-z$]*", "");
+            } else {
+                // Ignore unnamed inner references / static references
+                s = s.replaceAll("\\$(?![\\dA-Za-z$])", "");
+                s = s.replaceAll("\\$class(?![\\dA-Za-z$])", "");
+
+                if (hideInnerClasses) {
+                    // Ignore named inner classes
+                    s = s.replaceAll("\\$[a-zA-Z][\\da-zA-Z$]*.*?", "");
+                }
+
+                if (hideAnonymousClasses) {
+                    // Ignore anonymous classes and functions
+                    s = s.replaceAll("\\$\\d[\\da-zA-Z$]*.*?", "");
+                    s = s.replaceAll("\\$\\$[\\da-zA-Z$]*.*?", "");
+                }
+            }
+            return s;
+        }
+
+        private void readFromSource(Set<String> nodes, Set<String> edges) {
+
+            if (!EdgeClassVisitor.isValidSRC(srcFolder))
+                throw new RuntimeException("Invalid SRC folder");
+
+            var parsed = EdgeClassVisitor.parseSRCFolder(srcFolder);
+            var result = EdgeClassVisitor.visitAll(parsed, true);
+
+            nodes.addAll(result[0].stream().map(this::formatEdgeString).collect(Collectors.toSet()));
+            edges.addAll(result[1].stream().map(this::formatEdgeString).collect(Collectors.toSet()));
+
+            nodes.remove(null);
+            edges.remove(null);
+        }
+
+        private void readFromJar(Set<String> nodes, Set<String> edges) {
+
+            PrintStream ps = new PrintStream(new OutputStream() {
+                public void write(int b) {
+                }
+            }) {
+                public void print(String s) {
+                    s = formatEdgeString(s);
+                    if (s == null) return;
+
+                    // Only add source nodes
+                    nodes.add(s.split(" ")[0]);
+                    edges.add(s);
+                }
+            };
+
+
+            try (var jar = new JarInputStream(inputStream)) {
+                var e = jar.getNextJarEntry();
+                while (e != null) {
+
+                    if (cancelled) return;
+
+                    if (!e.isDirectory() && e.getName().endsWith(".class")) {
+
+                        ClassParser cp = new ClassParser(jar, e.getName());
+                        var classVisitor = new ClassVisitor(cp.parse());
+                        classVisitor.setPrintStream(ps);
+                        classVisitor.start();
+                    }
+
+                    e = jar.getNextJarEntry();
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         }
 
         protected CyNode newNode(CyNetwork network, String fullName) {
@@ -258,7 +297,7 @@ public class JarReader extends AbstractInputStreamTaskFactory {
         }
 
 
-        protected CyEdge newEdge(CyNetwork network, String from, String to) {
+        protected CyEdge newEdge(CyNetwork network, String from, String to, String interaction) {
             // Ignore self edges
             if (from.equals(to))
                 return null;
@@ -290,6 +329,11 @@ public class JarReader extends AbstractInputStreamTaskFactory {
             if (edgeTable.getColumn(EDGE_NAME) == null)
                 edgeTable.createColumn(EDGE_NAME, String.class, false);
             edgeTable.getRow(edge.getSUID()).set(EDGE_NAME, from + " > " + to);
+
+            if (edgeTable.getColumn(EDGE_INTERACTION) == null)
+                edgeTable.createColumn(EDGE_INTERACTION, String.class, false);
+            if (interaction != null && !interaction.equals(""))
+                edgeTable.getRow(edge.getSUID()).set(EDGE_INTERACTION, interaction);
 
             return edge;
         }
