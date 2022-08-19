@@ -1,9 +1,6 @@
 package ca.usask.vga.layout.magnetic;
 
-import ca.usask.vga.layout.magnetic.highlight.ChangeHopDistanceAction;
-import ca.usask.vga.layout.magnetic.highlight.CopyHighlightedAction;
-import ca.usask.vga.layout.magnetic.highlight.EdgeHighlighting;
-import ca.usask.vga.layout.magnetic.highlight.ToggleHighlightAction;
+import ca.usask.vga.layout.magnetic.highlight.*;
 import ca.usask.vga.layout.magnetic.io.JavaReader;
 import ca.usask.vga.layout.magnetic.io.PajekReader;
 import ca.usask.vga.layout.magnetic.poles.*;
@@ -64,23 +61,6 @@ public class CyActivator extends AbstractCyActivator {
     	Properties propsReaderServiceProps = new Properties();
     	propsReaderServiceProps.setProperty("cyPropertyName", "magnetic-layout.props");
     	registerAllServices(bc, preferences, propsReaderServiceProps);
-
-		// Editor Edge Highlighting
-		final EdgeHighlighting edgeHighlighting = new EdgeHighlighting(new EdgeHighlighting.CyAccess(
-				getService(bc, CyNetworkFactory.class),
-				getService(bc, CyNetworkManager.class),
-				getService(bc, CyNetworkViewFactory.class),
-				getService(bc, CyNetworkViewManager.class),
-				getService(bc, CyNetworkNaming.class),
-				getService(bc, VisualMappingManager.class),
-				getService(bc, CyRootNetworkManager.class),
-				getService(bc, CyApplicationManager.class)), preferences);
-		registerService(bc, edgeHighlighting, SelectedNodesAndEdgesListener.class);
-		registerService(bc, edgeHighlighting, SetCurrentNetworkListener.class);
-
-		registerService(bc, new ToggleHighlightAction(edgeHighlighting), CyAction.class, new Properties());
-		registerService(bc, new CopyHighlightedAction(edgeHighlighting), CyAction.class, new Properties());
-		registerService(bc, new ChangeHopDistanceAction(edgeHighlighting), CyAction.class, new Properties());
 
 		// Simple Magnetic Layout
 		SimpleMagneticLayout simpleMagneticLayout = new SimpleMagneticLayout(undo);
@@ -152,6 +132,25 @@ public class CyActivator extends AbstractCyActivator {
 		registerService(bc, ExtraTasks.getTaskFactory(makePoleNodesLarger),
 				TaskFactory.class, makePoleNodesLarger.getDefaultProperties());
 
+		var networkCyAccess = new NetworkCyAccess(
+				getService(bc, CyNetworkFactory.class),
+				getService(bc, CyNetworkManager.class),
+				getService(bc, CyNetworkViewFactory.class),
+				getService(bc, CyNetworkViewManager.class),
+				getService(bc, CyNetworkNaming.class),
+				getService(bc, VisualMappingManager.class),
+				getService(bc, CyRootNetworkManager.class),
+				getService(bc, CyApplicationManager.class),
+				poleManager);
+
+		// Editor Edge Highlighting
+		final EdgeHighlighting edgeHighlighting = new EdgeHighlighting(networkCyAccess, preferences);
+		registerService(bc, edgeHighlighting, SelectedNodesAndEdgesListener.class);
+		registerService(bc, edgeHighlighting, SetCurrentNetworkListener.class);
+
+		registerService(bc, new ToggleHighlightAction(edgeHighlighting), CyAction.class, new Properties());
+		registerService(bc, new CopyHighlightedAction(edgeHighlighting), CyAction.class, new Properties());
+		registerService(bc, new ChangeHopDistanceAction(edgeHighlighting), CyAction.class, new Properties());
 
 		// PAJEK .NET File format reading
 		PajekReader pajekReader = PajekReader.create(new PajekReader.CyAccess(getService(bc, CyNetworkFactory.class),
@@ -167,10 +166,9 @@ public class CyActivator extends AbstractCyActivator {
 
 		registerService(bc, javaReader, javaReader.getServiceClass(), javaReader.getDefaultProperties());
 
-
 		// Software Panel
 		SoftwareLayout softwareLayout = new SoftwareLayout(poleMagneticLayout, getService(bc, TaskManager.class),
-				getService(bc, CyApplicationManager.class));
+				getService(bc, CyApplicationManager.class), new CreateSubnetworkTask(networkCyAccess));
 
 		SoftwareStyle softwareStyle = new SoftwareStyle(getService(bc, CyApplicationManager.class),
 				getService(bc, TaskManager.class), getService(bc, VisualMappingManager.class),

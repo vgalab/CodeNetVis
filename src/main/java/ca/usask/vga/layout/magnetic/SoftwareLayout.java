@@ -2,6 +2,7 @@ package ca.usask.vga.layout.magnetic;
 
 import ca.usask.vga.layout.magnetic.force.FieldType;
 import ca.usask.vga.layout.magnetic.force.HierarchyForce;
+import ca.usask.vga.layout.magnetic.highlight.CreateSubnetworkTask;
 import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.work.FinishStatus;
 import org.cytoscape.work.ObservableTask;
@@ -15,14 +16,20 @@ public class SoftwareLayout {
     private final PoleMagneticLayout pml;
     private final TaskManager tm;
     private final CyApplicationManager am;
+    private final CreateSubnetworkTask subnetTask;
 
     private int maxRings;
     private float pinRadius;
 
-    public SoftwareLayout(PoleMagneticLayout pml, TaskManager tm, CyApplicationManager am) {
+    public SoftwareLayout(PoleMagneticLayout pml, TaskManager tm, CyApplicationManager am, CreateSubnetworkTask subnetTask) {
         this.pml = pml;
         this.tm = tm;
         this.am = am;
+        this.subnetTask = subnetTask;
+    }
+
+    public void createSubnetworkFromVisible() {
+        subnetTask.copyCurrentVisible();
     }
 
     public void runLayout() {

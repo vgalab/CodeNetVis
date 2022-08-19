@@ -21,29 +21,7 @@ import java.util.List;
 
 public class EdgeHighlighting implements SelectedNodesAndEdgesListener, SetCurrentNetworkListener {
 
-    public static class CyAccess {
-        public final CyNetworkFactory nf;
-        public final CyNetworkManager nm;
-        public final CyNetworkViewFactory vf;
-        public final CyNetworkViewManager vm;
-        public final CyNetworkNaming cnn;
-        public final VisualMappingManager vmm;
-        public final CyRootNetworkManager rnm;
-        public final CyApplicationManager am;
-
-        public CyAccess(CyNetworkFactory nf, CyNetworkManager nm, CyNetworkViewFactory vf, CyNetworkViewManager vm, CyNetworkNaming cnn, VisualMappingManager vmm, CyRootNetworkManager rnm, CyApplicationManager am) {
-            this.nf = nf;
-            this.nm = nm;
-            this.vf = vf;
-            this.vm = vm;
-            this.cnn = cnn;
-            this.vmm = vmm;
-            this.rnm = rnm;
-            this.am = am;
-        }
-    }
-
-    private final CyAccess cy;
+    private final NetworkCyAccess cy;
     private final AppPreferences preferences;
     private SelectedNodesAndEdgesEvent lastEvent;
 
@@ -52,7 +30,7 @@ public class EdgeHighlighting implements SelectedNodesAndEdgesListener, SetCurre
     private boolean enabled = false;
     private int desiredHopDistance = 1;
 
-    public EdgeHighlighting(CyAccess cy, AppPreferences preferences) {
+    public EdgeHighlighting(NetworkCyAccess cy, AppPreferences preferences) {
         this.cy = cy;
         this.preferences = preferences;
         // Load preference from file
@@ -265,67 +243,18 @@ public class EdgeHighlighting implements SelectedNodesAndEdgesListener, SetCurre
     }
 
     public void selectionToNetwork() {
-        // TODO: Check if anything is selected, send user notifications
-
         if (lastEvent == null) {
             System.out.println("Last event is null");
             return;
         }
-
-        CyNetwork supernet = lastEvent.getNetwork();
-        CyRootNetwork root = cy.rnm.getRootNetwork(supernet);
-
         ArrayList<CyNode> selectedNodes = new ArrayList<>();
         ArrayList<CyEdge> selectedEdges = new ArrayList<>();
 
         for (CyNode n : lastEvent.getSelectedNodes()) {
-            exploreEdges(n, supernet, null, desiredHopDistance, selectedNodes, selectedEdges);
+            exploreEdges(n, lastEvent.getNetwork(), null, desiredHopDistance, selectedNodes, selectedEdges);
         }
-
-        CyNetwork net = root.addSubNetwork(selectedNodes, selectedEdges);
-        net.getDefaultNetworkTable().getRow(net.getSUID()).set("name", cy.cnn.getSuggestedSubnetworkTitle(root));
-
-        cy.nm.addNetwork(net);
-
-        CyNetworkView view = cy.vf.createNetworkView(net);
-        cy.vm.addNetworkView(view);
-
-        Collection<CyNetworkView> oldViewList = cy.vm.getNetworkViews(supernet);
-
-        if (!oldViewList.isEmpty()) {
-
-            CyNetworkView oldView = oldViewList.iterator().next();
-
-            VisualStyle style = cy.vmm.getVisualStyle(oldView);
-
-            cy.vmm.addVisualStyle(style);
-            cy.vmm.setVisualStyle(style, view);
-            style.apply(view);
-
-            // Copy node positions and zoom
-
-            for (CyNode n : selectedNodes) {
-                view.getNodeView(n).setVisualProperty(BasicVisualLexicon.NODE_X_LOCATION, oldView.getNodeView(n).getVisualProperty(BasicVisualLexicon.NODE_X_LOCATION));
-                view.getNodeView(n).setVisualProperty(BasicVisualLexicon.NODE_Y_LOCATION, oldView.getNodeView(n).getVisualProperty(BasicVisualLexicon.NODE_Y_LOCATION));
-            }
-
-            VisualProperty[] toCopy = new VisualProperty[] {
-                    BasicVisualLexicon.NETWORK_CENTER_X_LOCATION,
-                    BasicVisualLexicon.NETWORK_CENTER_Y_LOCATION,
-                    BasicVisualLexicon.NETWORK_HEIGHT,
-                    BasicVisualLexicon.NETWORK_WIDTH,
-                    BasicVisualLexicon.NETWORK_SCALE_FACTOR,
-                    BasicVisualLexicon.NETWORK_CENTER_Z_LOCATION,
-                    BasicVisualLexicon.NETWORK_SIZE};
-            for (VisualProperty vp : toCopy)
-                view.setVisualProperty(vp, oldView.getVisualProperty(vp));
-
-
-            /*for (CyNode n : lastEvent.getSelectedNodes()) {
-                exploreIncomingEdges(n, supernet, view, desiredHopDistance);
-                exploreOutgoingEdges(n, supernet, view, desiredHopDistance);
-            }*/
-        }
-
+        new CreateSubnetworkTask(cy).copyNetwork(lastEvent.getNetwork(), selectedNodes, selectedEdges);
     }
+
+
 }

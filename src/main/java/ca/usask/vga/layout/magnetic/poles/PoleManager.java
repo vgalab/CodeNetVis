@@ -49,12 +49,13 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
     }
 
     protected void initializePoleList(CyNetwork network) {
-        if (!poleList.containsKey(network)) {
-            poleList.put(network, new ArrayList<CyNode>());
+        if (!poleList.containsKey(network) && network != null) {
+            poleList.put(network, new ArrayList<>());
         }
     }
 
     protected void readPoleListFromTable(CyNetwork network) {
+        if (network == null) return;
         readPoleListFromColumn(network, IN_POLE_LIST, false);
         readPoleListFromColumn(network, OUT_POLE_LIST, true);
     }
@@ -79,6 +80,10 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
     }
 
     public List<CyNode> getPoleList(CyNetwork network) {
+        if (network == null) {
+            System.out.println("Warning: Null network passed to getPoleList");
+            return Collections.emptyList();
+        }
         initializePoleList(network);
         return poleList.get(network);
     }
@@ -86,7 +91,7 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
     public List<CyNode> getPoleListSorted(CyNetwork network, Comparator<CyNode> comparator) {
         List<CyNode> list = getPoleList(network);
         list = new ArrayList<>(list);
-        Collections.sort(list, comparator);
+        list.sort(comparator);
         Collections.reverse(list);
         return list;
     }

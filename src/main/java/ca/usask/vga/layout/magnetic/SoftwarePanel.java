@@ -18,6 +18,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
 import java.util.List;
+import java.util.function.Consumer;
 
 public class SoftwarePanel extends JPanel implements CytoPanelComponent2, SessionLoadedListener, SetCurrentNetworkViewListener {
 
@@ -34,6 +35,7 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
 
     private final List<SessionLoadedListener> onSessionLoaded = new ArrayList<>();
     private final List<SetCurrentNetworkViewListener> onNewView = new ArrayList<>();
+    private final List<Consumer<String>> onFileLoaded = new ArrayList<>();
 
     protected SoftwarePanel(CySwingApplication swingApp, DialogTaskManager dtm, SoftwareLayout layout, SoftwareStyle style, SoftwareImport importS) {
         super();
@@ -121,6 +123,7 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         var format = filename.substring(filename.lastIndexOf('.') + 1).toLowerCase();
         layout.layoutOnLoad();
         style.onFileLoaded(format);
+        for (var l : onFileLoaded) l.accept(filename);
     }
 
     protected JPanel createSearchPanel() {
@@ -165,19 +168,22 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
 
         var input = new JComboBox<>(new DefaultComboBoxModel<>(style.getPackageFilterOptions()));
 
-        onNewView.add(e -> {
+        Consumer<Object> updateModel = (Object e) -> {
             input.setModel(new DefaultComboBoxModel<>(style.getPackageFilterOptions()));
-        });
+        };
 
-        onSessionLoaded.add(e -> {
-            input.setModel(new DefaultComboBoxModel<>(style.getPackageFilterOptions()));
-        });
+        onNewView.add(updateModel::accept);
+        onSessionLoaded.add(updateModel::accept);
+        onFileLoaded.add(updateModel::accept);
 
         input.setEditable(true);
 
         input.addActionListener(e -> style.setFilterPrefix(input.getSelectedItem() == null ? "" : input.getSelectedItem().toString()));
 
-        panel.add(groupBox(new JLabel("Prefix:"), input));
+        var subgraphButton = new JButton("Subgraph");
+        subgraphButton.addActionListener(l -> layout.createSubnetworkFromVisible());
+
+        panel.add(groupBox(new JLabel("Prefix:"), input, subgraphButton));
 
         return autoDisable(panel);
     }

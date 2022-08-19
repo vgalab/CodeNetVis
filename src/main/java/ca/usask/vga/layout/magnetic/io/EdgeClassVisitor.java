@@ -25,7 +25,8 @@ public class EdgeClassVisitor extends GenericListVisitorAdapter<String, Map<Stri
     private String currentClassName;
 
     private String USES = "USES", CALL = "CALL", CREATION = "CREATION", DECLARATION = "DECLARATION",
-            RETURN = "RETURN", PARAMETER = "PARAMETER", EXTENDS = "EXTENDS", IMPLEMENTS = "IMPLEMENTS", FIELD = "FIELD", INSIDEOF = "INSIDEOF";
+            RETURN = "RETURN", PARAMETER = "PARAMETER", EXTENDS = "EXTENDS", IMPLEMENTS = "IMPLEMENTS",
+            FIELD = "FIELD", INSIDEOF = "INSIDEOF";
 
     private static final Pattern INNER_CLASS = Pattern.compile("\\.[A-Z][A-Za-z0-9]*(?=\\.[A-Z0-9])");
 
