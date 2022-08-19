@@ -167,10 +167,16 @@ public class JavaReader extends AbstractInputStreamTaskFactory {
             return cy.vf.createNetworkView(network);
         }
 
+        private static String shortInputName(String s) {
+            var split = s.split("[\\\\/]");
+            return split.length <= 1 ? s : split[split.length - 2] + "/" + split[split.length - 1];
+        }
+
         @Override
         public void run(TaskMonitor taskMonitor) throws Exception {
 
-            taskMonitor.setTitle("Importing Java files: " + inputName);
+            taskMonitor.setTitle("Importing Java files...");
+            taskMonitor.setStatusMessage("Importing from: " + shortInputName(inputName));
 
             if (edges == null || nodes == null) {
                 nodes = new HashSet<>();

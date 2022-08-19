@@ -7,10 +7,7 @@ import org.cytoscape.model.CyNetworkManager;
 import org.cytoscape.task.read.LoadNetworkFileTaskFactory;
 import org.cytoscape.util.swing.FileUtil;
 import org.cytoscape.view.model.CyNetworkViewManager;
-import org.cytoscape.work.FinishStatus;
-import org.cytoscape.work.ObservableTask;
-import org.cytoscape.work.TaskIterator;
-import org.cytoscape.work.TaskObserver;
+import org.cytoscape.work.*;
 import org.cytoscape.work.swing.DialogTaskManager;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
@@ -75,7 +72,7 @@ public class SoftwareImport {
     }
 
     public void loadFromSrcFolderDialogue(String initialFolder, Consumer<String> onSuccess) {
-        File folder = fileUtil.getFolder(swingApp.getJFrame(), "Select source folder", initialFolder);
+        File folder = fileUtil.getFolder(swingApp.getJFrame(), "Select one Java SRC folder", initialFolder);
         loadFromSrcFolder(folder.getAbsolutePath(), onSuccess);
     }
 
@@ -90,26 +87,42 @@ public class SoftwareImport {
 
             System.out.println("\nFound GitHub repo: " + repo.getFullName());
 
-            File contents = downloadOrRead(repo);
-
-            String sourceFolder = contents.getPath() + "/src/";
-
-            if (Files.exists(Paths.get(sourceFolder))) {
-                loadFromSrcFolder(sourceFolder, onSuccess);
-            } else {
-                loadFromSrcFolderDialogue(contents.getPath(), onSuccess);
-            }
+            downloadOrReadAsync(repo, (contents) -> {
+                String sourceFolder = contents.getPath() + "/src/";
+                if (Files.exists(Paths.get(sourceFolder))) {
+                    loadFromSrcFolder(sourceFolder, onSuccess);
+                } else {
+                    loadFromSrcFolderDialogue(contents.getPath(), onSuccess);
+                }
+            });
 
         } catch (IOException e) {e.printStackTrace();}
     }
 
     private String getRepoByURL(String url) {
         if (!isValidGitHubUrl(url)) throw new IllegalArgumentException("Invalid GitHub URL: " + url);
-        return url.replaceAll(".*github.com/", "").replaceAll("/tree/.*", "");
+        return url.replaceAll(".*github.com/", "").replaceAll("/tree/.*", "").strip();
     }
 
     public boolean isValidGitHubUrl(String url) {
         return url.matches(".*github.com/.*");
+    }
+
+    private void downloadOrReadAsync(GHRepository repo, Consumer<File> onComplete) {
+        final File[] folder = {null};
+        dtm.execute(new TaskIterator(new AbstractTask() {
+            @Override
+            public void run(TaskMonitor taskMonitor) {
+                taskMonitor.setTitle("Downloading " + repo.getFullName());
+                folder[0] = downloadOrRead(repo);
+            }
+        }), new TaskObserver() {
+            public void taskFinished(ObservableTask task) {}
+            public void allFinished(FinishStatus finishStatus) {
+                if (finishStatus.getType() == FinishStatus.Type.SUCCEEDED)
+                    onComplete.accept(folder[0]);
+            }
+        });
     }
 
     private File downloadOrRead(GHRepository repo) {
@@ -169,7 +182,7 @@ public class SoftwareImport {
 
     // From: https://stackoverflow.com/a/5599842
     private String readableFileSize(long size) {
-        if(size <= 0) return "0 B";
+        if(size <= 0) return "(empty)";
         final String[] units = new String[] { "B", "kB", "MB", "GB", "TB" };
         int digitGroups = (int) (Math.log10(size)/Math.log10(1024));
         return new DecimalFormat("#,##0.#").format(size/Math.pow(1024, digitGroups)) + " " + units[digitGroups];
