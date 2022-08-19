@@ -244,7 +244,7 @@ public class JavaReader extends AbstractInputStreamTaskFactory {
                 throw new RuntimeException("Invalid SRC folder");
 
             var parsed = EdgeClassVisitor.parseSRCFolder(srcFolder);
-            var result = EdgeClassVisitor.visitAll(parsed, true);
+            var result = EdgeClassVisitor.visitAll(parsed, false);
 
             nodes.addAll(result[0].stream().map(this::formatEdgeString).collect(Collectors.toSet()));
             edges.addAll(result[1].stream().map(this::formatEdgeString).collect(Collectors.toSet()));
