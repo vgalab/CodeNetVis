@@ -1,6 +1,8 @@
 package ca.usask.vga.layout.magnetic;
 
 import ca.usask.vga.layout.magnetic.io.JavaReader;
+import org.apache.commons.io.FileUtils;
+import org.cytoscape.application.swing.CySwingApplication;
 import org.cytoscape.model.CyNetworkManager;
 import org.cytoscape.task.read.LoadNetworkFileTaskFactory;
 import org.cytoscape.util.swing.FileUtil;
@@ -10,16 +12,17 @@ import org.cytoscape.work.ObservableTask;
 import org.cytoscape.work.TaskIterator;
 import org.cytoscape.work.TaskObserver;
 import org.cytoscape.work.swing.DialogTaskManager;
-import org.kohsuke.github.GHContent;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
 import org.kohsuke.github.GitHubBuilder;
+import org.zeroturnaround.zip.ZipUtil;
 
 import java.awt.*;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.text.DecimalFormat;
 import java.util.*;
 import java.util.function.Consumer;
 
@@ -31,20 +34,24 @@ public class SoftwareImport {
     private final JavaReader.CyAccess readerAccess;
     private final CyNetworkManager nm;
     private final CyNetworkViewManager vm;
+    private final FileUtil fileUtil;
+    private final CySwingApplication swingApp;
 
     public SoftwareImport(DialogTaskManager dtm, FileUtil fu, LoadNetworkFileTaskFactory nftf, JavaReader.CyAccess readerAccess,
-                          CyNetworkManager nm, CyNetworkViewManager vm) {
+                          CyNetworkManager nm, CyNetworkViewManager vm, FileUtil fileUtil, CySwingApplication swingApp) {
         this.dtm = dtm;
         this.fu = fu;
         this.nftf = nftf;
         this.readerAccess = readerAccess;
         this.nm = nm;
         this.vm = vm;
+        this.fileUtil = fileUtil;
+        this.swingApp = swingApp;
     }
 
-    public void loadFromFile(Component parent, Consumer<String> onSuccess) {
+    public void loadFromFile(Consumer<String> onSuccess) {
 
-        File f = fu.getFile(parent, "New graph from file", FileUtil.LOAD, new HashSet<>());
+        File f = fu.getFile(swingApp.getJFrame(), "New graph from file", FileUtil.LOAD, new HashSet<>());
 
         if (f == null) return;
 
@@ -59,7 +66,7 @@ public class SoftwareImport {
     }
 
     public void loadFromSrcFolder(String path, Consumer<String> onSuccess) {
-        System.out.println(path);
+        System.out.println("Importing Java source code from: " + path);
         if (path.equals("")) return;
         dtm.execute(new TaskIterator(new JavaReader.ReaderTask(path, readerAccess, rt -> {
             rt.loadIntoView(nm, vm);
@@ -67,145 +74,104 @@ public class SoftwareImport {
         })));
     }
 
+    public void loadFromSrcFolderDialogue(String initialFolder, Consumer<String> onSuccess) {
+        File folder = fileUtil.getFolder(swingApp.getJFrame(), "Select source folder", initialFolder);
+        loadFromSrcFolder(folder.getAbsolutePath(), onSuccess);
+    }
+
     // LOAD FROM GITHUB FUNCTIONS:
 
-    public void loadFromGitHub() {
+    public void loadFromGitHub(String url, Consumer<String> onSuccess) {
         try {
+            var repoName = getRepoByURL(url);
 
-            GitHub github = new GitHubBuilder().withPassword("XXXXXX", "XXXXXX").build();
-            var repo = github.getRepository("BJNick/CytoscapeMagneticLayout");
+            GitHub github = new GitHubBuilder().build();
+            var repo = github.getRepository(repoName);
 
-            System.out.println("Repo: " + repo.getName());
+            System.out.println("\nFound GitHub repo: " + repo.getFullName());
 
-            var classes = getAllClasses(repo);
+            File contents = downloadOrRead(repo);
 
-            for (var clazz : classes) {
-                System.out.println(clazz.getName());
-            }
+            String sourceFolder = contents.getPath() + "/src/";
 
-            var contents= convertAll(classes);
-            filterImports(contents, getClassFullNames(contents));
-            loadGraph(contents);
-
-
-        } catch (Exception e) {e.printStackTrace();}
-    }
-
-
-    private Collection<GHContent> getAllClasses(GHRepository repo) throws IOException {
-
-        var mainDir = repo.getDirectoryContent("src/main/java");
-
-        Queue<GHContent> toExplore = new LinkedList<>(mainDir);
-
-        var classes = new HashSet<GHContent>();
-
-        while (!toExplore.isEmpty()) {
-            System.out.println("Exploring " + toExplore.size() + " directories");
-            var current = toExplore.poll();
-            if (current.isDirectory()) {
-                var subdir = repo.getDirectoryContent(current.getPath());
-                toExplore.addAll(subdir);
+            if (Files.exists(Paths.get(sourceFolder))) {
+                loadFromSrcFolder(sourceFolder, onSuccess);
             } else {
-                classes.add(current);
+                loadFromSrcFolderDialogue(contents.getPath(), onSuccess);
+            }
+
+        } catch (IOException e) {e.printStackTrace();}
+    }
+
+    private String getRepoByURL(String url) {
+        if (!isValidGitHubUrl(url)) throw new IllegalArgumentException("Invalid GitHub URL: " + url);
+        return url.replaceAll(".*github.com/", "").replaceAll("/tree/.*", "");
+    }
+
+    public boolean isValidGitHubUrl(String url) {
+        return url.matches(".*github.com/.*");
+    }
+
+    private File downloadOrRead(GHRepository repo) {
+        File tempDir = getTempDir(repo.getFullName());
+
+        try (var entries = Files.list(tempDir.toPath())) {
+            var entry = entries.findFirst();
+            if (entry.isPresent())
+                return entry.get().toFile();
+
+            return repo.readZip(input -> {
+                ZipUtil.unpack(input, tempDir);
+                System.out.println("Downloaded repo to: " + tempDir.getAbsolutePath());
+                return downloadOrRead(repo);
+            }, null);
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private String tempDirPath() {
+        String tempDir = System.getProperty("java.io.tmpdir");
+        return tempDir + "/cytoscape-loaded-repos/";
+    }
+
+    private File getTempDir(String repoName) {
+        repoName = repoName.replace("/", "-");
+        String subfolder = tempDirPath() + repoName + "/";
+        File f = new File(subfolder);
+        if (!f.exists()) {
+            if (!f.mkdirs()) {
+                throw new RuntimeException("Could not create temp directory: " + subfolder);
             }
         }
-
-        System.out.println("Classes: " +  classes.size());
-
-        return classes;
+        return f;
     }
 
-    private static class JavaFileContents {
-
-        GHContent origin;
-
-        String className;
-        String path;
-        String packageName;
-        String fullName;
-
-        Collection<String> imports;
-
-        @Override
-        public String toString() {
-            return "JavaFileContents{" +
-                    "className='" + className + '\'' +
-                    ", path='" + path + '\'' +
-                    ", packageName='" + packageName + '\'' +
-                    ", fullName='" + fullName + '\'' +
-                    ", importsSize=" + imports.size() +
-                    '}';
-        }
-    }
-
-    private JavaFileContents readGHJavaFile(GHContent javaFile) throws IOException {
-
-        var fileContents = new JavaFileContents();
-
-        fileContents.origin = javaFile;
-        fileContents.className = javaFile.getName().replace(".java", "");
-        fileContents.path = javaFile.getPath();
-
-        InputStream stream = javaFile.read();
-        Scanner scanner = new Scanner(stream);
-        // Get all the import statements
-
-        var imports = new HashSet<String>();
-
-        while (scanner.hasNextLine()) {
-            var line = scanner.nextLine();
-            if (line.startsWith("package")) {
-                fileContents.packageName = line.replace("package", "").replace(";", "").trim();
-            } else if (line.startsWith("import")) {
-                var importStatement = line.replace("import", "").replace(";", "").trim();
-                imports.add(importStatement);
+    public void clearTempDir() {
+        File f = new File(tempDirPath());
+        if (f.exists()) {
+            try {
+                FileUtils.deleteDirectory(f);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
         }
-
-        fileContents.imports = imports;
-        fileContents.fullName = fileContents.packageName + "." + fileContents.className;
-
-        System.out.println("File: " + fileContents);
-
-        return fileContents;
     }
 
-    private Collection<JavaFileContents> convertAll(Collection<GHContent> classes) throws IOException {
-        var javaFiles = new HashSet<JavaFileContents>();
-        for (var clazz : classes) {
-            System.out.println("Reading: " + clazz.getName());
-            javaFiles.add(readGHJavaFile(clazz));
+    public String getTempDirSize() {
+        File f = new File(tempDirPath());
+        if (f.exists()) {
+            return readableFileSize(FileUtils.sizeOfDirectory(f));
         }
-        return javaFiles;
+        return readableFileSize(0);
     }
 
-    private Set<String> getClassFullNames(Collection<JavaFileContents> javaFiles) {
-        var fullNames = new HashSet<String>();
-        for (var javaFile : javaFiles) {
-            fullNames.add(javaFile.fullName);
-        }
-        return fullNames;
+    // From: https://stackoverflow.com/a/5599842
+    private String readableFileSize(long size) {
+        if(size <= 0) return "0 B";
+        final String[] units = new String[] { "B", "kB", "MB", "GB", "TB" };
+        int digitGroups = (int) (Math.log10(size)/Math.log10(1024));
+        return new DecimalFormat("#,##0.#").format(size/Math.pow(1024, digitGroups)) + " " + units[digitGroups];
     }
-
-    private void filterImports(Collection<JavaFileContents> javaFiles, Set<String> fullNames) {
-        for (var javaFile : javaFiles) {
-            javaFile.imports.removeIf(f -> !fullNames.contains(f));
-        }
-    }
-
-    private void loadGraph(Collection<JavaFileContents> javaFiles) throws FileNotFoundException {
-        Set<String> nodes = new HashSet<>();
-        Set<String> edges = new HashSet<>();
-        for (var javaFile : javaFiles) {
-            nodes.add(javaFile.fullName);
-            for (var importStatement : javaFile.imports) {
-                edges.add(javaFile.fullName + " " + importStatement);
-            }
-        }
-        dtm.execute(new TaskIterator(new JavaReader.ReaderTask(nodes, edges, readerAccess, rt -> {
-            rt.loadIntoView(nm, vm);
-        })));
-    }
-
 }

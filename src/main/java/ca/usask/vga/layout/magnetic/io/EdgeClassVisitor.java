@@ -62,6 +62,7 @@ public class EdgeClassVisitor extends GenericListVisitorAdapter<String, Map<Stri
         Set<String> edges = new HashSet<>();
         for (var cu : compilations)
             edges.addAll(new EdgeClassVisitor(allInteractions).visit(cu, classDefinitions));
+        System.out.println("\nDone Java class import!");
         return new Set[]{nodes, edges};
     }
 
@@ -74,11 +75,14 @@ public class EdgeClassVisitor extends GenericListVisitorAdapter<String, Map<Stri
 
         if (!isValidSRC(srcFolder)) throw new InvalidPathException(srcFolder, "Must be a java src folder");
         srcFolder = srcFolder.replace("\\", "/");
-        if (srcFolder.endsWith("src")) srcFolder += "/main/java";
-        else if (srcFolder.endsWith("src/")) srcFolder += "main/java";
 
-        if (!srcFolder.endsWith("main/java") && !srcFolder.endsWith("main/java/"))
-            throw new InvalidPathException(srcFolder, "Must be a java src folder");
+        String javaSrcFolder = srcFolder + "";
+        if (srcFolder.endsWith("src")) javaSrcFolder += "/main/java";
+        else if (srcFolder.endsWith("src/")) javaSrcFolder += "main/java";
+
+        if (new File(javaSrcFolder).exists()) {
+            srcFolder = javaSrcFolder;
+        }
 
         Path pathToSource = new File(srcFolder).toPath();
 
@@ -113,7 +117,7 @@ public class EdgeClassVisitor extends GenericListVisitorAdapter<String, Map<Stri
         String resolved = null;
         try {
             resolved = n.getType().resolve().describe();
-        } catch (Exception ignored) {
+        } catch (Exception | StackOverflowError ignored) {
             if (arg != null) resolved = arg.get(n.getTypeAsString());
         }
         if (resolved != null) {
@@ -126,11 +130,21 @@ public class EdgeClassVisitor extends GenericListVisitorAdapter<String, Map<Stri
         String resolved = null;
         try {
             resolved = n.resolve().describe();
-        } catch (Exception ignored) {
+        } catch (Exception | StackOverflowError ignored) {
             if (arg != null) resolved = arg.get(n.getNameAsString());
         }
         if (resolved != null) {
             edges.addAll(createEdge(currentClassName, resolved, interaction));
+        }
+    }
+
+    @Override
+    public List<String> visit(CompilationUnit n, Map<String, String> arg) {
+        try {
+            return super.visit(n, arg);
+        } catch (StackOverflowError ignored) {
+            System.out.println("\nSkipping a compilation unit due to stack overflow");
+            return Collections.emptyList();
         }
     }
 
@@ -149,7 +163,8 @@ public class EdgeClassVisitor extends GenericListVisitorAdapter<String, Map<Stri
             arg.put(n.getNameAsString(), currentClassName);
             //System.out.println(n.getNameAsString() + " -> " + currentClassName);
         }
-        System.out.println("\nClass: " + currentClassName + (n.isInnerClass() ? " INNER" : ""));
+        // System.out.println("\nClass: " + currentClassName + (n.isInnerClass() ? " INNER" : ""));
+        System.out.printf("Exploring class: %s\r", currentClassName);
         // System.out.println("Extends: " + n.getExtendedTypes());
         // System.out.println("Implements: " + n.getImplementedTypes());
         List<String> edges = new ArrayList<>();
@@ -173,7 +188,8 @@ public class EdgeClassVisitor extends GenericListVisitorAdapter<String, Map<Stri
             arg.put(n.getNameAsString(), currentClassName);
             //System.out.println(n.getNameAsString() + " -> " + currentClassName);
         }
-        System.out.println("\nEnum: " + currentClassName);
+        // System.out.println("\nEnum: " + currentClassName);
+        System.out.printf("Exploring class: %s\r", currentClassName);
         // System.out.println("Extends: " + n.getExtendedTypes());
         // System.out.println("Implements: " + n.getImplementedTypes());
         List<String> edges = super.visit(n, arg);

@@ -611,7 +611,7 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
 
         var style = applyDirectedStyle();
 
-        if (fileFormat.equals("jar")) {
+        if (fileFormat.equals("jar") || fileFormat.equals("java")) {
             // Set class as the labels
             setLabelsPassthrough("Class");
             setTooltipsPassthrough("Package");

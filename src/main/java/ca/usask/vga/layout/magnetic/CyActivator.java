@@ -186,7 +186,9 @@ public class CyActivator extends AbstractCyActivator {
 				getService(bc, FileUtil.class),
 				getService(bc, LoadNetworkFileTaskFactory.class), jarReaderAccess,
 				getService(bc, CyNetworkManager.class),
-				getService(bc, CyNetworkViewManager.class));
+				getService(bc, CyNetworkViewManager.class),
+				getService(bc, FileUtil.class),
+				getService(bc, CySwingApplication.class));
 
 		SoftwarePanel sPanel = new SoftwarePanel(getService(bc, CySwingApplication.class),
 				getService(bc, DialogTaskManager.class),

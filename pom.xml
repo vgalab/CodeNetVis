@@ -165,11 +165,17 @@
             <version>6.5.0</version>
         </dependency>
 
-        <!-- GitHub download dependency -->
+        <!-- GitHub download dependencies -->
         <dependency>
             <groupId>org.kohsuke</groupId>
             <artifactId>github-api</artifactId>
             <version>1.307</version>
+        </dependency>
+        <dependency>
+            <groupId>org.zeroturnaround</groupId>
+            <artifactId>zt-zip</artifactId>
+            <version>1.15</version>
+            <type>jar</type>
         </dependency>
 
         <!-- Java source code dependency -->

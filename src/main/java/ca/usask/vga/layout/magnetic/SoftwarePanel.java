@@ -25,10 +25,10 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
     public static final String title = "Software Layout", identifier = "software-panel";
     private final Icon icon = new ImageIcon(getClass().getResource("/icons/add_pole_N_icon.png"));
 
-    private final CySwingApplication swingApp;
     private final SoftwareLayout layout;
     private final SoftwareStyle style;
     private final SoftwareImport importS;
+    private final CySwingApplication swingApp;
     private final DialogTaskManager dtm;
 
     private final int ENTRY_HEIGHT = 35;
@@ -104,23 +104,40 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
     }
 
     protected JPanel createImportPanel() {
-        var panel = createTitledPanel("Data");
+        var panel = createTitledPanel(null);
 
-        panel.add(disable(groupBox(new JLabel("GitHub Link:"), new JTextField("www.example.com"),
-                addListener(new JButton("Load"), l -> importS.loadFromGitHub()))));
+        var clearCache = new JButton("Clear cache");
+        clearCache.addActionListener(l -> {
+            importS.clearTempDir();
+            clearCache.setText("Clear cache " + importS.getTempDirSize());
+        });
 
-        var srcFolder = new JTextField("");
+        panel.add(groupBox(new JLabel(bold("Data import")), clearCache));
+
+        var gitLink = new JTextField("https://github.com/BJNick/CytoscapeMagneticLayout");
+        panel.add(groupBox(new JLabel("GitHub Link:"), gitLink,
+                addListener(new JButton("Load"), l -> importS.loadFromGitHub(gitLink.getText(), (it) -> {onFileLoaded(it);
+                    clearCache.setText("Clear cache " + importS.getTempDirSize());
+                }))));
+
+        /*var srcFolder = new JTextField("");
         panel.add(groupBox(new JLabel("Source code folder:"), srcFolder, addListener(new JButton("Load"),
-                e -> importS.loadFromSrcFolder(srcFolder.getText(), this::onFileLoaded))));
+                e -> importS.loadFromSrcFolder(srcFolder.getText(), this::onFileLoaded))));*/
 
-        panel.add(group(addListener(new JButton("Load data from file (txt, csv, net, jar)"),
-                e -> importS.loadFromFile(swingApp.getJFrame(), this::onFileLoaded))));
+        var bFile = addListener(new JButton("Load from JAR file"),
+                e -> importS.loadFromFile(this::onFileLoaded));
+
+        var bFolder = addListener(new JButton("Load from Java SRC folder"),
+                e -> importS.loadFromSrcFolderDialogue(null, this::onFileLoaded));
+
+        panel.add(group(bFile, bFolder));
 
         return panel;
     }
 
     protected void onFileLoaded(String filename) {
         var format = filename.substring(filename.lastIndexOf('.') + 1).toLowerCase();
+        if (!filename.contains(".")) format = "java";
         layout.layoutOnLoad();
         style.onFileLoaded(format);
         for (var l : onFileLoaded) l.accept(filename);

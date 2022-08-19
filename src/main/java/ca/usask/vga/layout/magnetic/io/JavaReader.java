@@ -120,10 +120,10 @@ public class JavaReader extends AbstractInputStreamTaskFactory {
         // @Tunable(description="Ignore java.*, javax.*, jdk.*, com.sun.*")
         public boolean ignoreJavaLibraries = true;
 
-        @Tunable(description="Hide inner classes:")
+        // @Tunable(description="Hide inner classes:")
         public boolean hideInnerClasses = true;
 
-        @Tunable(description="Hide anonymous classes:")
+        // @Tunable(description="Hide anonymous classes:")
         public boolean hideAnonymousClasses = true;
 
         public ReaderTask(InputStream inputStream, String inputName, JavaReader.CyAccess dependencies) {
