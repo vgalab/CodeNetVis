@@ -1,34 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
-  <!-- CHANGED POM TO MAKE IT SELF-SUFFICIENT -->
+    <!-- CHANGED POM TO MAKE IT SELF-SUFFICIENT -->
 
-  <!--parent>
-    <groupId>org.cytoscape</groupId>
-    <artifactId>impl-parent</artifactId>
-    <version>3.9.1</version>
-  </parent-->
+    <!--parent>
+      <groupId>org.cytoscape</groupId>
+      <artifactId>impl-parent</artifactId>
+      <version>3.9.1</version>
+    </parent-->
 
-  <properties>
-    <bundle.symbolicName>ca.usask.vga.cytoscape.magnetic-layout</bundle.symbolicName>
-    <bundle.namespace>ca.usask.vga.layout.magnetic</bundle.namespace>
+    <properties>
+        <bundle.symbolicName>ca.usask.vga.cytoscape.magnetic-layout</bundle.symbolicName>
+        <bundle.namespace>ca.usask.vga.layout.magnetic</bundle.namespace>
 
-    <cytoscape.api.version>3.9.0</cytoscape.api.version>
-    <maven-compiler-plugin.version>3.8.0</maven-compiler-plugin.version>
-    <maven-surefire-plugin.version>3.0.0-M3</maven-surefire-plugin.version>
-    <maven-bundle-plugin.version>4.2.1</maven-bundle-plugin.version>
-    <osgi.api.version>4.2.0</osgi.api.version>
-  </properties>
+        <cytoscape.api.version>3.9.0</cytoscape.api.version>
+        <maven-compiler-plugin.version>3.8.0</maven-compiler-plugin.version>
+        <maven-surefire-plugin.version>3.0.0-M3</maven-surefire-plugin.version>
+        <maven-bundle-plugin.version>4.2.1</maven-bundle-plugin.version>
+        <osgi.api.version>4.2.0</osgi.api.version>
+    </properties>
 
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>ca.usask.vga.cytoscape</groupId>
-  <artifactId>magnetic-layout</artifactId>
-  <version>1.0-SNAPSHOT</version>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>ca.usask.vga.cytoscape</groupId>
+    <artifactId>magnetic-layout</artifactId>
+    <version>1.0-SNAPSHOT</version>
 
 
-  <name>USask VGA Lab Magnetic Layout (${project.artifactId})</name>
+    <name>USask VGA Lab Magnetic Layout (${project.artifactId})</name>
 
-  <packaging>bundle</packaging>
+    <packaging>bundle</packaging>
 
 
     <repositories>
@@ -56,27 +56,27 @@
         </repository>
     </repositories>
 
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.felix</groupId>
-				<artifactId>maven-bundle-plugin</artifactId>
-				<version>${maven-bundle-plugin.version}</version>
-				<extensions>true</extensions>
-				<configuration>
-					<instructions>
-						<Bundle-SymbolicName>${bundle.symbolicName}</Bundle-SymbolicName>
-						<Bundle-Version>${project.version}</Bundle-Version>
-						<Export-Package>!${bundle.namespace}.*,!prefuse.*,!gr.*</Export-Package>
-						<Private-Package>${bundle.namespace}.*,prefuse.*,gr.*</Private-Package>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <version>${maven-bundle-plugin.version}</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Bundle-SymbolicName>${bundle.symbolicName}</Bundle-SymbolicName>
+                        <Bundle-Version>${project.version}</Bundle-Version>
+                        <Export-Package>!${bundle.namespace}.*,!prefuse.*,!gr.*</Export-Package>
+                        <Private-Package>${bundle.namespace}.*,prefuse.*,gr.*</Private-Package>
 
-						<Bundle-Activator>${bundle.namespace}.CyActivator</Bundle-Activator>
+                        <Bundle-Activator>${bundle.namespace}.CyActivator</Bundle-Activator>
                         <Embed-Dependency>*;scope=!provided</Embed-Dependency>
                         <Embed-Transitive>true</Embed-Transitive>
                         <Import-Package>*;resolution:=optional</Import-Package>
-					</instructions>
-				</configuration>
-			</plugin>
+                    </instructions>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -93,27 +93,28 @@
             </plugin>
 
         </plugins>
-	</build>
+    </build>
 
-	<dependencies>
-		<dependency>
-			<groupId>org.cytoscape</groupId>
-			<artifactId>work-api</artifactId>
+    <dependencies>
+        <!-- Cytoscape packages -->
+        <dependency>
+            <groupId>org.cytoscape</groupId>
+            <artifactId>work-api</artifactId>
             <version>${cytoscape.api.version}</version>
             <scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.cytoscape</groupId>
-			<artifactId>model-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.cytoscape</groupId>
+            <artifactId>model-api</artifactId>
             <version>${cytoscape.api.version}</version>
             <scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.cytoscape</groupId>
-			<artifactId>layout-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.cytoscape</groupId>
+            <artifactId>layout-api</artifactId>
             <version>${cytoscape.api.version}</version>
             <scope>provided</scope>
-		</dependency>
+        </dependency>
         <dependency>
             <groupId>org.cytoscape</groupId>
             <artifactId>swing-application-api</artifactId>
@@ -157,24 +158,28 @@
             <scope>provided</scope>
         </dependency>
 
-
+        <!-- Jar import dependency -->
         <dependency>
             <groupId>org.apache.bcel</groupId>
             <artifactId>bcel</artifactId>
             <version>6.5.0</version>
         </dependency>
 
+        <!-- GitHub download dependency -->
         <dependency>
             <groupId>org.kohsuke</groupId>
             <artifactId>github-api</artifactId>
             <version>1.307</version>
         </dependency>
+
+        <!-- Java source code dependency -->
         <dependency>
             <groupId>com.github.javaparser</groupId>
             <artifactId>javaparser-symbol-solver-core</artifactId>
             <version>3.24.4</version>
         </dependency>
 
+        <!-- Cytoscape OSGI -->
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
