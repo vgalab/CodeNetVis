@@ -101,7 +101,9 @@ public class SoftwareImport {
 
     private String getRepoByURL(String url) {
         if (!isValidGitHubUrl(url)) throw new IllegalArgumentException("Invalid GitHub URL: " + url);
-        return url.replaceAll(".*github.com/", "").replaceAll("/tree/.*", "").strip();
+        var split = url.replaceAll(".*github.com/", "").split("\\?")[0].split("/");
+        var string = split.length <= 1 ? split[0] : split[0] + "/" + split[1];
+        return string.replace(".git", "").strip();
     }
 
     public boolean isValidGitHubUrl(String url) {
