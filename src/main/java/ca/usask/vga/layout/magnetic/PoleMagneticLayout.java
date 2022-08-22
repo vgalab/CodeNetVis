@@ -11,6 +11,9 @@ import org.cytoscape.work.undo.UndoSupport;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Standard Cytoscape adapter for the {@link PoleMagneticLayoutTask}.
+ */
 public class PoleMagneticLayout extends AbstractLayoutAlgorithm {
 
     protected static final String ALGORITHM_ID = "magnetic-layout-poles";

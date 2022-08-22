@@ -11,6 +11,10 @@ import org.cytoscape.work.TaskObserver;
 
 import java.util.HashSet;
 
+/**
+ * Used to run the magnetic layout with pre-defined optimal parameters.
+ * Overrides the default parameters in {@link PoleMagneticLayoutContext}.
+ */
 public class SoftwareLayout {
 
     private final PoleMagneticLayout pml;

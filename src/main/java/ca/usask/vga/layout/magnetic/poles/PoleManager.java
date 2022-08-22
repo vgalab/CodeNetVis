@@ -12,6 +12,11 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
+/**
+ * Used to store information about the selected poles, as well as
+ * calculating the closest pole for every node. Any changes to the
+ * list of poles must be done through this service.
+ */
 public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListener, SessionAboutToBeLoadedListener {
 
     protected final UndoSupport undoSupport;

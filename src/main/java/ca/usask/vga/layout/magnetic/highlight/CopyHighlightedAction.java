@@ -5,6 +5,11 @@ import org.cytoscape.application.swing.AbstractCyAction;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 
+/**
+ * Creates a new graph from the highlighted paths on the click of a mouse.
+ * Present on the Cytoscape toolbar.
+ * @see EdgeHighlighting
+ */
 public class CopyHighlightedAction extends AbstractCyAction {
 
     private EdgeHighlighting edgeHighlighting;

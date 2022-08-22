@@ -9,6 +9,10 @@ import org.cytoscape.view.vizmap.VisualStyle;
 
 import java.util.*;
 
+/**
+ * Used to create a subnetwork of nodes/edges, then copy
+ * all the visual style and pole parameters to the new graph.
+ */
 public class CreateSubnetworkTask {
 
     private final NetworkCyAccess cy;

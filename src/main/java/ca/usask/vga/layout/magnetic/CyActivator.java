@@ -45,7 +45,13 @@ import java.util.Properties;
 
 import static org.cytoscape.work.ServiceProperties.*;
 
+/**
+ * The main class of the application, it is called by Cytoscape's OSGI
+ * system to turn on/turn off the plug in. It should contain all the additions
+ * to the program including event listeners and services.
+ */
 public class CyActivator extends AbstractCyActivator {
+
 	public CyActivator() {
 		super();
 	}
@@ -194,8 +200,6 @@ public class CyActivator extends AbstractCyActivator {
 				getService(bc, DialogTaskManager.class),
 				softwareLayout, softwareStyle, softwareImport);
 
-		//registerService(bc, sPanel, CytoPanelComponent.class);
-		//registerService(bc, sPanel, SessionLoadedListener.class);
 		registerAllServices(bc, sPanel);
 
 	}

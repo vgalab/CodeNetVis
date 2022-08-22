@@ -6,6 +6,10 @@ import org.cytoscape.view.vizmap.VisualStyle;
 import org.cytoscape.work.undo.AbstractCyEdit;
 import org.cytoscape.work.undo.UndoSupport;
 
+/**
+ * Implements the undo/redo functionality for visual style
+ * changes of the graph. Describes a single edit to the visual properties.
+ */
 public class VizMapEdit extends AbstractCyEdit {
 
     private final VisualStyle style;

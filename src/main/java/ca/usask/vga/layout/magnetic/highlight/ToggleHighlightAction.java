@@ -5,6 +5,13 @@ import org.cytoscape.application.swing.AbstractCyAction;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 
+/**
+ * Toggles edge highlighting on and off by the click of a mouse.
+ * Present on the Cytoscape toolbar.
+ * <br><img src="{@docRoot}/../resources/icons/edge_highlighting_off_icon.png">
+ * <img src="{@docRoot}/../resources/icons/edge_highlighting_on_icon.png">
+ * @see EdgeHighlighting
+ */
 public class ToggleHighlightAction extends AbstractCyAction {
 
     private EdgeHighlighting edgeHighlighting;

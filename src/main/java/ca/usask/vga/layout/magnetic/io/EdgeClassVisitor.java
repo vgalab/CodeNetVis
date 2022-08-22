@@ -19,7 +19,10 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-
+/**
+ * Java source code parser that goes through every class definition in the
+ * given project and creates an edge for every interaction between classes.
+ */
 public class EdgeClassVisitor extends GenericListVisitorAdapter<String, Map<String, String>> {
 
     private String currentClassName;

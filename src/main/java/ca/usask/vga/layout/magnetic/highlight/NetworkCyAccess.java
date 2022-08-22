@@ -11,6 +11,10 @@ import org.cytoscape.view.model.CyNetworkViewFactory;
 import org.cytoscape.view.model.CyNetworkViewManager;
 import org.cytoscape.view.vizmap.VisualMappingManager;
 
+/**
+ * Utility class for storing Cytoscape services important for
+ * network manipulation and copying.
+ */
 public class NetworkCyAccess {
     public final CyNetworkFactory nf;
     public final CyNetworkManager nm;

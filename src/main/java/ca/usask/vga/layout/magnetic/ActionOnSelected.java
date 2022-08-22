@@ -22,8 +22,8 @@ import java.util.Collections;
 import java.util.Properties;
 
 /**
- * Allows actions to act on the selected nodes/edges in the current view
- * TODO: Rewrite to work even without events
+ * Allows actions to perform operations on the selected nodes/edges in the current view.
+ * Provides the option for actions to be present both in the toolbar and the context menu.
  */
 public abstract class ActionOnSelected extends AbstractCyAction implements SelectedNodesAndEdgesListener {
 

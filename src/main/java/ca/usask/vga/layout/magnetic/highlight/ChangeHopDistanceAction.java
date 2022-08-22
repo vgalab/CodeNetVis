@@ -5,6 +5,16 @@ import org.cytoscape.application.swing.AbstractCyAction;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 
+/**
+ * Toggles between four modes of hop distance for edge highlighting. A higher
+ * number means more of the connections are going to be colored.
+ * Present on the Cytoscape toolbar. <br>
+ * <img src="{@docRoot}/../resources/icons/hop_distance1.png">
+ * <img src="{@docRoot}/../resources/icons/hop_distance2.png">
+ * <img src="{@docRoot}/../resources/icons/hop_distance3.png">
+ * <img src="{@docRoot}/../resources/icons/hop_distance4.png">
+ * @see EdgeHighlighting
+ */
 public class ChangeHopDistanceAction extends AbstractCyAction {
 
     private EdgeHighlighting edgeHighlighting;

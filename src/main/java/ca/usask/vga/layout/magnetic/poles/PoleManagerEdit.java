@@ -6,6 +6,12 @@ import org.cytoscape.work.undo.AbstractCyEdit;
 
 import java.util.*;
 
+/**
+ * Implements the undo/redo functionality for changes to the pole list.
+ * Use {@link PoleManager#beginEdit pm.beginEdit()} and
+ * {@link PoleManager#completeEdit pm.completeEdit()} of the PoleManager
+ * to enable this functionality for new actions.
+ */
 public class PoleManagerEdit extends AbstractCyEdit {
 
     private final PoleManager poleManager;
@@ -16,25 +22,25 @@ public class PoleManagerEdit extends AbstractCyEdit {
     protected Map<CyNetwork, List<CyNode>> poleListAfter;
     protected Set<CyNode> poleIsOutwardsAfter;
 
-    public PoleManagerEdit(String presentationName, PoleManager poleManager, CyNetwork network) {
+    protected PoleManagerEdit(String presentationName, PoleManager poleManager, CyNetwork network) {
         super(presentationName);
         this.poleManager = poleManager;
         this.network = network;
     }
 
-    public void setBefore() {
+    protected void setBefore() {
         poleListBefore = copyMap(poleManager.poleList);
         poleIsOutwardsBefore = copySet(poleManager.poleIsOutwards);
         poleListBefore.computeIfAbsent(network, k -> new ArrayList<>());
     }
 
-    public void setAfter() {
+    protected void setAfter() {
         poleListAfter = copyMap(poleManager.poleList);
         poleIsOutwardsAfter = copySet(poleManager.poleIsOutwards);
         poleListAfter.computeIfAbsent(network, k -> new ArrayList<>());
     }
 
-    public boolean changesPresent() {
+    protected boolean changesPresent() {
         if (!poleListBefore.get(network).equals(poleListAfter.get(network)))
             return true;
         return !poleIsOutwardsBefore.equals(poleIsOutwardsAfter);

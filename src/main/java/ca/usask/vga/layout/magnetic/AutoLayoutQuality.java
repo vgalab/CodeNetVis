@@ -6,6 +6,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Contains the definitions of quality measures, as well as a way
+ * to calculate the visual quality score for a given layout.
+ */
 public class AutoLayoutQuality {
 
     private final ForceDirectedLayoutContext context;

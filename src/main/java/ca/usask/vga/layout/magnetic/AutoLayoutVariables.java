@@ -4,6 +4,10 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
+/**
+ * Contains the ranges of possible input parameter adjustments,
+ * as well as a way to iterate over all possible combinations of them.
+ */
 public class AutoLayoutVariables {
 
     private final ForceDirectedLayoutContext context;

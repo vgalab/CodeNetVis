@@ -14,7 +14,6 @@ import org.kohsuke.github.GitHub;
 import org.kohsuke.github.GitHubBuilder;
 import org.zeroturnaround.zip.ZipUtil;
 
-import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -23,6 +22,10 @@ import java.text.DecimalFormat;
 import java.util.*;
 import java.util.function.Consumer;
 
+/**
+ * Used to create a new graph from existing data, such as
+ * a JAR file, Java source folder or a GitHub link.
+ */
 public class SoftwareImport {
 
     private final DialogTaskManager dtm;

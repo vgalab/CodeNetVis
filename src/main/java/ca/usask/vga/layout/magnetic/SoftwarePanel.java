@@ -20,6 +20,13 @@ import java.util.*;
 import java.util.List;
 import java.util.function.Consumer;
 
+/**
+ * Describes the full layout and functionality of the custom "software" panel.
+ * The panel uses customized Swing elements, as well as functionality classes.
+ * @see SoftwareImport
+ * @see SoftwareLayout
+ * @see SoftwareStyle
+ */
 public class SoftwarePanel extends JPanel implements CytoPanelComponent2, SessionLoadedListener, SetCurrentNetworkViewListener {
 
     public static final String title = "Software Layout", identifier = "software-panel";
@@ -304,7 +311,7 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         cutConnections.addActionListener(l -> layout.cutCommonConnections());
         panel.add(group(cutConnections));
 
-        return panel;
+        return autoDisable(panel);
     }
 
     protected JSlider createCustomSlider(int min, int max, int value, int majorTicks, int minorTicks, int scrollAmount) {

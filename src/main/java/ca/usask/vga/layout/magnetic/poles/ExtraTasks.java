@@ -21,6 +21,16 @@ import java.util.List;
 import static org.cytoscape.work.ServiceProperties.*;
 import static org.cytoscape.work.ServiceProperties.MENU_GRAVITY;
 
+/**
+ * Contains extra actions for working with the poles that are
+ * displayed in the application menu, and could be used as part
+ * of more complex procedures.
+ * @see MakeTopDegreePoles
+ * @see SelectAllPoles
+ * @see LegacyPoleColoring
+ * @see CopyNodeStyleToEdge
+ * @see MakePoleNodesLarger
+ */
 public class ExtraTasks {
 
     final static String MENU_APP_ROOT = "Apps.Magnetic Layout";
@@ -75,6 +85,10 @@ public class ExtraTasks {
 
     // TASK CLASSES
 
+    /**
+     * Asks the user which type of degree they want to use as poles and how many,
+     * then selects top N in/out degree nodes as the poles for the current network.
+     */
     public static class MakeTopDegreePoles extends AbstractTask {
 
         private final CyApplicationManager am;
@@ -160,6 +174,10 @@ public class ExtraTasks {
         }
     }
 
+    /**
+     * Selects all the nodes on the pole list on the network view.
+     * Further actions may be performed on the selected nodes.
+     */
     public static class SelectAllPoles extends AbstractTask {
 
         private final CyApplicationManager am;
@@ -208,6 +226,11 @@ public class ExtraTasks {
         }
     }
 
+    /**
+     * Applies the original coloring (orange, blue, pink ...) from the
+     * first implementation of the magnetic layout in C++.
+     * Colors both nodes and edges.
+     */
     public static class LegacyPoleColoring extends AbstractTask {
 
         private final CyApplicationManager am;
@@ -301,6 +324,10 @@ public class ExtraTasks {
         }
     }
 
+    /**
+     * Copies the color mapping from the nodes to the edges by a desired
+     * edge table column. Commonly used to color edges the same color as the nodes.
+     */
     public static class CopyNodeStyleToEdge extends AbstractTask {
 
         private final CyApplicationManager am;
@@ -367,7 +394,10 @@ public class ExtraTasks {
         }
     }
 
-
+    /**
+     * Makes poles 2x as large on the graph, while the rest of the nodes
+     * are all the same size. Incompatible with changing size by the degree.
+     */
     public static class MakePoleNodesLarger extends AbstractTask {
 
         private final CyApplicationManager am;

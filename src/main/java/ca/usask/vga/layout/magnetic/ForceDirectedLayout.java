@@ -27,6 +27,10 @@ import prefuse.util.force.StateMonitor;
  * #L%
  */
 
+/**
+ * Contains {@link Integrators} enum used for implementations of the layout.
+ * Previously part of the original Prefuse layout implementation.
+ */
 public abstract class ForceDirectedLayout {
 
 	public enum Integrators {

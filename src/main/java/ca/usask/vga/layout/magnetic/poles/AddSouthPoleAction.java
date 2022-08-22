@@ -13,6 +13,11 @@ import java.util.Properties;
 
 import static org.cytoscape.work.ServiceProperties.*;
 
+/**
+ * An action that makes new South (Inward) poles from selected nodes,
+ * and updates the screen to change the displayed colors.
+ * Present in the toolbar and the context menu.
+ */
 public class AddSouthPoleAction extends ActionOnSelected {
 
     private final PoleManager poleManager;

@@ -15,6 +15,11 @@ import java.util.Properties;
 
 import static org.cytoscape.work.ServiceProperties.*;
 
+/**
+ * An action that removes selected poles, and updates the screen to
+ * change the displayed colors.
+ * Present in the toolbar and the context menu.
+ */
 public class RemovePoleAction  extends ActionOnSelected {
 
     private final PoleManager poleManager;

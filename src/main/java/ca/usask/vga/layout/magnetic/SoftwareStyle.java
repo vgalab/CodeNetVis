@@ -30,6 +30,10 @@ import java.util.List;
 
 import static org.cytoscape.view.presentation.property.BasicVisualLexicon.*;
 
+/**
+ * Used for changing the style of the displayed graph, such as node size and color,
+ * filtering out certain nodes,as well as adding annotations on top of the graph view.
+ */
 public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
 
     protected final CyApplicationManager am;

@@ -10,6 +10,9 @@ import org.cytoscape.work.undo.UndoSupport;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Standard Cytoscape adapter for the {@link SimpleMagneticLayoutTask}.
+ */
 public class SimpleMagneticLayout extends AbstractLayoutAlgorithm {
 
     protected static final String ALGORITHM_ID = "magnetic-layout-simple";

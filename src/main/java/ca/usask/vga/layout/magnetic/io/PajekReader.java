@@ -23,6 +23,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.*;
 
+/**
+ * Used to import Pajek .NET graph files, used in the C++ version
+ * of the magnetic layout, as well as Gephi.
+ */
 public class PajekReader extends AbstractInputStreamTaskFactory {
 
     public static final String NODE_ID_COLUMN = "name", NODE_LABEL_COLUMN = "Label";

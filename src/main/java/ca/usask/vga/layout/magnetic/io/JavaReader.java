@@ -25,6 +25,10 @@ import java.util.function.Consumer;
 import java.util.jar.JarInputStream;
 import java.util.stream.Collectors;
 
+/**
+ * Used to import both compiled JAR files and source Java code.
+ * Converts package and class into different rows of the data table.
+ */
 public class JavaReader extends AbstractInputStreamTaskFactory {
 
     public static final String NODE_NAME = "name", NODE_CLASS = "Class", NODE_PACKAGE = "Package",

@@ -19,6 +19,11 @@ import java.awt.*;
 import java.util.*;
 import java.util.List;
 
+/**
+ *  For every selected node, highlights incoming edges in blue and outgoing edges
+ *  in red. This effect was first used in Gephi, and it is useful for visualizing
+ *  a directed graph.
+ */
 public class EdgeHighlighting implements SelectedNodesAndEdgesListener, SetCurrentNetworkListener {
 
     private final NetworkCyAccess cy;
