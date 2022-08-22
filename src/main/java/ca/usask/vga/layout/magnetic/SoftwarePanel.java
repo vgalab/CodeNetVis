@@ -68,6 +68,9 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         // STYLE panel
         innerPanel.add(createStylePanel());
 
+        // EXPERIMENTAL panel
+        innerPanel.add(createExperimentalPanel());
+
         // Scroll Pane
         innerPanel.setLayout(new BoxLayout(innerPanel, BoxLayout.Y_AXIS));
         innerPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
@@ -292,6 +295,16 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         //panel.add(group(new JButton("Choose colors...")));
 
         return autoDisable(panel);
+    }
+
+    protected JPanel createExperimentalPanel() {
+        JPanel panel = createTitledPanel("Experimental");
+
+        var cutConnections = new JButton("Cut connections between colors");
+        cutConnections.addActionListener(l -> layout.cutCommonConnections());
+        panel.add(group(cutConnections));
+
+        return panel;
     }
 
     protected JSlider createCustomSlider(int min, int max, int value, int majorTicks, int minorTicks, int scrollAmount) {

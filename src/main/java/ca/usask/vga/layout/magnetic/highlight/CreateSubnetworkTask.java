@@ -35,6 +35,26 @@ public class CreateSubnetworkTask {
         copyNetwork(cy.am.getCurrentNetwork(), nodes, edges);
     }
 
+    public void copyAndCutCommonEdges() {
+        Set<CyNode> nodes = new HashSet<>();
+        Set<CyEdge> edges = new HashSet<>();
+
+        for (CyNode node : cy.am.getCurrentNetwork().getNodeList()) {
+            if (cy.am.getCurrentNetworkView().getNodeView(node).getVisualProperty(BasicVisualLexicon.NODE_VISIBLE)) {
+                nodes.add(node);
+            }
+        }
+        for (CyEdge edge : cy.am.getCurrentNetwork().getEdgeList()) {
+            if (nodes.contains(edge.getSource()) && nodes.contains(edge.getTarget())) {
+                if (!cy.pm.isClosestToMultiple(cy.am.getCurrentNetwork(), edge)) {
+                    edges.add(edge);
+                }
+            }
+        }
+
+        copyNetwork(cy.am.getCurrentNetwork(), nodes, edges);
+    }
+
     public void copyNetwork(CyNetwork supernet, Collection<CyNode> selectedNodes, Collection<CyEdge> selectedEdges) {
 
         CyRootNetwork root = cy.rnm.getRootNetwork(supernet);

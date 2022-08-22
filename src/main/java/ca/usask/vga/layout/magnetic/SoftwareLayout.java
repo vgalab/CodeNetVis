@@ -32,6 +32,10 @@ public class SoftwareLayout {
         subnetTask.copyCurrentVisible();
     }
 
+    public void cutCommonConnections() {
+        subnetTask.copyAndCutCommonEdges();
+    }
+
     public void runLayout() {
         runLayout(null);
     }
