@@ -40,7 +40,9 @@ public class JavaReader extends AbstractInputStreamTaskFactory {
     public static final String PACKAGE_FORMULA = "=SUBSTITUTE($name, CONCATENATE(\".\",${"+NODE_CLASS+"}), \"\")";
     public static final String INNER_CLASS_FORMULA = "=LAST(SPLIT(${"+NODE_CLASS+"},\"$\"))";
 
-
+    /**
+     * Provides services necessary for the JavaReader.
+     */
     public static class CyAccess {
         public final CyNetworkFactory nf;
         public final CyNetworkViewFactory vf;
@@ -55,11 +57,19 @@ public class JavaReader extends AbstractInputStreamTaskFactory {
 
     private final JavaReader.CyAccess cy;
 
-    protected JavaReader(CyFileFilter fileFilter, JavaReader.CyAccess dependencies) {
+    /**
+     * Private constructor for the JavaReader service. Use the static method {@link #create(CyAccess, StreamUtil)}
+     * to create an instance, or create a new {@link ReaderTask} directly.
+     */
+    private JavaReader(CyFileFilter fileFilter, JavaReader.CyAccess dependencies) {
         super(fileFilter);
         this.cy = dependencies;
     }
 
+    /**
+     * Creates a new instance of the JavaReader service, which registers JAR files as
+     * valid input files for Cytoscape.
+     */
     public static JavaReader create(JavaReader.CyAccess dependencies, StreamUtil streamUtil) {
 
         //1. define a file filter (BasicCyFileFilter), to support the reader to read the file with extension '.tc'
@@ -78,8 +88,12 @@ public class JavaReader extends AbstractInputStreamTaskFactory {
         return new JavaReader(filter, dependencies);
 
         //3. register the ReaderFactory as an InputStreamTaskFactory.
+        // Done in CyActivator.
     }
 
+    /**
+     * Returns the default properties for the JavaReader service.
+     */
     public Properties getDefaultProperties() {
         Properties props = new Properties();
         props.setProperty("readerDescription","JAR file reader");
@@ -87,15 +101,24 @@ public class JavaReader extends AbstractInputStreamTaskFactory {
         return props;
     }
 
+    /**
+     * Returns the class of the service that this reader provides.
+     */
     public Class<InputStreamTaskFactory> getServiceClass() {
         return InputStreamTaskFactory.class;
     }
 
+    /**
+     * Creates a TaskIterator that can be used to read the Cytoscape-provided input stream.
+     */
     @Override
     public TaskIterator createTaskIterator(InputStream inputStream, String inputName) {
         return new TaskIterator(new JavaReader.ReaderTask(inputStream, inputName, cy));
     }
 
+    /**
+     * The primary task that reads the input stream and creates a CyNetwork.
+     */
     public static class ReaderTask implements CyNetworkReader {
 
         private InputStream inputStream = null;
@@ -118,6 +141,8 @@ public class JavaReader extends AbstractInputStreamTaskFactory {
             return "JAR file import properties";
         }
 
+        ///// Uncomment the @Tunable to enable the user prompts to ask for import parameters. /////
+
         // @Tunable(description="Root package of interest:")
         public String userPackage = "";
 
@@ -130,6 +155,9 @@ public class JavaReader extends AbstractInputStreamTaskFactory {
         // @Tunable(description="Hide anonymous classes:")
         public boolean hideAnonymousClasses = true;
 
+        /**
+         * Creates a new ReaderTask for a JAR file only, given the input stream and the name of the file.
+         */
         public ReaderTask(InputStream inputStream, String inputName, JavaReader.CyAccess dependencies) {
             this.inputStream = inputStream;
             this.inputName = inputName;
@@ -137,6 +165,9 @@ public class JavaReader extends AbstractInputStreamTaskFactory {
             newNetworks = new ArrayList<>();
         }
 
+        /**
+         * Creates a new ReaderTask for a JAR file or a source folder, given its path.
+         */
         public ReaderTask(String filename, JavaReader.CyAccess dependencies, Consumer<ReaderTask> afterComplete)  {
             this.inputName = filename;
             this.afterComplete = afterComplete;
@@ -151,6 +182,9 @@ public class JavaReader extends AbstractInputStreamTaskFactory {
             newNetworks = new ArrayList<>();
         }
 
+        /**
+         * Creates a new ReaderTask for a set of nodes and edges that are assumed to be part of Java code.
+         */
         public ReaderTask(Set<String> nodes, Set<String> edges, JavaReader.CyAccess dependencies, Consumer<ReaderTask> afterComplete) {
             this.nodes = nodes;
             this.edges = edges;
@@ -161,21 +195,33 @@ public class JavaReader extends AbstractInputStreamTaskFactory {
             newNetworks = new ArrayList<>();
         }
 
+        /**
+         * Returns the list of CyNetworks that were read by this ReaderTask.
+         */
         @Override
         public CyNetwork[] getNetworks() {
             return newNetworks.toArray(new CyNetwork[0]);
         }
 
+        /**
+         * Builds a CyNetworkView for the given CyNetwork.
+         */
         @Override
         public CyNetworkView buildCyNetworkView(CyNetwork network) {
             return cy.vf.createNetworkView(network);
         }
 
+        /**
+         * Returns the short name of the input file.
+         */
         private static String shortInputName(String s) {
             var split = s.split("[\\\\/]");
             return split.length <= 1 ? s : split[split.length - 2] + "/" + split[split.length - 1];
         }
 
+        /**
+         * Runs the ReaderTask, which reads all the files, generates edges, and creates a CyNetwork.
+         */
         @Override
         public void run(TaskMonitor taskMonitor) throws Exception {
 
@@ -209,6 +255,10 @@ public class JavaReader extends AbstractInputStreamTaskFactory {
             afterComplete.accept(this);
         }
 
+        /**
+         * Loads the CyNetworks into the Cytoscape window. Usually Cytoscape will automatically
+         * load the CyNetworks into the window, but this method can be used to do it manually.
+         */
         public void loadIntoView(CyNetworkManager nm, CyNetworkViewManager vm) {
             for (var n : getNetworks()) {
                 nm.addNetwork(n, true);
@@ -217,6 +267,10 @@ public class JavaReader extends AbstractInputStreamTaskFactory {
             }
         }
 
+        /**
+         * Formats the edge string to remove unwanted parts, as well as to remove the inner class
+         * and anonymous class names, replacing them with a reference to their outer class.
+         */
         private String formatEdgeString(String s) {
             if (s == null) return null;
 
@@ -242,6 +296,10 @@ public class JavaReader extends AbstractInputStreamTaskFactory {
             return s;
         }
 
+        /**
+         * Reads the source folder and adds all the edges and nodes to the sets.
+         * Uses {@link EdgeClassVisitor} to parse the source folder into a list of edges.
+         */
         private void readFromSource(Set<String> nodes, Set<String> edges) {
 
             if (!EdgeClassVisitor.isValidSRC(srcFolder))
@@ -257,6 +315,10 @@ public class JavaReader extends AbstractInputStreamTaskFactory {
             edges.remove(null);
         }
 
+        /**
+         * Reads the inputStream and adds all the edges and nodes to the sets.
+         * Uses {@link ClassVisitor} to parse the inputStream into a list of edges.
+         */
         private void readFromJar(Set<String> nodes, Set<String> edges) {
 
             PrintStream ps = new PrintStream(new OutputStream() {
@@ -295,6 +357,9 @@ public class JavaReader extends AbstractInputStreamTaskFactory {
             }
         }
 
+        /**
+         * Creates a new CyNode with the given name and adds it to the CyNetwork and CyTable.
+         */
         protected CyNode newNode(CyNetwork network, String fullName) {
             CyNode node = network.addNode();
             CyTable table = network.getDefaultNodeTable();
@@ -307,6 +372,10 @@ public class JavaReader extends AbstractInputStreamTaskFactory {
         }
 
 
+        /**
+         * Creates a new CyEdge with the given source, target and interaction type
+         * and adds it to the CyNetwork and CyTable.
+         */
         protected CyEdge newEdge(CyNetwork network, String from, String to, String interaction) {
             // Ignore self edges
             if (from.equals(to))
@@ -348,6 +417,10 @@ public class JavaReader extends AbstractInputStreamTaskFactory {
             return edge;
         }
 
+        /**
+         * Initializes the Java columns in the CyTable.
+         * Columns: NODE_NAME, NODE_PACKAGE, NODE_CLASS, NODE_INNER_CLASS
+         */
         protected void initJavaColumns(CyNetwork net) {
 
             var table = net.getDefaultNodeTable();
@@ -379,6 +452,10 @@ public class JavaReader extends AbstractInputStreamTaskFactory {
             table.getAllRows().forEach(r -> r.set(NODE_INNER_CLASS, cy.eq.getEquation()));
         }
 
+        /**
+         * Attempts to cancel the task.
+         * Currently unable to stop existing EdgeClassVisitors.
+         */
         @Override
         public void cancel() {
             cancelled = true;

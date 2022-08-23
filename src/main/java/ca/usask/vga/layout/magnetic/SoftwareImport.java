@@ -37,6 +37,9 @@ public class SoftwareImport {
     private final FileUtil fileUtil;
     private final CySwingApplication swingApp;
 
+    /**
+     * Initializes the parameters for the software import functionality.
+     */
     public SoftwareImport(DialogTaskManager dtm, FileUtil fu, LoadNetworkFileTaskFactory nftf, JavaReader.CyAccess readerAccess,
                           CyNetworkManager nm, CyNetworkViewManager vm, FileUtil fileUtil, CySwingApplication swingApp) {
         this.dtm = dtm;
@@ -49,6 +52,10 @@ public class SoftwareImport {
         this.swingApp = swingApp;
     }
 
+    /**
+     * Prompts the user to select a file to import, then imports the file.
+     * If the import is successful, the name of the file is returned.
+     */
     public void loadFromFile(Consumer<String> onSuccess) {
 
         File f = fu.getFile(swingApp.getJFrame(), "New graph from file", FileUtil.LOAD, new HashSet<>());
@@ -65,6 +72,10 @@ public class SoftwareImport {
 
     }
 
+    /**
+     * Uses the path to a folder containing Java source code to import the source code.
+     * If the import is successful, the path of the folder is returned.
+     */
     public void loadFromSrcFolder(String path, Consumer<String> onSuccess) {
         System.out.println("Importing Java source code from: " + path);
         if (path.equals("")) return;
@@ -74,6 +85,10 @@ public class SoftwareImport {
         })));
     }
 
+    /**
+     * Prompts the user to select a Java source folder to import, then imports the folder.
+     * If the import is successful, the path of the folder is returned.
+     */
     public void loadFromSrcFolderDialogue(String initialFolder, Consumer<String> onSuccess) {
         File folder = fileUtil.getFolder(swingApp.getJFrame(), "Select one Java SRC folder", initialFolder);
         loadFromSrcFolder(folder.getAbsolutePath(), onSuccess);
@@ -81,6 +96,10 @@ public class SoftwareImport {
 
     // LOAD FROM GITHUB FUNCTIONS:
 
+    /**
+     * Uses the URL of a GitHub repository to download and import the source code.
+     * If the import is successful, the download path of the repository is returned.
+     */
     public void loadFromGitHub(String url, Consumer<String> onSuccess) {
         try {
             var repoName = getRepoByURL(url);
@@ -102,6 +121,9 @@ public class SoftwareImport {
         } catch (IOException e) {e.printStackTrace();}
     }
 
+    /**
+     * Extracts the name of the GitHub repository from the URL.
+     */
     private String getRepoByURL(String url) {
         if (!isValidGitHubUrl(url)) throw new IllegalArgumentException("Invalid GitHub URL: " + url);
         var split = url.replaceAll(".*github.com/", "").split("\\?")[0].split("/");
@@ -109,10 +131,17 @@ public class SoftwareImport {
         return string.replace(".git", "").strip();
     }
 
+    /**
+     * Checks if the URL is a valid GitHub URL containing "github.com".
+     */
     public boolean isValidGitHubUrl(String url) {
         return url.matches(".*github.com/.*");
     }
 
+    /**
+     * Downloads the source code of the GitHub repository asynchronously if it is not already downloaded.
+     * If the download is successful, the download path of the repository is returned.
+     */
     private void downloadOrReadAsync(GHRepository repo, Consumer<File> onComplete) {
         final File[] folder = {null};
         dtm.execute(new TaskIterator(new AbstractTask() {
@@ -130,6 +159,11 @@ public class SoftwareImport {
         });
     }
 
+    /**
+     * Downloads the source code of the GitHub repository if it is not already downloaded.
+     * If the download is successful, the download path of the repository is returned.
+     * Warning: Blocks the current thread until the download is complete.
+     */
     private File downloadOrRead(GHRepository repo) {
         File tempDir = getTempDir(repo.getFullName());
 
@@ -149,11 +183,17 @@ public class SoftwareImport {
         }
     }
 
+    /**
+     * Returns the path to the temporary directory containing downloaded GitHub repositories.
+     */
     private String tempDirPath() {
         String tempDir = System.getProperty("java.io.tmpdir");
         return tempDir + "/cytoscape-loaded-repos/";
     }
 
+    /**
+     * Returns the path to the temporary directory for a specific GitHub repository.
+     */
     private File getTempDir(String repoName) {
         repoName = repoName.replace("/", "-");
         String subfolder = tempDirPath() + repoName + "/";
@@ -166,6 +206,9 @@ public class SoftwareImport {
         return f;
     }
 
+    /**
+     * Clears the temporary directory containing downloaded GitHub repositories.
+     */
     public void clearTempDir() {
         File f = new File(tempDirPath());
         if (f.exists()) {
@@ -177,6 +220,10 @@ public class SoftwareImport {
         }
     }
 
+    /**
+     * Calculates the size of the temporary directory containing downloaded GitHub repositories.
+     * Returns the size as a readable string, e.g. "1.2 MB".
+     */
     public String getTempDirSize() {
         File f = new File(tempDirPath());
         if (f.exists()) {
@@ -185,7 +232,10 @@ public class SoftwareImport {
         return readableFileSize(0);
     }
 
-    // From: https://stackoverflow.com/a/5599842
+    /**
+     * Formats the size of a file as a readable string, e.g. "1.2 MB".
+     * Source: <a href="https://stackoverflow.com/a/5599842/">stackoverflow.com</a>
+     */
     private String readableFileSize(long size) {
         if(size <= 0) return "(empty)";
         final String[] units = new String[] { "B", "kB", "MB", "GB", "TB" };

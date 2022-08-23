@@ -33,6 +33,11 @@ public class EdgeClassVisitor extends GenericListVisitorAdapter<String, Map<Stri
 
     private static final Pattern INNER_CLASS = Pattern.compile("\\.[A-Z][A-Za-z0-9]*(?=\\.[A-Z0-9])");
 
+    /**
+     * A way to get around the fact that JavaParser doesn't handle inner classes
+     * the same way compiled Java does. This replaces every occurrence of . after the outer class with $.
+     * Example: package.OuterClass.InnerClass -> package.OuterClass$InnerClass
+     */
     private static String innerClassToDollar(String className) {
         Matcher m = INNER_CLASS.matcher(className);
         while (m.find()) {
@@ -41,6 +46,9 @@ public class EdgeClassVisitor extends GenericListVisitorAdapter<String, Map<Stri
         return className;
     }
 
+    /**
+     * Create an edge string between the source and target classes with the given type.
+     */
     private static List<String> createEdge(String source, String target, String type) {
         if (source == null || target == null) return Collections.emptyList();
         target = target.replaceAll("\\[+.*]+", ""); // remove array brackets
@@ -51,6 +59,10 @@ public class EdgeClassVisitor extends GenericListVisitorAdapter<String, Map<Stri
         return Collections.singletonList(source + " " + target + " " + type);
     }
 
+    /**
+     * Visit all classes in the given compilation units and returns a set of both nodes and edges.
+     * Must visit them twice for better class definition resolution.
+     */
     public static Set<String>[] visitAll(Collection<CompilationUnit> compilations, boolean allInteractions) {
         Set<String> nodes = new HashSet<>();
         Map<String, String> classDefinitions = new HashMap<>() {
@@ -69,11 +81,18 @@ public class EdgeClassVisitor extends GenericListVisitorAdapter<String, Map<Stri
         return new Set[]{nodes, edges};
     }
 
-    public static boolean isValidSRC(String srcFolder) {
-        srcFolder = srcFolder.replace("\\", "/");
-        return srcFolder.matches(".*[\\\\/]src*.");
+    /**
+     * Check if the given folder is a valid Java /src/ folder.
+     */
+    public static boolean isValidSRC(String folder) {
+        folder = folder.replace("\\", "/");
+        return folder.matches(".*[\\\\/]src*.");
     }
 
+    /**
+     * Parse all Java source files in the given folder. Returns a list of compilation units,
+     * which can be used to visit all classes in the project and create edges.
+     */
     public static List<CompilationUnit> parseSRCFolder(String srcFolder) {
 
         if (!isValidSRC(srcFolder)) throw new InvalidPathException(srcFolder, "Must be a java src folder");
@@ -109,6 +128,10 @@ public class EdgeClassVisitor extends GenericListVisitorAdapter<String, Map<Stri
         return sourceRoot.getCompilationUnits();
     }
 
+    /**
+     * Constructor that sets the interaction types to use. If allInteractions is false,
+     * all interactions are set to USES, and duplicates are removed.
+     */
     public EdgeClassVisitor(boolean allInteractions) {
         if (!allInteractions) {
             USES = "USES"; CALL = USES; CREATION = USES; DECLARATION = USES; RETURN = USES;
@@ -116,6 +139,11 @@ public class EdgeClassVisitor extends GenericListVisitorAdapter<String, Map<Stri
         }
     }
 
+    /**
+     * Resolve the type (declaration) of the given object and create an edge if it is a valid class.
+     * First try to resolve the type, if that fails try to match the type
+     * with a class in the existing map (less accurate).
+     */
     public void resolveOrMatchType(NodeWithType n, List<String> edges, Map<String, String> arg, String interaction) {
         String resolved = null;
         try {
@@ -128,6 +156,11 @@ public class EdgeClassVisitor extends GenericListVisitorAdapter<String, Map<Stri
         }
     }
 
+    /**
+     * Resolve the class of the given class/interface and create an edge if it is a valid class.
+     * First try to resolve the class, if that fails try to match the class
+     * with a class in the existing map (less accurate).
+     */
     public void resolveOrMatchClass(ClassOrInterfaceType n, List<String> edges, Map<String, String> arg, String interaction) {
         if (interaction.equals(USES)) return; // Skip generic uses
         String resolved = null;
@@ -141,6 +174,10 @@ public class EdgeClassVisitor extends GenericListVisitorAdapter<String, Map<Stri
         }
     }
 
+    /**
+     * Visit the compilation unit and create edges. Skips compilation units that cause stack overflow,
+     * which is caused by excessive recursive class definitions in lambdas and anonymous classes.
+     */
     @Override
     public List<String> visit(CompilationUnit n, Map<String, String> arg) {
         try {
@@ -151,6 +188,9 @@ public class EdgeClassVisitor extends GenericListVisitorAdapter<String, Map<Stri
         }
     }
 
+    /**
+     * Visit the class/interface type and try to create generic edges of type "USES".
+     */
     @Override
     public List<String> visit(ClassOrInterfaceType n, Map<String, String> arg) {
         List<String> edges = super.visit(n, arg);
@@ -158,6 +198,10 @@ public class EdgeClassVisitor extends GenericListVisitorAdapter<String, Map<Stri
         return edges;
     }
 
+    /**
+     * Visit the class/interface declaration and create edges based on the implemented and extended classes,
+     * as well as the edges created by the contained methods and fields.
+     */
     @Override
     public List<String> visit(ClassOrInterfaceDeclaration n, Map<String, String> arg) {
         String lastClassName = currentClassName;
@@ -183,6 +227,9 @@ public class EdgeClassVisitor extends GenericListVisitorAdapter<String, Map<Stri
         return edges;
     }
 
+    /**
+     * Visit the enum declaration and returned edges created by the contained methods and fields.
+     */
     @Override
     public List<String> visit(EnumDeclaration n, Map<String, String> arg) {
         String lastClassName = currentClassName;
@@ -201,6 +248,10 @@ public class EdgeClassVisitor extends GenericListVisitorAdapter<String, Map<Stri
         return edges;
     }
 
+    /**
+     * Visit the method declaration and create edges based on the return type, parameters, and
+     * edges created by the contained statements.
+     */
     @Override
     public List<String> visit(MethodDeclaration n, Map<String, String> arg) {
         //System.out.println( n.getName() + " | " + n.getParameters() + " | " + n.getType());
@@ -214,6 +265,10 @@ public class EdgeClassVisitor extends GenericListVisitorAdapter<String, Map<Stri
         return edges;
     }
 
+    /**
+     * Visit the field declaration and create edges based on the type
+     * and edges created by the contained expressions.
+     */
     @Override
     public List<String> visit(FieldDeclaration n, Map<String, String> arg) {
         List<String> edges = super.visit(n, arg);
@@ -223,6 +278,9 @@ public class EdgeClassVisitor extends GenericListVisitorAdapter<String, Map<Stri
         return edges;
     }
 
+    /**
+     * Visit the method call expression and create an edge to the class on which the method is called.
+     */
     @Override
     public List<String> visit(MethodCallExpr n, Map<String, String> arg) {
         List<String> edges = super.visit(n, arg);
@@ -236,6 +294,10 @@ public class EdgeClassVisitor extends GenericListVisitorAdapter<String, Map<Stri
         return edges;
     }
 
+    /**
+     * Visit the variable declaration expression and create edges based on the type
+     * and edges created by the contained expressions.
+     */
     @Override
     public List<String> visit(VariableDeclarationExpr n, Map<String, String> arg) {
         List<String> edges = super.visit(n, arg);
@@ -245,6 +307,9 @@ public class EdgeClassVisitor extends GenericListVisitorAdapter<String, Map<Stri
         return edges;
     }
 
+    /**
+     * Visit the object creation expression and create an edge to the class of which the object is created.
+     */
     @Override
     public List<String> visit(ObjectCreationExpr n, Map<String, String> arg) {
         List<String> edges = super.visit(n, arg);

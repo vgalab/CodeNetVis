@@ -15,7 +15,7 @@ import java.util.*;
 /**
  * Used to store information about the selected poles, as well as
  * calculating the closest pole for every node. Any changes to the
- * list of poles must be done through this service.
+ * list of poles must be submitted through this service.
  */
 public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListener, SessionAboutToBeLoadedListener {
 
@@ -40,8 +40,11 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
 
     protected PoleManagerEdit lastEdit;
 
-    private List<Runnable> changeListeners;
+    private final List<Runnable> changeListeners;
 
+    /**
+     * Creates a new PoleManager service for all networks, with undo support.
+     */
     public PoleManager(CyNetworkManager networkManager, UndoSupport undoSupport) {
         this.undoSupport = undoSupport;
         poleList = new HashMap<>();
@@ -53,18 +56,30 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
         }
     }
 
+    /**
+     * Initializes the pole list for the given network,
+     * if it doesn't already exist.
+     */
     protected void initializePoleList(CyNetwork network) {
         if (!poleList.containsKey(network) && network != null) {
             poleList.put(network, new ArrayList<>());
         }
     }
 
+    /**
+     * Reads the pole list from the given Cytoscape network's table,
+     * if it contains the columns for the inward and outward pole lists.
+     */
     protected void readPoleListFromTable(CyNetwork network) {
         if (network == null) return;
         readPoleListFromColumn(network, IN_POLE_LIST, false);
         readPoleListFromColumn(network, OUT_POLE_LIST, true);
     }
 
+    /**
+     * Reads the pole list from the given Cytoscape column
+     * by searching for nodes with the same given name.
+     */
     protected void readPoleListFromColumn(CyNetwork network, String columnName, boolean isOutwards) {
         CyTable table = network.getDefaultNetworkTable();
         if (table.getColumn(NAMESPACE, columnName) != null) {
@@ -84,6 +99,9 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
         }
     }
 
+    /**
+     * Returns the list of poles for the given network.
+     */
     public List<CyNode> getPoleList(CyNetwork network) {
         if (network == null) {
             System.out.println("Warning: Null network passed to getPoleList");
@@ -93,6 +111,10 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
         return poleList.get(network);
     }
 
+    /**
+     * Returns the list of poles for the given network, sorted by the given comparator.
+     * The returned list is a copy, so the original list is not modified.
+     */
     public List<CyNode> getPoleListSorted(CyNetwork network, Comparator<CyNode> comparator) {
         List<CyNode> list = getPoleList(network);
         list = new ArrayList<>(list);
@@ -101,6 +123,9 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
         return list;
     }
 
+    /**
+     * Returns the list of String pole names for the given network.
+     */
     public List<String> getPoleNameList(CyNetwork network) {
         List<CyNode> list = getPoleList(network);
         List<String> newList = new ArrayList<>(list.size());
@@ -110,6 +135,10 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
         return newList;
     }
 
+    /**
+     * Returns the list of String pole names for the given network,
+     * only including inward poles.
+     */
     public List<String> getInPoleNameList(CyNetwork network) {
         List<CyNode> list = getPoleList(network);
         List<String> newList = new ArrayList<>(list.size());
@@ -120,6 +149,10 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
         return newList;
     }
 
+    /**
+     * Returns the list of String pole names for the given network,
+     * only including outward poles.
+     */
     public List<String> getOutPoleNameList(CyNetwork network) {
         List<CyNode> list = getPoleList(network);
         List<String> newList = new ArrayList<>(list.size());
@@ -130,29 +163,49 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
         return newList;
     }
 
+    /**
+     * Adds the given node to the pole list for the given network.
+     * Call {@link #updateTables(CyNetwork)} to update the coloring.
+     */
     public void addPole(CyNetwork network, CyNode node) {
         if (!getPoleList(network).contains(node)) {
             getPoleList(network).add(node);
         }
     }
 
+    /**
+     * Adds all the given nodes to the pole list for the given network.
+     * Call {@link #updateTables(CyNetwork)} to update the coloring.
+     */
     public void addPole(CyNetwork network, Collection<CyNode> nodes) {
         for (CyNode n : nodes)
             addPole(network, n);
     }
 
+    /**
+     * Sets the given pole to be an outward pole.
+     */
     protected void makePoleOutwards(CyNetwork network, CyNode pole) {
         poleIsOutwards.add(pole);
     }
 
+    /**
+     * Sets the given pole to be an inward pole.
+     */
     protected void makePoleInwards(CyNetwork network, CyNode pole) {
         poleIsOutwards.remove(pole);
     }
 
+    /**
+     * Returns true if the given pole is an outward pole.
+     */
     public boolean isPoleOutwards(CyNetwork network, CyNode pole) {
         return poleIsOutwards.contains(pole);
     }
 
+    /**
+     * Sets the direction of the given pole, either inward or outward.
+     */
     public void setPoleDirection(CyNetwork network, CyNode pole, boolean isOutwards) {
         if (isOutwards != isPoleOutwards(network, pole))
             invalidateCache(network, pole);
@@ -162,34 +215,59 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
             makePoleInwards(network, pole);
     }
 
+    /**
+     * Sets the direction of all the given nodes, either inward or outward.
+     */
     public void setPoleDirection(CyNetwork network, Collection<CyNode> nodes, boolean isOutwards) {
         for (CyNode n : nodes)
             setPoleDirection(network, n, isOutwards);
     }
 
+    /**
+     * Removes the given node from the pole list for the given network.
+     * Call {@link #updateTables(CyNetwork)} ()} to update the coloring.
+     */
     public void removePole(CyNetwork network, CyNode node) {
         getPoleList(network).remove(node);
     }
 
+    /**
+     * Removes all the given nodes from the pole list for the given network.
+     * Call {@link #updateTables(CyNetwork)} to update the coloring.
+     */
     public void removePole(CyNetwork network, Collection<CyNode> nodes) {
         for (CyNode n : nodes)
             removePole(network, n);
     }
 
+    /**
+     * Removes every pole from the given network. It is guaranteed that
+     * the pole list for the given network is empty after this call.
+     * Call {@link #updateTables(CyNetwork)} to update the coloring.
+     */
     public void removeAllPoles(CyNetwork network) {
         getPoleList(network).clear();
     }
 
+    /**
+     * Returns true if the given node is a pole.
+     */
     public boolean isPole(CyNetwork network, CyNode node) {
         return getPoleList(network).contains(node);
     }
 
+    /**
+     * Returns the cached shortest distances for the given network and pole.
+     */
     protected Map<CyNode, Byte> getCachedShortestDistances(CyNetwork network, CyNode pole) {
         if (cachedPoleDistances != null && cachedPoleDistances.containsKey(network) && cachedPoleDistances.get(network).containsKey(pole))
             return cachedPoleDistances.get(network).get(pole);
         return null;
     }
 
+    /**
+     * Saves the given shortest distances for the given network and pole.
+     */
     protected void setCachedShortestDistances(CyNetwork network, CyNode pole, Map<CyNode, Byte> distances) {
         if (cachedPoleDistances == null)
             cachedPoleDistances = new HashMap<>();
@@ -198,16 +276,30 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
         cachedPoleDistances.get(network).put(pole, distances);
     }
 
+    /**
+     * Invalidates the cached shortest distances for the given network and pole.
+     * Called whenever a pole is removed or its direction is changed. The rest of
+     * the cache can still be used.
+     */
     protected void invalidateCache(CyNetwork network, CyNode pole) {
         if (cachedPoleDistances != null && cachedPoleDistances.containsKey(network))
             cachedPoleDistances.get(network).remove(pole);
     }
 
+    /**
+     * Invalidates the cached shortest distances for the given network.
+     * Called whenever the entire pole list is changed. The entire cache will be erased.
+     */
     protected void invalidateNetworkCache(CyNetwork network) {
         if (cachedPoleDistances != null && cachedPoleDistances.containsKey(network))
             cachedPoleDistances.get(network).clear();
     }
 
+    /**
+     * Returns the shortest distances from the given pole to every other node in the given network.
+     * This is an expensive operation, so it is cached.
+     * To force a new calculation, {@link #invalidateCache(CyNetwork, CyNode)} must be called.
+     */
     protected Map<CyNode, Byte> getShortestDistancesFrom(CyNetwork network, CyNode pole) {
         // Caching
         Map<CyNode, Byte> cache = getCachedShortestDistances(network, pole);
@@ -248,6 +340,9 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
         return shortestDistances;
     }
 
+    /**
+     * Returns the distance from the given node to the given pole.
+     */
     public int getDistanceToPole(CyNetwork network, CyNode pole, CyNode from) {
         Map<CyNode, Byte> distances = getShortestDistancesFrom(network, pole);
         if (!distances.containsKey(from))
@@ -255,6 +350,10 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
         return distances.get(from);
     }
 
+    /**
+     * Returns the closest poles to the given node. If there are multiple poles with the same distance,
+     * all of them are returned. If there are no poles within reach, an empty list is returned.
+     */
     public Collection<CyNode> getClosestPoles(CyNetwork network, CyNode from) {
 
         List<CyNode> closestPoles = new ArrayList<>();
@@ -279,6 +378,10 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
         return closestPoles;
     }
 
+    /**
+     * Returns the closest pole to the given node. If there are multiple poles with the same distance,
+     * the first one is returned. If there are no poles within reach, null is returned.
+     */
     public CyNode getClosestPole(CyNetwork network, CyNode from) {
         Collection<CyNode> closest = getClosestPoles(network, from);
         if (closest.size() == 1)
@@ -286,6 +389,10 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
         return null;
     }
 
+    /**
+     * Returns the distance from the given node to all of its closest poles.
+     * If there are no poles within reach, null is returned.
+     */
     @Nullable
     public Integer getClosestPoleDistance(CyNetwork network, CyNode from) {
         Collection<CyNode> closest = getClosestPoles(network, from);
@@ -294,21 +401,34 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
         return null;
     }
 
+    /**
+     * Returns true if the given node is disconnected from the network,
+     * meaning that there are no poles within reach.
+     */
     public boolean isDisconnected(CyNetwork network, CyNode from) {
         if (from == null) return true;
         return getClosestPoles(network, from).size() == 0;
     }
 
+    /**
+     * Returns true if the given node is closest to multiple poles.
+     */
     public boolean isClosestToMultiple(CyNetwork network, CyNode from) {
         if (from == null) return false;
         return getClosestPoles(network, from).size() > 1;
     }
 
+    /**
+     * Returns true if the given node is closest to exactly one pole.
+     */
     public boolean isClosestToOne(CyNetwork network, CyNode from) {
         if (from == null) return false;
         return getClosestPoles(network, from).size() == 1;
     }
 
+    /**
+     * Returns the poles that are closest to the source and target of the given edge.
+     */
     public Collection<CyNode> getAssignedPoles(CyNetwork network, CyEdge edge) {
         Collection<CyNode> p1 = getClosestPoles(network, edge.getSource());
         Collection<CyNode> p2 = getClosestPoles(network, edge.getTarget());
@@ -316,6 +436,10 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
         return new HashSet<>(p1);
     }
 
+    /**
+     * Returns the pole that is closest to both the source and target of the given edge.
+     * If there are multiple poles, or if there are no poles, null is returned.
+     */
     public CyNode getAssignedPole(CyNetwork network, CyEdge edge) {
         Collection<CyNode> closest = getAssignedPoles(network, edge);
         if (isClosestToOne(network, edge))
@@ -323,6 +447,11 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
         return null;
     }
 
+    /**
+     * Returns the pole that is closest to the target of the given edge, if it is connected to an inward pole,
+     * or the pole that is closest to the source of the given edge, if it is connected to an outward pole.
+     * If there are multiple conflicting poles, or if there are no poles, null is returned.
+     */
     public CyNode getTargetPole(CyNetwork network, CyEdge edge) {
         CyNode inwardPole = null, outwardPole = null;
         if (isClosestToOne(network, edge.getTarget())) {
@@ -343,11 +472,19 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
             return outwardPole;
     }
 
+    /**
+     * Returns true if the given edge is disconnected from any poles,
+     * meaning that either of its nodes is disconnected.
+     */
     public boolean isDisconnected(CyNetwork network, CyEdge edge) {
         if (edge == null) return true;
         return isDisconnected(network, edge.getTarget()) || isDisconnected(network, edge.getSource());
     }
 
+    /**
+     * Returns true if the given edge is closest to multiple poles, meaning that either one of its nodes
+     * is closest to multiple poles or they are closest to different poles from each other.
+     */
     public boolean isClosestToMultiple(CyNetwork network, CyEdge edge) {
         if (edge == null) return false;
         if (isDisconnected(network, edge))
@@ -357,6 +494,10 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
         return getClosestPole(network, edge.getSource()) != getClosestPole(network, edge.getTarget());
     }
 
+    /**
+     * Returns true if the given edge is closest to exactly one pole,
+     * meaning both nodes are closest to the same pole and not disconnected.
+     */
     public boolean isClosestToOne(CyNetwork network, CyEdge edge) {
         if (edge == null) return false;
         if (isDisconnected(network, edge))
@@ -364,10 +505,19 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
         return !isClosestToMultiple(network, edge);
     }
 
+    /**
+     * Returns the Cytoscape name of the given pole.
+     */
     protected String getPoleName(CyNetwork network, CyNode pole) {
         return network.getDefaultNodeTable().getRow(pole.getSUID()).get("name", String.class);
     }
 
+    /**
+     * Fully updates the pole table columns of the given network.
+     * This means that colors, names, and other attributes are updated according
+     * to the new pole distances and closest poles.
+     * After the update, the table may be saved to the session file and reloaded later.
+     */
     public void updateTables(CyNetwork network) {
 
         // Network pole lists
@@ -465,6 +615,9 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
         for (var l : changeListeners) l.run();
     }
 
+    /**
+     * When a new network is added, attempt to import the pole list from the table of the network.
+     */
     @Override
     public void handleEvent(NetworkAddedEvent e) {
         if (e.getNetwork() == null || e.getNetwork().getDefaultNetworkTable() == null) {
@@ -473,6 +626,10 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
         readPoleListFromTable(e.getNetwork());
     }
 
+    /**
+     * When the current network is changed, update the pole table columns of the network,
+     * to make sure the colors and other attributes reflect the new pole positions.
+     */
     @Override
     public void handleEvent(SetCurrentNetworkEvent e) {
         if (e.getNetwork() == null || e.getNetwork().getDefaultNetworkTable() == null) {
@@ -483,18 +640,29 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
             updateTables(e.getNetwork());
     }
 
+    /**
+     * When the session is about to be loaded, reset the tableInitialized flag,
+     * to ensure that the user has to prompt adding poles before any new tables are added.
+     */
     @Override
     public void handleEvent(SessionAboutToBeLoadedEvent e) {
-        // This ensures that the user has to prompt adding poles before any new tables are added
         tableInitialized = false;
     }
 
+    /**
+     * Begin an edit operation on the pole manager. This may involve adding/removing poles,
+     * or changing their directions. Once the operation has finished, call {@link #completeEdit()} to save the changes.
+     */
     public void beginEdit(String operation, CyNetwork network) {
         if (lastEdit != null) completeEdit();
         lastEdit = new PoleManagerEdit(operation, this, network);
         lastEdit.setBefore();
     }
 
+    /**
+     * Complete an edit operation on the pole manage. This adds the edit to the swing undo stack,
+     * which the user can undo with ctrl+z. @see {@link #beginEdit(String, CyNetwork)}
+     */
     public void completeEdit() {
         lastEdit.setAfter();
         if (lastEdit.changesPresent())
@@ -502,14 +670,24 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
         lastEdit = null;
     }
 
+    /**
+     * Add a change listener to the pole manager.
+     * The listener will be notified whenever the pole table columns are updated.
+     */
     public void addChangeListener(Runnable r) {
         changeListeners.add(r);
     }
 
+    /**
+     * Remove a change listener from the pole manager.
+     */
     public void removeChangeListener(Runnable r) {
         changeListeners.remove(r);
     }
 
+    /**
+     * Get the total number of poles in the given network.
+     */
     public int getPoleCount(CyNetwork net) {
         if (net == null || poleList == null|| poleList.get(net) == null) return 0;
         return poleList.get(net).size();

@@ -25,6 +25,9 @@ public class SoftwareLayout {
     private int maxRings;
     private float pinRadius;
 
+    /**
+     * Initializes the parameters for the software layout functionality.
+     */
     public SoftwareLayout(PoleMagneticLayout pml, TaskManager tm, CyApplicationManager am, CreateSubnetworkTask subnetTask) {
         this.pml = pml;
         this.tm = tm;
@@ -32,18 +35,24 @@ public class SoftwareLayout {
         this.subnetTask = subnetTask;
     }
 
+    /**
+     * Creates a new subnetwork from visible nodes and edges.
+     */
     public void createSubnetworkFromVisible() {
         subnetTask.copyCurrentVisible();
     }
 
+    /**
+     * Creates a new subnetwork from visible nodes and edges,
+     * with edges between nodes of different colors/poles removed.
+     */
     public void cutCommonConnections() {
         subnetTask.copyAndCutCommonEdges();
     }
 
-    public void runLayout() {
-        runLayout(null);
-    }
-
+    /**
+     * Runs the POLE magnetic layout algorithm with the currently saved parameters.
+     */
     public void runLayout(Runnable onFinished) {
 
         var context = getContext();
@@ -58,6 +67,9 @@ public class SoftwareLayout {
         });
     }
 
+    /**
+     * Returns the recommended parameters for the POLE magnetic layout.
+     */
     protected PoleMagneticLayoutContext getContext() {
 
         var c = new PoleMagneticLayoutContext();
@@ -103,6 +115,9 @@ public class SoftwareLayout {
         return c;
     }
 
+    /**
+     * Returns the recommended parameters for the LINEAR magnetic layout.
+     */
     protected PoleMagneticLayoutContext getLinearContext() {
 
         var c = getContext();
@@ -132,14 +147,24 @@ public class SoftwareLayout {
         return c;
     }
 
+    /**
+     * Sets the radius of the pins for use whenever the software layout is run.
+     */
     public void setPinRadius(float newValue) {
         this.pinRadius = newValue;
     }
 
+    /**
+     * Sets the maximum number of rings for use whenever the software layout is run.
+     */
     public void setMaxRings(int newValue) {
         this.maxRings = newValue;
     }
 
+    /**
+     * Runs the default LINEAR magnetic layout.
+     * Executed immediately after a new network is loaded.
+     */
     public void layoutOnLoad() {
 
         var context = getLinearContext();

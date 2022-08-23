@@ -67,6 +67,10 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
     private boolean usePoleColors = true;
     private Coloring currentColoring = Coloring.NONE;
 
+    /**
+     * Initializes the parameters for the software style functionality.
+     * Note that many services are necessary to update the style of the graph.
+     */
     public SoftwareStyle(CyApplicationManager am, TaskManager tm, VisualMappingManager vmm,
                          VisualMappingFunctionFactory vmff_passthrough,
                          VisualMappingFunctionFactory vmff_discrete,
@@ -94,11 +98,17 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
         pm.addChangeListener(this::updatePoleColors);
     }
 
+    /**
+     * Set whether to continuously update the node colors, applying coloring by pole.
+     */
     private void setShowPoleColors(boolean value) {
         usePoleColors = value;
         updatePoleColors();
     }
 
+    /**
+     * Update the pole color mapping in a separate thread.
+     */
     private void updatePoleColors() {
         if (usePoleColors && pm.getPoleCount(am.getCurrentNetwork()) > 0) {
             var coloring = new ExtraTasks.LegacyPoleColoring(am, pm, vmm, vmff_discrete);
@@ -106,6 +116,9 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
         }
     }
 
+    /**
+     * Remove the node and edge color mappings from the current style.
+     */
     private void clearNodeColorMappings() {
         VisualStyle style = vmm.getVisualStyle(am.getCurrentNetworkView());
         style.removeVisualMappingFunction(NODE_FILL_COLOR);
@@ -113,6 +126,10 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
         style.removeVisualMappingFunction(EDGE_STROKE_UNSELECTED_PAINT);
     }
 
+    /**
+     * Set the top n poles for the current network. To prompt the user instead,
+     * use {@link ExtraTasks.MakeTopDegreePoles} with a dialog task manager.
+     */
     public void setTopNasPoles(int n, boolean incoming) {
         var makeTop = new ExtraTasks.MakeTopDegreePoles(am, pm);
         makeTop.topN = n;
@@ -120,10 +137,18 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
         tm.execute(new TaskIterator(makeTop));
     }
 
+    /**
+     * Convert the given slider value to node size and set the node and label size to that value.
+     */
     public void setNodeSize(float value) {
         setNodeLabelSize(nodeSizeFunc(value));
     }
 
+    /**
+     * Calculate the node size based on the slider value.
+     * Uses a logarithmic scale, to cover a range of sizes from 5 to 500.
+     * The slider value of 0 results in a size of 0.1 (practically invisible).
+     */
     private double nodeSizeFunc(double value) {
         double calculated = Math.round(Math.pow(10, 1+(value / 50))/2);
         if (value == 0) {
@@ -132,14 +157,19 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
         return calculated;
     }
 
+    /**
+     * Calculate the slider value based on the node size.
+     * Reverse of the function {@link #nodeSizeFunc(double)}
+     */
     private double nodeSizeFuncReverse(double size) {
         if (size == 0.1) return 0;
         return 50*(Math.log10(size*2) - 1);
     }
 
+    /**
+     * Set the node size and label size to the given value.
+     */
     private void setNodeLabelSize(double size) {
-        // TODO EXISTING MAPPINGS
-        // TODO NON ROUND NODES
         lastSetNodeSize = size;
         updateSizeMapping();
 
@@ -149,6 +179,9 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
         style.setDefaultValue(NODE_LABEL_FONT_SIZE, (int) Math.ceil(size/2));
     }
 
+    /**
+     * Get the current default node size.
+     */
     private double getCurrentNodeSize() {
         if (am.getCurrentNetworkView() == null) return 30;
         VisualStyle style = vmm.getVisualStyle(am.getCurrentNetworkView());
@@ -157,23 +190,35 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
         return value;
     }
 
+    /**
+     * Get the slider value for the default node size of the current graph.
+     */
     public float getInitialNodeSizeValue() {
         return (float) Math.max(0, Math.min(nodeSizeFuncReverse(getCurrentNodeSize()), 100));
     }
 
+    /**
+     * Set the edge transparency to the given value.
+     */
     public void setEdgeTransparency(float value) {
         int calculated = Math.round(value);
-
         VisualStyle style = vmm.getVisualStyle(am.getCurrentNetworkView());
         style.setDefaultValue(EDGE_TRANSPARENCY, calculated);
     }
 
+    /**
+     * Get the default edge transparency value.
+     */
     public float getInitialEdgeTransparency() {
         if (am.getCurrentNetworkView() == null) return 120;
         VisualStyle style = vmm.getVisualStyle(am.getCurrentNetworkView());
         return style.getDefaultValue(EDGE_TRANSPARENCY);
     }
 
+    /**
+     * Set whether to show only unique nodes (non-gray) in the current graph.
+     * Hides all nodes that are not unique.
+     */
     public void setShowUnique(boolean showUnique) {
         if (this.showUnique == showUnique)
             return;
@@ -181,6 +226,10 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
         reapplyFilters();
     }
 
+    /**
+     * Set the prefix to filter nodes by, usually a package name that
+     * comes before the Java class name.
+     */
     public void setFilterPrefix(String filterPrefix) {
         if (this.filterPrefix.equals(filterPrefix))
             return;
@@ -188,6 +237,9 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
         reapplyFilters();
     }
 
+    /**
+     * Hide and unhide nodes according to the current filter settings.
+     */
     public void reapplyFilters() {
 
         var net = am.getCurrentNetwork();
@@ -210,39 +262,55 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
         }
     }
 
+    /**
+     * Set the node visible property, same as hiding but with a different name.
+     */
     protected void setNodeVisible(CyNode node, boolean visible) {
         var view = am.getCurrentNetworkView();
         view.getNodeView(node).setLockedValue(NODE_VISIBLE, visible);
     }
 
+    /**
+     * Reset the node visible property to its default value.
+     */
     protected void clearNodeVisible(CyNode node) {
         var view = am.getCurrentNetworkView();
         view.getNodeView(node).clearValueLock(NODE_VISIBLE);
     }
 
+    /**
+     * Get the pin radius annotation object.
+     */
     public PinRadiusAnnotation getRadiusAnnotation() {
         return pinRadiusAnnotation;
     }
 
+    /**
+     * Get the rings annotation object.
+     */
     public RingsAnnotation getRingsAnnotation() {
         return ringsAnnotation;
     }
 
+    /**
+     * Handle the network view being destroyed. Remove the annotations from the network view,
+     * to avoid memory leaks and missing references.
+     */
     @Override
     public void handleEvent(NetworkViewAboutToBeDestroyedEvent e) {
         try {pinRadiusAnnotation.onViewDestroyed(e);} catch (Exception ignored) {};
         try {ringsAnnotation.onViewDestroyed(e);} catch (Exception ignored) {};
     }
 
+    /**
+     * Used to display a circle with the same radius as the pin radius of the nodes.
+     */
     public class PinRadiusAnnotation implements TooltipAnnotation {
 
         protected boolean visible;
         protected ShapeAnnotation annotation;
         protected float radius = 2500;
         protected CyNetworkView lastView;
-
-        public PinRadiusAnnotation() {
-        }
 
         protected void init() {
             if (am.getCurrentNetworkView() == null) return;
@@ -307,6 +375,9 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
         }
     }
 
+    /**
+     * Used to display multiple circles with the same radii as the hierarchy force rings.
+     */
     public class RingsAnnotation implements TooltipAnnotation {
 
         protected boolean visible;
@@ -421,6 +492,10 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
         return new Point2D.Double(x+offsetX, y+offsetY);
     }
 
+    /**
+     * Returns the position of the first pole in the network, or the center of the network
+     * if there are no poles. Offset values are added to the resulting position.
+     */
     protected Point2D getAtPolePos(float offsetX, float offsetY) {
         var view = am.getCurrentNetworkView();
         var list = pm.getPoleList(am.getCurrentNetwork());
@@ -433,10 +508,17 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
         return new Point2D.Double(x+offsetX, y+offsetY);
     }
 
+    /**
+     * Returns true if there are poles in the current network.
+     */
     protected boolean polesPresent() {
         return am.getCurrentNetwork() != null && pm.getPoleList(am.getCurrentNetwork()).size() > 0;
     }
 
+    /**
+     * Returns the initial suggested radius for the force layout,
+     * based on the size of the network view.
+     */
     public float getSuggestedRadius() {
         var view = am.getCurrentNetworkView();
         if (view == null) return 2500;
@@ -446,6 +528,9 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
         return Math.min((float) Math.min(width, height) / 2, 10000);
     }
 
+    /**
+     * Returns the list of allowed dropdown options for the size mapping.
+     */
     public enum SizeEquation {
         FIXED, INDEGREE, OUTDEGREE, DEGREE;
         @Override
@@ -461,12 +546,18 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
         }
     }
 
+    /**
+     * Sets the size equation to use with the node size mapping.
+     */
     public void setSizeEquation(SizeEquation sizeEquation) {
         if (sizeEquation == this.currentSizeEquation) return;
         currentSizeEquation = sizeEquation;
         updateSizeMapping();
     }
 
+    /**
+     * Updates the node size mapping based on the current size equation.
+     */
     private void updateSizeMapping() {
         VisualStyle style = vmm.getVisualStyle(am.getCurrentNetworkView());
         if (currentSizeEquation == SizeEquation.FIXED) {
@@ -480,8 +571,10 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
         } else {
             initColumn(currentSizeEquation);
 
-            var nodeSizeFunc = (ContinuousMapping<Integer, Double>) vmff_continuous.createVisualMappingFunction(currentSizeEquation.getColumnName(), Integer.class, NODE_SIZE);
-            var fontSizeFunc = (ContinuousMapping<Integer, Integer>) vmff_continuous.createVisualMappingFunction(currentSizeEquation.getColumnName(), Integer.class, NODE_LABEL_FONT_SIZE);
+            var nodeSizeFunc = (ContinuousMapping<Integer, Double>) vmff_continuous.createVisualMappingFunction(
+                    currentSizeEquation.getColumnName(), Integer.class, NODE_SIZE);
+            var fontSizeFunc = (ContinuousMapping<Integer, Integer>) vmff_continuous.createVisualMappingFunction(
+                    currentSizeEquation.getColumnName(), Integer.class, NODE_LABEL_FONT_SIZE);
 
             double s = lastSetNodeSize/2;
             int i = (int) Math.max(1, Math.ceil(s)/2);
@@ -494,18 +587,27 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
         }
     }
 
+    /**
+     * Sets the typical control points for the given continuous mapping.
+     */
     private void setPoints(ContinuousMapping<Integer, Double> map, double lower, double mid, double upper, int min, int handle, int max) {
         map.addPoint(min, new BoundaryRangeValues<>(0d, lower, lower));
         map.addPoint(handle, new BoundaryRangeValues<>(mid, mid, mid));
         map.addPoint(max, new BoundaryRangeValues<>(upper, upper, upper));
     }
 
+    /**
+     * Sets the typical control points for the given continuous mapping.
+     */
     private void setPoints(ContinuousMapping<Integer, Integer> map, int lower, int mid, int upper, int min, int handle, int max) {
         map.addPoint(min, new BoundaryRangeValues<>(0, lower, lower));
         map.addPoint(handle, new BoundaryRangeValues<>(mid, mid, mid));
         map.addPoint(max, new BoundaryRangeValues<>(upper, upper, upper));
     }
 
+    /**
+     * Initializes the node size column if it doesn't exist.
+     */
     private void initColumn(SizeEquation s) {
         if (s == SizeEquation.FIXED) return;
 
@@ -523,6 +625,9 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
         }
     }
 
+    /**
+     * Applies the directed software network style to the current network view.
+     */
     public VisualStyle applyDirectedStyle() {
         if (am.getCurrentNetworkView() == null) return null;
         var style = vsf.createVisualStyle(vmm.getDefaultVisualStyle());
@@ -546,18 +651,27 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
         return style;
     }
 
+    /**
+     * Sets the passthrough mapping for the node label to the given column.
+     */
     public void setLabelsPassthrough(String column) {
         PassthroughMapping<String, String> func = (PassthroughMapping<String, String>)
                 vmff_passthrough.createVisualMappingFunction(column, String.class, NODE_LABEL);
         vmm.getVisualStyle(am.getCurrentNetworkView()).addVisualMappingFunction(func);
     }
 
+    /**
+     * Sets the passthrough mapping for the node tooltip to the given column.
+     */
     public void setTooltipsPassthrough(String column) {
         PassthroughMapping<String, String> func = (PassthroughMapping<String, String>)
                 vmff_passthrough.createVisualMappingFunction(column, String.class, NODE_TOOLTIP);
         vmm.getVisualStyle(am.getCurrentNetworkView()).addVisualMappingFunction(func);
     }
 
+    /**
+     * Returns the list of allowed options for node coloring.
+     */
     public enum Coloring {
         NONE, PACKAGE, CLOSEST_POLE;
         public void apply(SoftwareStyle s) {
@@ -575,6 +689,9 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
         }
     }
 
+    /**
+     * Sets the current coloring.
+     */
     public void setCurrentColoring(Coloring c) {
         if (currentColoring != c) {
             currentColoring = c;
@@ -582,6 +699,9 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
         }
     }
 
+    /**
+     * Applies the discrete coloring to the node color, based on the given column.
+     */
     protected void applyDiscreteColoring(String column) {
         // Allows for parallel computation
         VisualStyle style = vmm.getVisualStyle(am.getCurrentNetworkView());
@@ -590,6 +710,10 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
         tm.execute(new TaskIterator(new ApplyDiscreteColoringTask(column, String.class)));
     }
 
+    /**
+     * Applies the discrete coloring to the node color, based on the given column and type.
+     * This is a helper method for ApplyDiscreteColoringTask.
+     */
     private <T> void applyDiscreteColoring(String column, Class<T> type) {
         var view = am.getCurrentNetworkView();
         var net = am.getCurrentNetwork();
@@ -610,6 +734,9 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
         vmm.getVisualStyle(view).addVisualMappingFunction(func);
     }
 
+    /**
+     * Applies the software network style to the current network view when a software file is loaded.
+     */
     public void onFileLoaded(String fileFormat) {
         if (am.getCurrentNetworkView() == null) return;
 
@@ -621,10 +748,12 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
             setTooltipsPassthrough("Package");
             applyDiscreteColoring("Package");
         }
-
     }
 
-    // From https://colorbrewer2.org/
+    /**
+     * The color brewer set 3 color palette for package colors.
+     * Imported from <a href="https://colorbrewer2.org/">colorbrewer2.org</a>
+     */
     public final static Color[] COLOR_BREWER_SET3 = {
             new Color(141,211,199),
             new Color(255,255,179),
@@ -640,6 +769,9 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
             new Color(255,237,111)
     };
 
+    /**
+     * Applies the discrete coloring to the node color, based on the given column and type.
+     */
     private class ApplyDiscreteColoringTask extends AbstractTask {
 
         private final String column;
@@ -657,6 +789,10 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
         }
     }
 
+    /**
+     * Returns a task observer that runs the given runnable or
+     * lambda expression after all tasks are finished.
+     */
     protected TaskObserver afterFinished(Runnable r) {
         return new TaskObserver() {
             public void taskFinished(ObservableTask task) {}
@@ -667,6 +803,11 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
         };
     }
 
+    /**
+     * Returns the list of all package names in the current network,
+     * sorted by the number of dots in the name.
+     * The first element is an empty string, an option to show all packages.
+     */
     public String[] getPackageFilterOptions() {
 
         var net = am.getCurrentNetwork();
@@ -703,7 +844,6 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
         }
 
         return packages.toArray(new String[0]);
-
     }
 
 }

@@ -44,6 +44,9 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
     private final List<SetCurrentNetworkViewListener> onNewView = new ArrayList<>();
     private final List<Consumer<String>> onFileLoaded = new ArrayList<>();
 
+    /**
+     * Initialize the panel with the given Swing application, task manager, layout, style, and import function classes.
+     */
     protected SoftwarePanel(CySwingApplication swingApp, DialogTaskManager dtm, SoftwareLayout layout, SoftwareStyle style, SoftwareImport importS) {
         super();
         this.swingApp = swingApp;
@@ -90,6 +93,9 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         add(scrollPane);
     }
 
+    /**
+     * Updates the layout and style panels when a new Cytoscape session is loaded.
+     */
     @Override
     public void handleEvent(SessionLoadedEvent sessionLoadedEvent) {
         style.getRingsAnnotation().reset();
@@ -97,11 +103,17 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         for (var l : onSessionLoaded) l.handleEvent(sessionLoadedEvent);
     }
 
+    /**
+     * Updates the layout and style panels when a new network view is selected.
+     */
     @Override
     public void handleEvent(SetCurrentNetworkViewEvent e) {
         for (var l : onNewView) l.handleEvent(e);
     }
 
+    /**
+     * Creates a custom panel with a border, margins and title.
+     */
     protected JPanel createTitledPanel(String title) {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
@@ -113,6 +125,9 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         return panel;
     }
 
+    /**
+     * Describes the "Data import" panel components and functionality.
+     */
     protected JPanel createImportPanel() {
         var panel = createTitledPanel(null);
 
@@ -145,6 +160,9 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         return panel;
     }
 
+    /**
+     * Updates the layout and style panels when a new file is loaded.
+     */
     protected void onFileLoaded(String filename) {
         var format = filename.substring(filename.lastIndexOf('.') + 1).toLowerCase();
         if (!filename.contains(".")) format = "java";
@@ -153,6 +171,10 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         for (var l : onFileLoaded) l.accept(filename);
     }
 
+    /**
+     * Describes the "Pole selection" panel components and functionality.
+     * The panel is automatically disabled when no network is loaded.
+     */
     protected JPanel createSearchPanel() {
         var panel = createTitledPanel(null);
 
@@ -179,6 +201,10 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         return autoDisable(panel);
     }
 
+    /**
+     * Describes the "Filtering" panel components and functionality.
+     * The panel is automatically disabled when no network is loaded.
+     */
     protected JPanel createFilterPanel() {
         JPanel panel = createTitledPanel("Filtering");
 
@@ -215,6 +241,10 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         return autoDisable(panel);
     }
 
+    /**
+     * Describes the "Layout" panel components and functionality.
+     * The panel is automatically disabled when no network is loaded.
+     */
     protected JPanel createLayoutPanel() {
         JPanel panel = createTitledPanel("Layout");
 
@@ -254,6 +284,10 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         return autoDisable(panel);
     }
 
+    /**
+     * Describes the "Style" panel components and functionality.
+     * The panel is automatically disabled when no network is loaded.
+     */
     protected JPanel createStylePanel() {
         JPanel panel = createTitledPanel("Style");
 
@@ -304,6 +338,10 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         return autoDisable(panel);
     }
 
+    /**
+     * Describes the "Experimental" panel components and functionality.
+     * The panel is automatically disabled when no network is loaded.
+     */
     protected JPanel createExperimentalPanel() {
         JPanel panel = createTitledPanel("Experimental");
 
@@ -314,6 +352,9 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         return autoDisable(panel);
     }
 
+    /**
+     * Creates a JSlider with the given parameters and adds the ability to change using the scroll wheel.
+     */
     protected JSlider createCustomSlider(int min, int max, int value, int majorTicks, int minorTicks, int scrollAmount) {
         var slider = new JSlider(min, max, value);
         slider.setPaintTicks(true);
@@ -331,6 +372,9 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         return slider;
     }
 
+    /**
+     * Creates a JSpinner with the given parameters and adds the ability to change using the scroll wheel.
+     */
     protected JSpinner createCustomSpinner(int min, int max, int value, int step) {
         var spinner = new JSpinner(new SpinnerNumberModel(value, min, max, step));
         // Add ability to change using scroll wheel
@@ -345,19 +389,24 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         return spinner;
     }
 
+    /**
+     * Creates a bold HTML string that can be used in a JLabel.
+     */
     private String bold(String text) {
         return "<html><b>" + text + "</b></html>";
     }
 
+    /**
+     * Adds an action listener to the given button and returns the button.
+     */
     private AbstractButton addListener(AbstractButton object, ActionListener action) {
         object.addActionListener(action);
         return object;
     }
 
-    private JPanel label(String text, JComponent component) {
-        return group(new JLabel(text), component);
-    }
-
+    /**
+     * Appends a label with the given text that is updated when the slider value changes.
+     */
     private JPanel label(String text, JSlider component) {
         var label = new JLabel(text);
         component.addChangeListener(e -> updateLabelValue(label, component.getValue()));
@@ -367,6 +416,16 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         return group(label, component);
     }
 
+    /**
+     * Appends a label with the given text, for any component that is not a JSlider.
+     */
+    private JPanel label(String text, JComponent component) {
+        return group(new JLabel(text), component);
+    }
+
+    /**
+     * Automatically disables the given component there is no network loaded.
+     */
     private <T extends Component> T autoDisable(T component) {
         if (component instanceof JPanel)
             for (var c : ((JPanel) component).getComponents())
@@ -375,6 +434,9 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         return component;
     }
 
+    /**
+     * Disables the given component entirely.
+     */
     private <T extends Component> T disable(T component) {
         if (component instanceof JPanel)
             for (var c : ((JPanel) component).getComponents())
@@ -383,6 +445,9 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         return component;
     }
 
+    /**
+     * Updates the text of the given label to the given value, in the format "property: value".
+     */
     private void updateLabelValue(JLabel label, float value) {
         var text = label.getText();
         text = text.split(":")[0];
@@ -391,10 +456,10 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         label.setText(text + ": " + valString);
     }
 
-    private JPanel group(Component... components) {
-        return group(ENTRY_HEIGHT, components);
-    }
-
+    /**
+     * Creates a single row of components, with the given height.
+     * The panel is divided into equally sized cells.
+     */
     private JPanel group(int height, Component... components) {
         JPanel panel = new JPanel();
         panel.setLayout(new GridLayout(1, components.length, 10, 10));
@@ -407,6 +472,14 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         return panel;
     }
 
+    private JPanel group(Component... components) {
+        return group(ENTRY_HEIGHT, components);
+    }
+
+    /**
+     * Creates a single row of components, with the given height.
+     * The panel has the box layout, with extra rigid area between components.
+     */
     private JPanel groupBox(int height, Component... components) {
         JPanel panel = group(height, components);
         panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
@@ -420,14 +493,10 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         return groupBox(ENTRY_HEIGHT, components);
     }
 
-    private void fireChangeListeners(JSlider component) {
-        Arrays.stream(component.getChangeListeners()).forEach(l -> l.stateChanged(new ChangeEvent(component)));
-    }
-
-    private void fireChangeListeners(JSpinner component) {
-        Arrays.stream(component.getChangeListeners()).forEach(l -> l.stateChanged(new ChangeEvent(component)));
-    }
-
+    /**
+     * Creates a mouse listener that shows the given annotation when the mouse is
+     * over the component or pressed, and hides it when the mouse is released and exited.
+     */
     private MouseListener annotationOnMouse(SoftwareStyle.TooltipAnnotation annotation) {
         return new MouseAdapter() {
             boolean pressed, entered;
@@ -446,6 +515,10 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         };
     }
 
+    /**
+     * Finds the default search field and sets it to the given prompt.
+     * Fires the action event to search and clears the field.
+     */
     private void searchNetworkFor(String prompt) {
         Component[] components = swingApp.getJToolBar().getComponents();
         var result =
@@ -462,6 +535,14 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
                 return;
             }
         }
+    }
+
+    private void fireChangeListeners(JSlider component) {
+        Arrays.stream(component.getChangeListeners()).forEach(l -> l.stateChanged(new ChangeEvent(component)));
+    }
+
+    private void fireChangeListeners(JSpinner component) {
+        Arrays.stream(component.getChangeListeners()).forEach(l -> l.stateChanged(new ChangeEvent(component)));
     }
 
     @Override
