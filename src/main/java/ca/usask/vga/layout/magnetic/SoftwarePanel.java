@@ -30,7 +30,7 @@ import java.util.function.Consumer;
 public class SoftwarePanel extends JPanel implements CytoPanelComponent2, SessionLoadedListener, SetCurrentNetworkViewListener {
 
     public static final String title = "Software Layout", identifier = "software-panel";
-    private final Icon icon = new ImageIcon(getClass().getResource("/icons/add_pole_N_icon.png"));
+    private final Icon icon = new ImageIcon(getClass().getResource("/icons/add_pole_N_icon_16.png"));
 
     private final SoftwareLayout layout;
     private final SoftwareStyle style;
