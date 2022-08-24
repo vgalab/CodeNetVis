@@ -20,6 +20,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.util.*;
+import java.util.concurrent.CancellationException;
 import java.util.function.Consumer;
 
 /**
@@ -36,6 +37,8 @@ public class SoftwareImport {
     private final CyNetworkViewManager vm;
     private final FileUtil fileUtil;
     private final CySwingApplication swingApp;
+
+    private boolean cancelRepoDownload = false;
 
     /**
      * Initializes the parameters for the software import functionality.
@@ -57,7 +60,6 @@ public class SoftwareImport {
      * If the import is successful, the name of the file is returned.
      */
     public void loadFromFile(Consumer<String> onSuccess) {
-
         File f = fu.getFile(swingApp.getJFrame(), "New graph from file", FileUtil.LOAD, new HashSet<>());
 
         if (f == null) return;
@@ -109,6 +111,7 @@ public class SoftwareImport {
 
             System.out.println("\nFound GitHub repo: " + repo.getFullName());
 
+            cancelRepoDownload = false;
             downloadOrReadAsync(repo, (contents) -> {
                 String sourceFolder = contents.getPath() + "/src/";
                 if (Files.exists(Paths.get(sourceFolder))) {
@@ -141,6 +144,7 @@ public class SoftwareImport {
     /**
      * Downloads the source code of the GitHub repository asynchronously if it is not already downloaded.
      * If the download is successful, the download path of the repository is returned.
+     * The download may be interrupted by the user with the cancel button.
      */
     private void downloadOrReadAsync(GHRepository repo, Consumer<File> onComplete) {
         final File[] folder = {null};
@@ -149,6 +153,10 @@ public class SoftwareImport {
             public void run(TaskMonitor taskMonitor) {
                 taskMonitor.setTitle("Downloading " + repo.getFullName());
                 folder[0] = downloadOrRead(repo);
+            }
+            @Override
+            public void cancel() {
+                cancelRepoDownload = true;
             }
         }), new TaskObserver() {
             public void taskFinished(ObservableTask task) {}
@@ -165,6 +173,9 @@ public class SoftwareImport {
      * Warning: Blocks the current thread until the download is complete.
      */
     private File downloadOrRead(GHRepository repo) {
+        if (cancelRepoDownload)
+            throw new CancellationException("Cancelled by user");
+
         File tempDir = getTempDir(repo.getFullName());
 
         try (var entries = Files.list(tempDir.toPath())) {
@@ -173,6 +184,7 @@ public class SoftwareImport {
                 return entry.get().toFile();
 
             return repo.readZip(input -> {
+                if (cancelRepoDownload) throw new CancellationException("Cancelled by user");
                 ZipUtil.unpack(input, tempDir);
                 System.out.println("Downloaded repo to: " + tempDir.getAbsolutePath());
                 return downloadOrRead(repo);

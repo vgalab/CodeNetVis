@@ -237,6 +237,8 @@ public class JavaReader extends AbstractInputStreamTaskFactory {
                     readFromSource(nodes, edges);
             }
 
+            if (cancelled) return;
+
             // Create network
             CyNetwork network = cy.nf.createNetwork();
 
@@ -306,7 +308,9 @@ public class JavaReader extends AbstractInputStreamTaskFactory {
                 throw new RuntimeException("Invalid SRC folder");
 
             var parsed = EdgeClassVisitor.parseSRCFolder(srcFolder);
-            var result = EdgeClassVisitor.visitAll(parsed, false);
+            var result = EdgeClassVisitor.visitAll(parsed, false, () -> cancelled);
+
+            if (result == null || cancelled) return;
 
             nodes.addAll(result[0].stream().map(this::formatEdgeString).collect(Collectors.toSet()));
             edges.addAll(result[1].stream().map(this::formatEdgeString).collect(Collectors.toSet()));
@@ -453,8 +457,7 @@ public class JavaReader extends AbstractInputStreamTaskFactory {
         }
 
         /**
-         * Attempts to cancel the task.
-         * Currently unable to stop existing EdgeClassVisitors.
+         * Attempts to cancel the task, stopping any ongoing processes.
          */
         @Override
         public void cancel() {

@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -62,8 +63,12 @@ public class EdgeClassVisitor extends GenericListVisitorAdapter<String, Map<Stri
     /**
      * Visit all classes in the given compilation units and returns a set of both nodes and edges.
      * Must visit them twice for better class definition resolution.
+     * @param compilations the compilation units to visit
+     * @param allInteractions whether to include all interaction names or remove redundant edges
+     * @param hasBeenCancelled a function that returns true if the operation has been cancelled
+     * @return two sets of nodes and edges
      */
-    public static Set<String>[] visitAll(Collection<CompilationUnit> compilations, boolean allInteractions) {
+    public static Set<String>[] visitAll(Collection<CompilationUnit> compilations, boolean allInteractions, Supplier<Boolean> hasBeenCancelled) {
         Set<String> nodes = new HashSet<>();
         Map<String, String> classDefinitions = new HashMap<>() {
             @Override
@@ -72,11 +77,19 @@ public class EdgeClassVisitor extends GenericListVisitorAdapter<String, Map<Stri
                 return super.put(key, value);
             }
         };
-        for (var cu : compilations)
+        for (var cu : compilations) {
             new EdgeClassVisitor(allInteractions).visit(cu, classDefinitions);
+            if (hasBeenCancelled.get()) {
+                System.out.println("\nCancelled by user."); return null;
+            }
+        }
         Set<String> edges = new HashSet<>();
-        for (var cu : compilations)
+        for (var cu : compilations) {
             edges.addAll(new EdgeClassVisitor(allInteractions).visit(cu, classDefinitions));
+            if (hasBeenCancelled.get()) {
+                System.out.println("\nCancelled by user."); return null;
+            }
+        }
         System.out.println("\nDone Java class import!");
         return new Set[]{nodes, edges};
     }
