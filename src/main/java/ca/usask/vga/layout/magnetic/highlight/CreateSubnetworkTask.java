@@ -64,6 +64,8 @@ public class CreateSubnetworkTask {
         CyRootNetwork root = cy.rnm.getRootNetwork(supernet);
 
         CyNetwork net = root.addSubNetwork(selectedNodes, selectedEdges);
+
+        copyNetworkTable(supernet, net);
         net.getDefaultNetworkTable().getRow(net.getSUID()).set("name", cy.cnn.getSuggestedSubnetworkTitle(root));
 
         cy.nm.addNetwork(net);
@@ -111,5 +113,20 @@ public class CreateSubnetworkTask {
         }
 
         cy.pm.updateTables(net);
+    }
+
+    public void copyNetworkTable(CyNetwork supernet, CyNetwork net) {
+        var table1 = supernet.getDefaultNetworkTable();
+        var table2 = net.getDefaultNetworkTable();
+        table1.getColumns().forEach(c -> {
+            // Copy only things that aren't causing errors
+            try {
+                if (table2.getColumn(c.getName()) == null) {
+                    table2.createColumn(c.getName(), c.getType(), c.isImmutable());
+                }
+                table2.getRow(net.getSUID()).set(c.getName(),
+                        table1.getRow(supernet.getSUID()).get(c.getName(), c.getType()));
+            } catch (Exception ignored) {}
+        });
     }
 }

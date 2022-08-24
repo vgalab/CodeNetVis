@@ -103,11 +103,9 @@ public class EdgeClassVisitor extends GenericListVisitorAdapter<String, Map<Stri
     }
 
     /**
-     * Parse all Java source files in the given folder. Returns a list of compilation units,
-     * which can be used to visit all classes in the project and create edges.
+     * Retrieve the folder that contains all the java packages.
      */
-    public static List<CompilationUnit> parseSRCFolder(String srcFolder) {
-
+    public static String getPackagesFolder(String srcFolder) {
         if (!isValidSRC(srcFolder)) throw new InvalidPathException(srcFolder, "Must be a java src folder");
         srcFolder = srcFolder.replace("\\", "/");
 
@@ -118,6 +116,16 @@ public class EdgeClassVisitor extends GenericListVisitorAdapter<String, Map<Stri
         if (new File(javaSrcFolder).exists()) {
             srcFolder = javaSrcFolder;
         }
+        return srcFolder;
+    }
+
+    /**
+     * Parse all Java source files in the given folder. Returns a list of compilation units,
+     * which can be used to visit all classes in the project and create edges.
+     */
+    public static List<CompilationUnit> parseSRCFolder(String srcFolder) {
+
+        srcFolder = getPackagesFolder(srcFolder);
 
         Path pathToSource = new File(srcFolder).toPath();
 

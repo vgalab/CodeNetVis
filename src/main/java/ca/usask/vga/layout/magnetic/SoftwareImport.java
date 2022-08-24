@@ -77,23 +77,38 @@ public class SoftwareImport {
     /**
      * Uses the path to a folder containing Java source code to import the source code.
      * If the import is successful, the path of the folder is returned.
+     * @param path The path to the folder containing the local files of the source code.
+     * @param originalSource The path to the original source code, may be a GitHub link.
+     * @param onSuccess The function to call when the import is successful.
      */
-    public void loadFromSrcFolder(String path, Consumer<String> onSuccess) {
+    public void loadFromSrcFolder(String path, String originalSource, Consumer<String> onSuccess) {
         System.out.println("Importing Java source code from: " + path);
         if (path.equals("")) return;
         dtm.execute(new TaskIterator(new JavaReader.ReaderTask(path, readerAccess, rt -> {
+            String packagePath = originalSource;
+            if (!packagePath.endsWith("/")) packagePath += "/";
+            if (rt.inMainJavaFolder()) packagePath += "main/java/";
+            rt.setPathToFiles(packagePath);
             rt.loadIntoView(nm, vm);
             onSuccess.accept(path);
         })));
     }
 
     /**
-     * Prompts the user to select a Java source folder to import, then imports the folder.
+     * Uses the path to a folder containing Java source code to import the source code.
      * If the import is successful, the path of the folder is returned.
+     * @param path The path to the folder containing the local files of the source code.
+     * @param onSuccess The function to call when the import is successful.
      */
-    public void loadFromSrcFolderDialogue(String initialFolder, Consumer<String> onSuccess) {
-        File folder = fileUtil.getFolder(swingApp.getJFrame(), "Select one Java SRC folder", initialFolder);
-        loadFromSrcFolder(folder.getAbsolutePath(), onSuccess);
+    public void loadFromSrcFolder(String path, Consumer<String> onSuccess) {
+        loadFromSrcFolder(path, path, onSuccess);
+    }
+
+    /**
+     * Prompts the user to select a Java source folder to import, returns the path to the folder.
+     */
+    public String chooseSrcFolderDialogue(String initialFolder) {
+        return fileUtil.getFolder(swingApp.getJFrame(), "Select one Java SRC folder", initialFolder).getAbsolutePath();
     }
 
     // LOAD FROM GITHUB FUNCTIONS:
@@ -111,13 +126,23 @@ public class SoftwareImport {
 
             System.out.println("\nFound GitHub repo: " + repo.getFullName());
 
+            String mainBranchName = repo.getDefaultBranch();
+
+            String originURL = "https://github.com/" + repo.getFullName() + "/blob/" + mainBranchName + "/src/";
+
             cancelRepoDownload = false;
             downloadOrReadAsync(repo, (contents) -> {
                 String sourceFolder = contents.getPath() + "/src/";
                 if (Files.exists(Paths.get(sourceFolder))) {
-                    loadFromSrcFolder(sourceFolder, onSuccess);
+                    loadFromSrcFolder(sourceFolder, originURL, onSuccess);
                 } else {
-                    loadFromSrcFolderDialogue(contents.getPath(), onSuccess);
+                    String subpath = chooseSrcFolderDialogue(contents.getPath());
+
+                    // Make sure any selected sub folders are included in the origin URL.
+                    String difference = subpath.substring(contents.getPath().length()).replace("\\", "/");
+                    System.out.println("Subpath: " + difference);
+
+                    loadFromSrcFolder(subpath, originURL.replace("/src", difference), onSuccess);
                 }
             });
 

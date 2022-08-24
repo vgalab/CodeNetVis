@@ -153,7 +153,7 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
                 e -> importS.loadFromFile(this::onFileLoaded));
 
         var bFolder = addListener(new JButton("Load from Java SRC folder"),
-                e -> importS.loadFromSrcFolderDialogue(null, this::onFileLoaded));
+                e -> importS.loadFromSrcFolder(importS.chooseSrcFolderDialogue(null), this::onFileLoaded));
 
         panel.add(group(bFile, bFolder));
 

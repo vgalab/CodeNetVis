@@ -40,6 +40,8 @@ public class JavaReader extends AbstractInputStreamTaskFactory {
     public static final String PACKAGE_FORMULA = "=SUBSTITUTE($name, CONCATENATE(\".\",${"+NODE_CLASS+"}), \"\")";
     public static final String INNER_CLASS_FORMULA = "=LAST(SPLIT(${"+NODE_CLASS+"},\"$\"))";
 
+    public static final String PATH_TO_FILES_COLUMN = "Path to files";
+
     /**
      * Provides services necessary for the JavaReader.
      */
@@ -133,6 +135,7 @@ public class JavaReader extends AbstractInputStreamTaskFactory {
         private boolean cancelled;
 
         private final List<CyNetwork> newNetworks;
+        private boolean inMainJavaFolder = false;
 
         public String[] packagesToIgnore = {"java.", "javax.", "com.sun.", "jdk.", "scala."};
 
@@ -254,6 +257,16 @@ public class JavaReader extends AbstractInputStreamTaskFactory {
             initJavaColumns(network);
             newNetworks.add(network);
 
+            var netTable = network.getDefaultNetworkTable();
+            netTable.getRow(network.getSUID()).set(CyNetwork.NAME, shortInputName(inputName));
+
+            if (!inputName.endsWith(".jar")) {
+                String result = EdgeClassVisitor.getPackagesFolder(inputName);
+                if (result.contains("/main/java"))
+                    inMainJavaFolder = true;
+                setPathToFiles(result);
+            }
+
             afterComplete.accept(this);
         }
 
@@ -267,6 +280,27 @@ public class JavaReader extends AbstractInputStreamTaskFactory {
                 var view = buildCyNetworkView(n);
                 vm.addNetworkView(view, true);
             }
+        }
+
+        /**
+         * Sets the path to the files that were imported, which is used for
+         * opening the files in an editor. Could be a local src folder or a URL.
+         */
+        public void setPathToFiles(String path) {
+            for (var n : getNetworks()) {
+                var netTable = n.getDefaultNetworkTable();
+                if (netTable.getColumn(PATH_TO_FILES_COLUMN) == null) {
+                    netTable.createColumn(PATH_TO_FILES_COLUMN, String.class, false);
+                }
+                netTable.getRow(n.getSUID()).set(PATH_TO_FILES_COLUMN, path);
+            }
+        }
+
+        /**
+         * Returns whether the path to packages must include the /main/java/ folder.
+         */
+        public boolean inMainJavaFolder() {
+            return inMainJavaFolder;
         }
 
         /**

@@ -2,6 +2,7 @@ package ca.usask.vga.layout.magnetic;
 
 import ca.usask.vga.layout.magnetic.highlight.*;
 import ca.usask.vga.layout.magnetic.io.JavaReader;
+import ca.usask.vga.layout.magnetic.io.OpenSelectedFiles;
 import ca.usask.vga.layout.magnetic.io.PajekReader;
 import ca.usask.vga.layout.magnetic.poles.*;
 import org.cytoscape.application.CyApplicationManager;
@@ -92,7 +93,9 @@ public class CyActivator extends AbstractCyActivator {
 		AddSouthPoleAction addSPole = new AddSouthPoleAction(am, im, poleManager);
 		RemovePoleAction removePole = new RemovePoleAction(am, im, poleManager);
 
-		for (ActionOnSelected action : new ActionOnSelected[] {addNPole, addSPole, removePole}) {
+		OpenSelectedFiles openSelectedFiles = new OpenSelectedFiles(am, im);
+
+		for (ActionOnSelected action : new ActionOnSelected[] {addNPole, addSPole, removePole, openSelectedFiles}) {
 			registerService(bc, action, CyAction.class);
 			registerService(bc, action, SelectedNodesAndEdgesListener.class);
 			registerService(bc, action.getNetworkTaskFactory(), NetworkViewTaskFactory.class, action.getNetworkTaskProperties());
