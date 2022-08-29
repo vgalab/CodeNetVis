@@ -13,7 +13,7 @@ An app for Cytoscape 3.9.1+ that introduces a magnetic force to the default pref
 [this repository](https://github.com/BJNick/CytoscapeMagneticLayout/raw/master/target/magnetic-layout-1.0-SNAPSHOT.jar).
 
 3. Copy the .JAR file into the folder
-`USER\CytoscapeConfiguration\3\apps\installed`
+`%userprofile%\CytoscapeConfiguration\3\apps\installed`
 
 4. Launch Cytoscape. A panel with the title ![Icon](src/main/resources/icons/add_pole_N_icon_16.png) **Software Layout**
 should appear to the left of the editor.
