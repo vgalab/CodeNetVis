@@ -19,10 +19,6 @@ An app for Cytoscape 3.9.1+ that introduces a magnetic force to the default pref
 should appear to the left of the editor.
 
 
-### Preview:
-
-![Preview image](preview-image.png)
-
 ### Sample GitHub links to try out:
 
 - https://github.com/BJNick/CytoscapeMagneticLayout
@@ -31,3 +27,19 @@ should appear to the left of the editor.
 - https://github.com/ReactiveX/RxJava
 - https://github.com/MinecraftForge/MinecraftForge
 - https://github.com/tensorflow/java
+
+### Libraries
+
+This code uses the following libraries:
+
+- https://github.com/cytoscape/cytoscape-api
+- https://github.com/gousiosg/java-callgraph/
+- https://github-api.kohsuke.org/
+- https://github.com/zeroturnaround/zt-zip/
+- https://github.com/javaparser/javaparser
+
+They are built into the app, so no need to install them separately.
+
+### App Preview:
+
+![Preview image](preview-image.png)
