@@ -166,12 +166,23 @@ public class SoftwareLayout {
      * Executed immediately after a new network is loaded.
      */
     public void layoutOnLoad() {
+        runLinearLayout(null);
+    }
+
+    /**
+     * Runs the default LINEAR magnetic layout.
+     * Calls back to the runnable after the layout is finished.
+     */
+    public void runLinearLayout(Runnable onFinished) {
 
         var context = getLinearContext();
         var netView = am.getCurrentNetworkView();
         var task = pml.createTaskIterator(netView, context, new HashSet<>(netView.getNodeViews()), null);
 
-        tm.execute(task);
+        tm.execute(task, new TaskObserver() {
+            public void taskFinished(ObservableTask task) {}
+            public void allFinished(FinishStatus finishStatus) {if (onFinished!=null) onFinished.run();}
+        });
     }
 
 }

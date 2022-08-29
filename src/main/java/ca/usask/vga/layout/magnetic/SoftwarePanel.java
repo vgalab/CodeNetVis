@@ -274,12 +274,32 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
 
         panel.add(label("Number of rings:", ringsEditor));
 
-        panel.add(group(addListener(new JButton("Run layout algorithm"), e ->
-                layout.runLayout(() -> {
-                    // On layout complete
-                    style.getRadiusAnnotation().reposition();
-                    style.getRingsAnnotation().reposition();
-                }))));
+        var runPolarLayout = addListener(new JButton("Run pole layout"), e -> {
+                    int count = style.pm.getPoleCount(style.am.getCurrentNetwork());
+                    Runnable onComplete = () -> {
+                        // On layout complete
+                        style.getRadiusAnnotation().reposition();
+                        style.getRingsAnnotation().reposition();
+                    };
+                    if (count == 0) {
+                        layout.runLinearLayout(onComplete);
+                    } else {
+                        layout.runLayout(onComplete);
+                    }
+                }
+        );
+        runPolarLayout.setToolTipText("At least 1 pole is required to run the pole layout");
+
+        Runnable update = () -> {
+            var count = style.pm.getPoleCount(style.am.getCurrentNetwork());
+            runPolarLayout.setText(count > 0
+                    ? "Run pole layout (" + count + (count > 1 ? " poles"  : " pole") +  " selected)"
+                    : "Run linear layout (No poles selected)");
+        };
+
+        style.pm.addChangeListener(update);
+        panel.add(group(runPolarLayout));
+        update.run();
 
         return autoDisable(panel);
     }
