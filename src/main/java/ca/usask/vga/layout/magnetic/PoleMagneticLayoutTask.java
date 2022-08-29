@@ -83,7 +83,6 @@ public class PoleMagneticLayoutTask extends ForceDirectedLayoutTask {
         if (context.pinPoles) {
             PinForce pf = new PinForce(poleClassifier);
             m_fsim.addForce(pf);
-            // TODO: More options for pins
             if (context.useCirclePin)
                 pf.setPinAroundCircle(part, (float) context.pinRadius);
         }

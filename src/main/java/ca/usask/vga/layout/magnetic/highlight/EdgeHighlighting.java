@@ -136,7 +136,6 @@ public class EdgeHighlighting implements SelectedNodesAndEdgesListener, SetCurre
             if (n.edge != null) {
                 if (edges != null) edges.add(n.edge);
                 if (view != null && n.isInbound)  {
-                    // TODO: Potentially add a check for edges that are both in and out, or remove them
                     applyIncomingStyle(n.edge, view);
                 }
                 if (view != null && !n.isInbound) {

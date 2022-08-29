@@ -40,7 +40,7 @@ import java.util.*;
  * @see <a href="http://prefuse.org">Prefuse web site</a>
  */
 public abstract class ForceDirectedLayoutTask extends AbstractPartitionLayoutTask {
-	// TODO: Allow for parallel computation
+	// In the future it would be good to allow for parallel computation here
 
 	protected static final int ANIMATION_FRAME_PERIOD = 10;
 

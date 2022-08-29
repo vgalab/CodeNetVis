@@ -38,7 +38,7 @@ public class AutoLayout extends AbstractTask {
     @Override
     public void run(TaskMonitor taskMonitor) {
 
-        // TODO: Consider multiple threads/executions
+        // Single threaded; only works on one partition at a time.
         taskMonitor.showMessage(TaskMonitor.Level.INFO, "Finding parameters...");
 
         AutoLayoutQuality quality = new AutoLayoutQuality(getContext());
@@ -71,7 +71,6 @@ public class AutoLayout extends AbstractTask {
 
         }
 
-        // TODO: Reduce excessive messages
         taskMonitor.showMessage(TaskMonitor.Level.INFO, "Chosen combination: " + Arrays.toString(bestComb) + " Score: " + maxScore);
 
         taskMonitor.showMessage(TaskMonitor.Level.INFO, quality.qualityToString(layout.getErrorCalculator(part)));

@@ -60,7 +60,7 @@ public class ForceDirectedLayoutContext implements TunableValidator {
 	@Tunable(description="Number of Iterations:", gravity=800.9, context="both", longDescription="Number of Iterations, in numeric value", exampleStringValue="100")
 	public int numIterations = 100;
 
-	@Tunable(description="ANIMATE", gravity=900.02, context="both", longDescription="TODO", exampleStringValue="true")
+	@Tunable(description="ANIMATE", gravity=900.02, context="both", longDescription="Apply animation to the layout; boolean values only", exampleStringValue="false")
 	public boolean useAnimation = false;
 
 	@Override

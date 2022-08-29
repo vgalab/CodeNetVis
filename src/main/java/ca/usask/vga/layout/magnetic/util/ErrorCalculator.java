@@ -132,14 +132,13 @@ public class ErrorCalculator {
         float V_mean = velocityMean();
         float V_sd = velocitySD();
         char deg = '\u00B0';
-        // TODO: Remove excessive information
         taskMonitor.showMessage(TaskMonitor.Level.INFO,
                 "Total edges: " + totalEdges());
         taskMonitor.showMessage(TaskMonitor.Level.INFO,
                 "Misaligned edges (> 60"+deg+"): " + formatFloat(M_percent) + "%");
         taskMonitor.showMessage(TaskMonitor.Level.INFO,
                 "Angle mean = " + formatFloat(M_mean) + deg + ", sd = " + formatFloat(M_sd) + deg);
-        taskMonitor.showMessage(TaskMonitor.Level.INFO,
+        /*taskMonitor.showMessage(TaskMonitor.Level.INFO,
                 "Force mean = " + formatExp(F_mean) + ", sd = " + formatFloat(F_sd));
         taskMonitor.showMessage(TaskMonitor.Level.INFO,
                 "Speed mean = " + formatExp(V_mean) + ", sd = " + formatFloat(V_sd));
@@ -150,7 +149,7 @@ public class ErrorCalculator {
         taskMonitor.showMessage(TaskMonitor.Level.INFO,
                 "Density = " + formatExp(density()));
         taskMonitor.showMessage(TaskMonitor.Level.INFO,
-                "XY SD = " + sdXY() + ", desired = " + uniformSD(0, 1));
+                "XY SD = " + sdXY() + ", desired = " + uniformSD(0, 1));*/
 
     }
 
@@ -220,7 +219,6 @@ public class ErrorCalculator {
 
     public float ratioError(float current, float desired) {
         return current < desired ? desired / current : current / desired; //-1
-        // TODO: Check implementation
         //return (1 / (current * desired)) *  (current - desired) * (current - desired);
     }
 

@@ -57,8 +57,7 @@ public class MagneticForce extends AbstractForce {
 
     @Override
     protected String[] getParameterNames() {
-        // TODO: Parameter names
-        return new String[0];
+        return new String[]{"field_type", "field_strength", "alpha", "beta"};
     }
 
     /**
