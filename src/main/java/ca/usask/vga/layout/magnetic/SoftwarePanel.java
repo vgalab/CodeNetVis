@@ -131,7 +131,7 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
     protected JPanel createImportPanel() {
         var panel = createTitledPanel(null);
 
-        var clearCache = new JButton("Clear cache");
+        var clearCache = new TooltipButton("Clear cache", "Clear cache of all downloaded repositories");
         clearCache.addActionListener(l -> {
             importS.clearTempDir();
             clearCache.setText("Clear cache " + importS.getTempDirSize());
@@ -141,18 +141,25 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
 
         var gitLink = new JTextField("https://github.com/BJNick/CytoscapeMagneticLayout");
         panel.add(groupBox(new JLabel("GitHub Link:"), gitLink,
-                addListener(new JButton("Load"), l -> importS.loadFromGitHub(gitLink.getText(), (it) -> {onFileLoaded(it);
-                    clearCache.setText("Clear cache " + importS.getTempDirSize());
-                }))));
+                new TooltipButton("Load", "Downloads and imports all Java classes from the repository", l -> {
+                    try {
+                        importS.loadFromGitHub(gitLink.getText(), (it) -> {
+                            onFileLoaded(it);
+                            clearCache.setText("Clear cache " + importS.getTempDirSize());
+                        });
+                    } catch (IllegalArgumentException e) {
+                        JOptionPane.showMessageDialog(gitLink, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                })));
 
         /*var srcFolder = new JTextField("");
         panel.add(groupBox(new JLabel("Source code folder:"), srcFolder, addListener(new JButton("Load"),
                 e -> importS.loadFromSrcFolder(srcFolder.getText(), this::onFileLoaded))));*/
 
-        var bFile = addListener(new JButton("Load from JAR file"),
+        var bFile = new TooltipButton("Load from JAR file", "Imports all Java classes from the JAR file",
                 e -> importS.loadFromFile(this::onFileLoaded));
 
-        var bFolder = addListener(new JButton("Load from Java SRC folder"),
+        var bFolder = new TooltipButton("Load from Java SRC folder", "Imports all Java classes from the SRC folder",
                 e -> importS.loadFromSrcFolder(importS.chooseSrcFolderDialogue(null), this::onFileLoaded));
 
         panel.add(group(bFile, bFolder));
@@ -183,9 +190,9 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
 
         var searchField = new JTextField();
 
-        var button = new JButton("Search");
+        var button = new TooltipButton("Search", "Search nodes for a specific keyword in any of the fields",
+                e -> searchNetworkFor(searchField.getText().strip()));
         searchField.addActionListener(e -> searchNetworkFor(searchField.getText().strip()));
-        button.addActionListener(e -> searchNetworkFor(searchField.getText().strip()));
         onSessionLoaded.add(e -> searchField.setText(""));
 
         panel.add(groupBox(searchField, button));
@@ -195,8 +202,9 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         var poleCount = new JLabel(poleCountText + style.pm.getPoleCount(style.am.getCurrentNetwork()));
         style.pm.addChangeListener(() -> poleCount.setText(poleCountText+style.pm.getPoleCount(style.am.getCurrentNetwork())));
 
-        panel.add(group(poleCount, addListener(new JButton("Set poles by top degree..."), e ->
-                dtm.execute(new TaskIterator(new ExtraTasks.MakeTopDegreePoles(style.am, style.pm))))));
+        panel.add(group(poleCount, new TooltipButton("Set poles by top degree...",
+                "Choose the number of poles to be set by top indegree or outdegree",
+                e -> dtm.execute(new TaskIterator(new ExtraTasks.MakeTopDegreePoles(style.am, style.pm))))));
 
         return autoDisable(panel);
     }
@@ -233,8 +241,8 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
 
         input.addActionListener(e -> style.setFilterPrefix(input.getSelectedItem() == null ? "" : input.getSelectedItem().toString()));
 
-        var subgraphButton = new JButton("Subgraph");
-        subgraphButton.addActionListener(l -> layout.createSubnetworkFromVisible());
+        var subgraphButton = new TooltipButton("Subgraph", "Create a subgraph to show only the selected package and nodes",
+                l -> layout.createSubnetworkFromVisible());
 
         panel.add(groupBox(new JLabel("Prefix:"), input, subgraphButton));
 
@@ -274,7 +282,9 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
 
         panel.add(label("Number of rings:", ringsEditor));
 
-        var runPolarLayout = addListener(new JButton("Run pole layout"), e -> {
+        var runPolarLayout = new TooltipButton("Run pole layout",
+                "At least 1 pole is required to run the pole layout",
+                e -> {
                     int count = style.pm.getPoleCount(style.am.getCurrentNetwork());
                     Runnable onComplete = () -> {
                         // On layout complete
@@ -288,7 +298,6 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
                     }
                 }
         );
-        runPolarLayout.setToolTipText("At least 1 pole is required to run the pole layout");
 
         Runnable update = () -> {
             var count = style.pm.getPoleCount(style.am.getCurrentNetwork());
@@ -365,8 +374,9 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
     protected JPanel createExperimentalPanel() {
         JPanel panel = createTitledPanel("Experimental");
 
-        var cutConnections = new JButton("Cut connections between colors");
-        cutConnections.addActionListener(l -> layout.cutCommonConnections());
+        var cutConnections = new TooltipButton("Cut connections between colors",
+                "Cut all connections between colors of different poles",
+                l -> layout.cutCommonConnections());
         panel.add(group(cutConnections));
 
         return autoDisable(panel);
@@ -554,6 +564,21 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
                 textField.setText("");
                 return;
             }
+        }
+    }
+
+    /**
+     * Utility class that is a JButton with a tooltip field and action in the constructor.
+     */
+    class TooltipButton extends JButton {
+        public TooltipButton(String text, String tooltip, ActionListener action) {
+            super(text);
+            setToolTipText(tooltip);
+            addListener(this, action);
+        }
+        public TooltipButton(String text, String tooltip) {
+            super(text);
+            setToolTipText(tooltip);
         }
     }
 
