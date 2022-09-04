@@ -1,7 +1,7 @@
 
 # Cytoscape Magnetic Layout
 
-Contributors: Mykyta Shvets, Ehsan Moradi, Dr. Debajyoti Mondal
+Contributors: Mykyta Shvets, Ehsan Moradi, Debajyoti Mondal
 
 An app for Cytoscape 3.9.1+ that introduces a magnetic force to the default prefuse algorithm.
 
