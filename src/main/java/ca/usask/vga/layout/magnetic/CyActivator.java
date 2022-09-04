@@ -10,6 +10,7 @@ import org.cytoscape.application.events.SetCurrentNetworkListener;
 import org.cytoscape.application.swing.CyAction;
 import org.cytoscape.application.swing.CySwingApplication;
 import org.cytoscape.equations.EquationCompiler;
+import org.cytoscape.event.CyEventHelper;
 import org.cytoscape.io.util.StreamUtil;
 import org.cytoscape.model.CyNetworkFactory;
 import org.cytoscape.model.CyNetworkManager;
@@ -150,7 +151,7 @@ public class CyActivator extends AbstractCyActivator {
 				getService(bc, VisualMappingManager.class),
 				getService(bc, CyRootNetworkManager.class),
 				getService(bc, CyApplicationManager.class),
-				poleManager);
+				poleManager, getService(bc, CyEventHelper.class));
 
 		// Editor Edge Highlighting
 		final EdgeHighlighting edgeHighlighting = new EdgeHighlighting(networkCyAccess, preferences);
@@ -177,7 +178,7 @@ public class CyActivator extends AbstractCyActivator {
 
 		// Software Panel
 		SoftwareLayout softwareLayout = new SoftwareLayout(poleMagneticLayout, getService(bc, TaskManager.class),
-				getService(bc, CyApplicationManager.class), new CreateSubnetworkTask(networkCyAccess));
+				getService(bc, CyApplicationManager.class), new CreateSubnetworkTask(networkCyAccess), networkCyAccess);
 
 		SoftwareStyle softwareStyle = new SoftwareStyle(getService(bc, CyApplicationManager.class),
 				getService(bc, TaskManager.class), getService(bc, VisualMappingManager.class),

@@ -3,6 +3,7 @@ package ca.usask.vga.layout.magnetic.highlight;
 
 import ca.usask.vga.layout.magnetic.poles.PoleManager;
 import org.cytoscape.application.CyApplicationManager;
+import org.cytoscape.event.CyEventHelper;
 import org.cytoscape.model.CyNetworkFactory;
 import org.cytoscape.model.CyNetworkManager;
 import org.cytoscape.model.subnetwork.CyRootNetworkManager;
@@ -25,8 +26,9 @@ public class NetworkCyAccess {
     public final CyRootNetworkManager rnm;
     public final CyApplicationManager am;
     public final PoleManager pm;
+    public final CyEventHelper eh;
 
-    public NetworkCyAccess(CyNetworkFactory nf, CyNetworkManager nm, CyNetworkViewFactory vf, CyNetworkViewManager vm, CyNetworkNaming cnn, VisualMappingManager vmm, CyRootNetworkManager rnm, CyApplicationManager am, PoleManager pm) {
+    public NetworkCyAccess(CyNetworkFactory nf, CyNetworkManager nm, CyNetworkViewFactory vf, CyNetworkViewManager vm, CyNetworkNaming cnn, VisualMappingManager vmm, CyRootNetworkManager rnm, CyApplicationManager am, PoleManager pm, CyEventHelper eh) {
         this.nf = nf;
         this.nm = nm;
         this.vf = vf;
@@ -36,5 +38,6 @@ public class NetworkCyAccess {
         this.rnm = rnm;
         this.am = am;
         this.pm = pm;
+        this.eh = eh;
     }
 }

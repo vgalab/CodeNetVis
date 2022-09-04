@@ -3,11 +3,11 @@ package ca.usask.vga.layout.magnetic;
 import ca.usask.vga.layout.magnetic.force.FieldType;
 import ca.usask.vga.layout.magnetic.force.HierarchyForce;
 import ca.usask.vga.layout.magnetic.highlight.CreateSubnetworkTask;
+import ca.usask.vga.layout.magnetic.highlight.NetworkCyAccess;
+import ca.usask.vga.layout.magnetic.highlight.PartialEdgeColoringTask;
 import org.cytoscape.application.CyApplicationManager;
-import org.cytoscape.work.FinishStatus;
-import org.cytoscape.work.ObservableTask;
-import org.cytoscape.work.TaskManager;
-import org.cytoscape.work.TaskObserver;
+import org.cytoscape.model.CyNetwork;
+import org.cytoscape.work.*;
 
 import java.util.HashSet;
 
@@ -21,6 +21,7 @@ public class SoftwareLayout {
     private final TaskManager tm;
     private final CyApplicationManager am;
     private final CreateSubnetworkTask subnetTask;
+    private final NetworkCyAccess cy;
 
     private int maxRings;
     private float pinRadius;
@@ -28,11 +29,12 @@ public class SoftwareLayout {
     /**
      * Initializes the parameters for the software layout functionality.
      */
-    public SoftwareLayout(PoleMagneticLayout pml, TaskManager tm, CyApplicationManager am, CreateSubnetworkTask subnetTask) {
+    public SoftwareLayout(PoleMagneticLayout pml, TaskManager tm, CyApplicationManager am, CreateSubnetworkTask subnetTask, NetworkCyAccess cy) {
         this.pml = pml;
         this.tm = tm;
         this.am = am;
         this.subnetTask = subnetTask;
+        this.cy = cy;
     }
 
     /**
@@ -48,6 +50,23 @@ public class SoftwareLayout {
      */
     public void cutCommonConnections() {
         subnetTask.copyAndCutCommonEdges();
+    }
+
+    /**
+     * Creates a new network with partial edge coloring of the current network.
+     */
+    public void createPartialColoring() {
+        tm.execute(new TaskIterator(new PartialEdgeColoringTask(cy)));
+    }
+
+    /**
+     * Checks whether a network is considered IMMUTABLE due to it being
+     * a partial coloring of another network.
+     */
+    public boolean isImmutable(CyNetwork net) {
+        return net == null || net.getDefaultNetworkTable().getRow(net.getSUID())
+                .get("name", String.class)
+                .equals(PartialEdgeColoringTask.NETWORK_NAME);
     }
 
     /**

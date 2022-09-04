@@ -379,6 +379,12 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
                 l -> layout.cutCommonConnections());
         panel.add(group(cutConnections));
 
+
+        var edgePartialColoring = new TooltipButton("Partial edge coloring view",
+                "TODO",
+                l -> layout.createPartialColoring());
+        panel.add(group(edgePartialColoring));
+
         return autoDisable(panel);
     }
 
@@ -454,13 +460,15 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
     }
 
     /**
-     * Automatically disables the given component there is no network loaded.
+     * Automatically disables the given component there is no network loaded,
+     * and when an immutable partial coloring network is loaded.
      */
     private <T extends Component> T autoDisable(T component) {
         if (component instanceof JPanel)
             for (var c : ((JPanel) component).getComponents())
                 autoDisable(c);
-        onNewView.add(e -> component.setEnabled(style.am.getCurrentNetworkView() != null));
+        onNewView.add(e -> component.setEnabled(style.am.getCurrentNetworkView() == null ||
+                !layout.isImmutable(style.am.getCurrentNetwork())));
         return component;
     }
 

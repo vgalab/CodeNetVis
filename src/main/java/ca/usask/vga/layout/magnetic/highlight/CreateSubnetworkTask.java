@@ -21,7 +21,7 @@ public class CreateSubnetworkTask {
         this.cy = cy;
     }
 
-    public void copyCurrentVisible() {
+    public CyNetwork copyCurrentVisible() {
         Set<CyNode> nodes = new HashSet<>();
         Set<CyEdge> edges = new HashSet<>();
 
@@ -36,10 +36,15 @@ public class CreateSubnetworkTask {
             }
         }
 
-        copyNetwork(cy.am.getCurrentNetwork(), nodes, edges);
+        return copyNetwork(cy.am.getCurrentNetwork(), nodes, edges);
     }
 
-    public void copyAndCutCommonEdges() {
+    public CyNetwork copyCurrent() {
+        var net = cy.am.getCurrentNetwork();
+        return copyNetwork(net, net.getNodeList(), net.getEdgeList());
+    }
+
+    public CyNetwork copyAndCutCommonEdges() {
         Set<CyNode> nodes = new HashSet<>();
         Set<CyEdge> edges = new HashSet<>();
 
@@ -56,10 +61,10 @@ public class CreateSubnetworkTask {
             }
         }
 
-        copyNetwork(cy.am.getCurrentNetwork(), nodes, edges);
+        return copyNetwork(cy.am.getCurrentNetwork(), nodes, edges);
     }
 
-    public void copyNetwork(CyNetwork supernet, Collection<CyNode> selectedNodes, Collection<CyEdge> selectedEdges) {
+    public CyNetwork copyNetwork(CyNetwork supernet, Collection<CyNode> selectedNodes, Collection<CyEdge> selectedEdges) {
 
         CyRootNetwork root = cy.rnm.getRootNetwork(supernet);
 
@@ -80,6 +85,8 @@ public class CreateSubnetworkTask {
             CyNetworkView oldView = oldViewList.iterator().next();
 
             VisualStyle style = cy.vmm.getVisualStyle(oldView);
+
+            // TODO: Clone style instead of using the same one
 
             cy.vmm.addVisualStyle(style);
             cy.vmm.setVisualStyle(style, view);
@@ -113,6 +120,7 @@ public class CreateSubnetworkTask {
         }
 
         cy.pm.updateTables(net);
+        return net;
     }
 
     public void copyNetworkTable(CyNetwork supernet, CyNetwork net) {
