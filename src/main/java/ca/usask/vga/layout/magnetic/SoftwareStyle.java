@@ -424,7 +424,6 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
 
         public void reposition() {
             if (am.getCurrentNetworkView() == null) return;
-            checkNetwork();
             for (int i = 0; i < maxRings; i++) {
                 ShapeAnnotation a = annotations.get(i);
                 var radius = getRingRadius(i);
@@ -449,6 +448,7 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
 
         public void show() {
             if (!polesPresent()) return;
+            checkNetwork();
             init();
             reposition();
             anm.addAnnotations(annotations.subList(0, maxRings));
