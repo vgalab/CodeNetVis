@@ -63,6 +63,9 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
             }
         };
 
+        // STYLE panel
+        innerPanel.add(createStylePanel());
+
         // IMPORT panel
         innerPanel.add(createImportPanel());
 
@@ -75,15 +78,14 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         // LAYOUT panel
         innerPanel.add(createLayoutPanel());
 
-        // STYLE panel
-        innerPanel.add(createStylePanel());
-
         // EXPERIMENTAL panel
         innerPanel.add(createExperimentalPanel());
 
         // Scroll Pane
         innerPanel.setLayout(new BoxLayout(innerPanel, BoxLayout.Y_AXIS));
         innerPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        innerPanel.add(Box.createVerticalGlue());
 
         var scrollPane = new JScrollPane(innerPanel, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
                 JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
@@ -114,30 +116,22 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
     /**
      * Creates a custom panel with a border, margins and title.
      */
-    protected JPanel createTitledPanel(String title) {
-        JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        if (title != null && !title.equals(""))
-            panel.add(group(new JLabel(bold(title))));
-        //panel.setBorder(BorderFactory.createLineBorder(Color.lightGray));
-        panel.setBorder(BorderFactory.createCompoundBorder(new EmptyBorder(0,0,10,0),
-                BorderFactory.createLineBorder(Color.lightGray)));
-        return panel;
+    protected CollapsiblePanel createTitledPanel(String title) {
+        return new CollapsiblePanel(title);
     }
 
     /**
      * Describes the "Data import" panel components and functionality.
      */
     protected JPanel createImportPanel() {
-        var panel = createTitledPanel(null);
+        var panel = createTitledPanel("Data import");
+        panel.closeContent();
 
         var clearCache = new TooltipButton("Clear cache", "Clear cache of all downloaded repositories");
         clearCache.addActionListener(l -> {
             importS.clearTempDir();
             clearCache.setText("Clear cache " + importS.getTempDirSize());
         });
-
-        panel.add(groupBox(new JLabel(bold("Data import")), clearCache));
 
         var gitLink = new JTextField("https://github.com/BJNick/CytoscapeMagneticLayout");
         panel.add(groupBox(new JLabel("GitHub Link:"), gitLink,
@@ -164,6 +158,8 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
 
         panel.add(group(bFile, bFolder));
 
+        panel.add(group(/*new JLabel(bold("Data import")),*/ clearCache));
+
         return panel;
     }
 
@@ -183,10 +179,8 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
      * The panel is automatically disabled when no network is loaded.
      */
     protected JPanel createSearchPanel() {
-        var panel = createTitledPanel(null);
-
-        panel.add(groupBox(new JLabel(bold("Pole selection")),
-                new JLabel("See the \"Node Table\" tab for search results")));
+        var panel = createTitledPanel("Pole selection");
+        panel.closeContent();
 
         var searchField = new JTextField();
 
@@ -206,6 +200,9 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
                 "Choose the number of poles to be set by top indegree or outdegree",
                 e -> dtm.execute(new TaskIterator(new ExtraTasks.MakeTopDegreePoles(style.am, style.pm))))));
 
+        addExplanation(panel, "See the \"Node Table\" tab for search results. To select poles manually, right click " +
+                "a node or use the red/blue pole buttons on the toolbar.");
+
         return autoDisable(panel);
     }
 
@@ -214,7 +211,8 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
      * The panel is automatically disabled when no network is loaded.
      */
     protected JPanel createFilterPanel() {
-        JPanel panel = createTitledPanel("Filtering");
+        var panel = createTitledPanel("Filtering");
+        panel.closeContent();
 
         var b1 = new JRadioButton("All dependencies", true);
         var b2 = new JRadioButton("Unique dependencies", false);
@@ -254,7 +252,8 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
      * The panel is automatically disabled when no network is loaded.
      */
     protected JPanel createLayoutPanel() {
-        JPanel panel = createTitledPanel("Layout");
+        var panel = createTitledPanel("Layout");
+        panel.closeContent();
 
         var initialRadius = Math.round(style.getSuggestedRadius())/100;
         var radiusEditor = createCustomSlider(0, 100, initialRadius, 25, 5, 5);
@@ -318,7 +317,7 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
      * The panel is automatically disabled when no network is loaded.
      */
     protected JPanel createStylePanel() {
-        JPanel panel = createTitledPanel("Style");
+        var panel = createTitledPanel("Style");
 
         // CONTENTS
         var b0 = new JRadioButton("None");
@@ -364,6 +363,10 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
 
         //panel.add(group(new JButton("Choose colors...")));
 
+        addExplanation(panel, "The style section allows you to change the size and color of the nodes. Coloring " +
+                "by package will use the Java package information to group items in similar packages together. Coloring " +
+                "by pole will set the color to the closest pole, if there are poles selected.");
+
         return autoDisable(panel);
     }
 
@@ -372,7 +375,8 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
      * The panel is automatically disabled when no network is loaded.
      */
     protected JPanel createExperimentalPanel() {
-        JPanel panel = createTitledPanel("Experimental");
+        var panel = createTitledPanel("Experimental");
+        panel.closeContent();
 
         var cutConnections = new TooltipButton("Cut connections between colors",
                 "Cut all connections between colors of different poles",
@@ -502,8 +506,10 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         JPanel panel = new JPanel();
         panel.setLayout(new GridLayout(1, components.length, 10, 10));
         panel.setBorder(new EmptyBorder(5, 5,5,5));
-        panel.setMaximumSize(new Dimension(10000, height));
-        panel.setPreferredSize(new Dimension(panel.getPreferredSize().width, height));
+        if (height >= 0) {
+            panel.setMaximumSize(new Dimension(10000, height));
+            panel.setPreferredSize(new Dimension(panel.getPreferredSize().width, height));
+        }
         for (Component c : components) {
             panel.add(c);
         }
@@ -588,6 +594,79 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
             super(text);
             setToolTipText(tooltip);
         }
+    }
+
+    /**
+     * A custom panel that can be opened and closed by the user. For use
+     * in a list of panels each of which can be expanded.
+     */
+    class CollapsiblePanel extends JPanel {
+
+        public final JPanel innerPanel, outerPanel;
+
+        private final String OPEN_V = "\u2227", CLOSED_V = "\u2228";
+        private final JLabel icon;
+
+        public CollapsiblePanel(String title) {
+            outerPanel = this;
+            innerPanel = new JPanel();
+
+            outerPanel.setLayout(new BoxLayout(outerPanel, BoxLayout.Y_AXIS));
+            innerPanel.setLayout(new BoxLayout(innerPanel, BoxLayout.Y_AXIS));
+
+            icon = new JLabel(OPEN_V);
+
+            outerPanel.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mousePressed(MouseEvent e) {
+                    innerPanel.setVisible(!innerPanel.isVisible());
+                    icon.setText(innerPanel.isVisible() ? OPEN_V : CLOSED_V);
+                }
+            });
+
+
+            innerPanel.addMouseListener(new MouseAdapter() {});
+
+
+            if (title != null && !title.equals("")) {
+                super.add(groupBox(new JLabel(bold(title)), icon));
+            } else {
+                super.add(groupBox(new JLabel(bold("")), icon));
+            }
+
+            outerPanel.setBorder(BorderFactory.createCompoundBorder(new EmptyBorder(0,0,10,0),
+                    BorderFactory.createLineBorder(Color.lightGray)));
+
+            super.add(innerPanel);
+        }
+
+        public void openContent() {
+            innerPanel.setVisible(true);
+            icon.setText(OPEN_V);
+        }
+
+        public void closeContent() {
+            innerPanel.setVisible(false);
+            icon.setText(CLOSED_V);
+        }
+
+        @Override
+        public Component add(Component comp) {
+            return innerPanel.add(comp);
+        }
+    }
+
+    private JTextArea addExplanation(JPanel panel, String text) {
+        panel.add(group(10, new JSeparator())); // set to 15 to show separator
+
+        var textExplanation = new JTextArea(text);
+        textExplanation.setLineWrap(true);
+        textExplanation.setWrapStyleWord(true);
+        textExplanation.setBackground(panel.getBackground());
+        textExplanation.setFont(new Label().getFont());
+        textExplanation.setEditable(false);
+        panel.add(group(75, textExplanation));
+        return textExplanation;
     }
 
     private void fireChangeListeners(JSlider component) {
