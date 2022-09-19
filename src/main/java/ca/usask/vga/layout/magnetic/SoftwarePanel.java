@@ -63,11 +63,11 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
             }
         };
 
-        // STYLE panel
-        innerPanel.add(createStylePanel());
-
         // IMPORT panel
         innerPanel.add(createImportPanel());
+
+        // STYLE panel
+        innerPanel.add(createStylePanel());
 
         // SEARCH panel
         innerPanel.add(createSearchPanel());
@@ -179,7 +179,7 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
      * The panel is automatically disabled when no network is loaded.
      */
     protected JPanel createSearchPanel() {
-        var panel = createTitledPanel("Pole selection");
+        var panel = createTitledPanel("Pole selection and node search");
         panel.closeContent();
 
         var searchField = new JTextField();
@@ -211,7 +211,7 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
      * The panel is automatically disabled when no network is loaded.
      */
     protected JPanel createFilterPanel() {
-        var panel = createTitledPanel("Filtering");
+        var panel = createTitledPanel("Filtering nodes by package");
         panel.closeContent();
 
         var b1 = new JRadioButton("All dependencies", true);
@@ -252,7 +252,7 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
      * The panel is automatically disabled when no network is loaded.
      */
     protected JPanel createLayoutPanel() {
-        var panel = createTitledPanel("Layout");
+        var panel = createTitledPanel("Run layout for the dependency graph ");
         panel.closeContent();
 
         var initialRadius = Math.round(style.getSuggestedRadius())/100;
@@ -317,7 +317,7 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
      * The panel is automatically disabled when no network is loaded.
      */
     protected JPanel createStylePanel() {
-        var panel = createTitledPanel("Style");
+        var panel = createTitledPanel("Visual style of the graph");
 
         // CONTENTS
         var b0 = new JRadioButton("None");
@@ -375,7 +375,7 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
      * The panel is automatically disabled when no network is loaded.
      */
     protected JPanel createExperimentalPanel() {
-        var panel = createTitledPanel("Experimental");
+        var panel = createTitledPanel("Experimental features");
         panel.closeContent();
 
         var cutConnections = new TooltipButton("Cut connections between colors",
