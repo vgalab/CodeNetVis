@@ -733,10 +733,15 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
                 vmff_discrete.createVisualMappingFunction(column, type, NODE_FILL_COLOR);
 
         var table = net.getDefaultNodeTable();
-        var values = new TreeSet<>(table.getColumn(column).getValues(type));
+
+        var valueList = table.getColumn(column).getValues(type);
+        valueList.removeIf(Objects::isNull); // TreeSet does not support null values
+
+        var values = new TreeSet<>(valueList);
 
         int i = 0;
         for (var v : values) {
+            if (v == null) continue;
             func.putMapValue(v, COLOR_BREWER_SET3[i%12]);
             i++;
         }
