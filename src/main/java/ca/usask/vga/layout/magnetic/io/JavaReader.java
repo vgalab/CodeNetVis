@@ -39,6 +39,7 @@ public class JavaReader extends AbstractInputStreamTaskFactory {
     public static final String PACKAGE_FORMULA = "=SUBSTITUTE($name, CONCATENATE(\".\",${"+NODE_CLASS+"}), \"\")";
     public static final String INNER_CLASS_FORMULA = "=LAST(SPLIT(${"+NODE_CLASS+"},\"$\"))";
     public static final String ROOT_PACKAGE_FORMULA = "=FIRST(SPLIT(SUBSTITUTE($Package,\".\",\"%\",3),\"%\"))";
+    public static final String ROOT_PACKAGE_FORMULA_2 = "=FIRST(SPLIT(SUBSTITUTE($Package,\".\",\"%\",4),\"%\"))";
 
     public static final String PATH_TO_FILES_COLUMN = "Path to files";
 
@@ -496,6 +497,11 @@ public class JavaReader extends AbstractInputStreamTaskFactory {
 
             cy.eq.compile(ROOT_PACKAGE_FORMULA, map);
             table.getAllRows().forEach(r -> r.set(NODE_ROOT_PACKAGE, cy.eq.getEquation()));
+
+            if (table.getColumn(NODE_ROOT_PACKAGE).getValues(String.class).stream().distinct().count() <= 1) {
+                cy.eq.compile(ROOT_PACKAGE_FORMULA_2, map);
+                table.getAllRows().forEach(r -> r.set(NODE_ROOT_PACKAGE, cy.eq.getEquation()));
+            }
         }
 
         /**
