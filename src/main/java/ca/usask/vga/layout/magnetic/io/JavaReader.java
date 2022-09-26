@@ -17,7 +17,6 @@ import org.cytoscape.view.model.CyNetworkViewManager;
 import org.cytoscape.work.ProvidesTitle;
 import org.cytoscape.work.TaskIterator;
 import org.cytoscape.work.TaskMonitor;
-import org.cytoscape.work.Tunable;
 
 import java.io.*;
 import java.util.*;
@@ -32,13 +31,14 @@ import java.util.stream.Collectors;
 public class JavaReader extends AbstractInputStreamTaskFactory {
 
     public static final String NODE_NAME = "name", NODE_CLASS = "Class", NODE_PACKAGE = "Package",
-            NODE_INNER_CLASS = "Simple class";
+            NODE_INNER_CLASS = "Simple class", NODE_ROOT_PACKAGE = "Root package";
 
     public static final String EDGE_NAME = "name", EDGE_INTERACTION = "interaction";
 
     public static final String CLASS_FORMULA = "=LAST(SPLIT(${"+NODE_NAME+"},\".\"))";
     public static final String PACKAGE_FORMULA = "=SUBSTITUTE($name, CONCATENATE(\".\",${"+NODE_CLASS+"}), \"\")";
     public static final String INNER_CLASS_FORMULA = "=LAST(SPLIT(${"+NODE_CLASS+"},\"$\"))";
+    public static final String ROOT_PACKAGE_FORMULA = "=FIRST(SPLIT(SUBSTITUTE($Package,\".\",\"%\",3),\"%\"))";
 
     public static final String PATH_TO_FILES_COLUMN = "Path to files";
 
@@ -467,6 +467,7 @@ public class JavaReader extends AbstractInputStreamTaskFactory {
             map.put(NODE_NAME, String.class);
             map.put(NODE_CLASS, String.class);
             map.put(NODE_PACKAGE, String.class);
+            map.put(NODE_ROOT_PACKAGE, String.class);
 
             if (table.getColumn(NODE_PACKAGE) == null) {
                 table.createColumn(NODE_PACKAGE, String.class, false);
@@ -480,6 +481,10 @@ public class JavaReader extends AbstractInputStreamTaskFactory {
                 table.createColumn(NODE_INNER_CLASS, String.class, false);
             }
 
+            if (table.getColumn(NODE_ROOT_PACKAGE) == null) {
+                table.createColumn(NODE_ROOT_PACKAGE, String.class, false);
+            }
+
             cy.eq.compile(String.format(CLASS_FORMULA), map);
             table.getAllRows().forEach(r -> r.set(NODE_CLASS, cy.eq.getEquation()));
 
@@ -488,6 +493,9 @@ public class JavaReader extends AbstractInputStreamTaskFactory {
 
             cy.eq.compile(INNER_CLASS_FORMULA, map);
             table.getAllRows().forEach(r -> r.set(NODE_INNER_CLASS, cy.eq.getEquation()));
+
+            cy.eq.compile(ROOT_PACKAGE_FORMULA, map);
+            table.getAllRows().forEach(r -> r.set(NODE_ROOT_PACKAGE, cy.eq.getEquation()));
         }
 
         /**

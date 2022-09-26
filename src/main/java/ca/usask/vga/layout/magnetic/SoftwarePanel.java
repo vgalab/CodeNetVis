@@ -321,25 +321,30 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
 
         // CONTENTS
         var b0 = new JRadioButton("None");
-        var b1 = new JRadioButton("Package");
+        var b1a = new JRadioButton("Package");
+        var b1b = new JRadioButton("Root package");
         var b2 = new JRadioButton("Closest pole");
         var group = new ButtonGroup();
         group.add(b0);
-        group.add(b1);
+        group.add(b1a);
+        group.add(b1b);
         group.add(b2);
         b0.setSelected(true);
 
         b0.addChangeListener(l -> {
             if (b0.isSelected()) style.setCurrentColoring(SoftwareStyle.Coloring.NONE);
         });
-        b1.addChangeListener(l -> {
-            if (b1.isSelected()) style.setCurrentColoring(SoftwareStyle.Coloring.PACKAGE);
+        b1a.addChangeListener(l -> {
+            if (b1a.isSelected()) style.setCurrentColoring(SoftwareStyle.Coloring.PACKAGE);
+        });
+        b1b.addChangeListener(l -> {
+            if (b1b.isSelected()) style.setCurrentColoring(SoftwareStyle.Coloring.ROOT_PACKAGE);
         });
         b2.addChangeListener(l -> {
             if (b2.isSelected()) style.setCurrentColoring(SoftwareStyle.Coloring.CLOSEST_POLE);
         });
 
-        panel.add(groupBox(new JLabel("Color nodes by"), Box.createHorizontalGlue(), b0, b1, b2));
+        panel.add(groupBox(new JLabel("Color nodes by"), Box.createHorizontalGlue(), b0, b1a, b1b, b2));
 
         var comboBox = new JComboBox<>(SoftwareStyle.SizeEquation.getAllowedList());
         comboBox.addItemListener(e -> style.setSizeEquation((SoftwareStyle.SizeEquation) e.getItem()));

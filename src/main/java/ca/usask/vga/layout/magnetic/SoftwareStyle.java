@@ -66,6 +66,8 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
     private boolean usePoleColors = true;
     private Coloring currentColoring = Coloring.NONE;
 
+    public final int MAX_DISCRETE_COLORS = 12*2;
+
     /**
      * Initializes the parameters for the software style functionality.
      * Note that many services are necessary to update the style of the graph.
@@ -673,12 +675,15 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
      * Returns the list of allowed options for node coloring.
      */
     public enum Coloring {
-        NONE, PACKAGE, CLOSEST_POLE;
+        NONE, ROOT_PACKAGE, PACKAGE, CLOSEST_POLE;
         public void apply(SoftwareStyle s) {
             s.setShowPoleColors(false);
             switch (this) {
                 case PACKAGE:
                     s.applyDiscreteColoring("Package");
+                    return;
+                case ROOT_PACKAGE:
+                    s.applyDiscreteColoring("Root package");
                     return;
                 case CLOSEST_POLE:
                     s.setShowPoleColors(true);
@@ -695,7 +700,7 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
     }
 
     /**
-     * Sets the current coloring.
+     * Sets the current coloring scheme for nodes and edges of the graph.
      */
     public void setCurrentColoring(Coloring c) {
         if (currentColoring != c) {
@@ -718,11 +723,12 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
     /**
      * Applies the discrete coloring to the node color, based on the given column and type.
      * This is a helper method for ApplyDiscreteColoringTask.
+     * Returns the number of distinct categories in the specified column.
      */
-    private <T> void applyDiscreteColoring(String column, Class<T> type) {
+    private <T> int applyDiscreteColoring(String column, Class<T> type) {
         var view = am.getCurrentNetworkView();
         var net = am.getCurrentNetwork();
-        if (view == null || net == null) return;
+        if (view == null || net == null) return 0;
 
         if (net.getDefaultNodeTable().getColumn(column) == null) {
             throw new RuntimeException("The graph does not contain \"" + column + "\" property to apply coloring with.");
@@ -741,11 +747,18 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
         int i = 0;
         for (var v : values) {
             if (v == null) continue;
-            func.putMapValue(v, COLOR_BREWER_SET3[i%12]);
+
+            // Add new colors by darkening or brightening existing colors
+            Color color = COLOR_BREWER_SET3[i % 12];
+            if (i / 12 % 2 == 1)
+                color = color.darker();
+
+            func.putMapValue(v, color);
             i++;
         }
 
         vmm.getVisualStyle(view).addVisualMappingFunction(func);
+        return values.size();
     }
 
     /**
@@ -780,7 +793,7 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
             new Color(217,217,217),
             new Color(188,128,189),
             new Color(204,235,197),
-            new Color(255,237,111)
+            new Color(231, 59, 125) // edited for better visibility
     };
 
     /**
@@ -799,7 +812,13 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
         @Override
         public void run(TaskMonitor taskMonitor) throws Exception {
             taskMonitor.setTitle("Apply coloring by " + column);
-            applyDiscreteColoring(column, type);
+            int categories = applyDiscreteColoring(column, type);
+
+            if (categories > MAX_DISCRETE_COLORS) {
+                taskMonitor.setStatusMessage("The selected option to color by " + column +
+                        " has more than " + MAX_DISCRETE_COLORS + " categories (" + categories + "), " +
+                        "so the not all colors might be distinct.");
+            }
         }
     }
 
