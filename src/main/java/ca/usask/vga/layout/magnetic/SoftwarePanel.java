@@ -160,6 +160,11 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
 
         panel.add(group(/*new JLabel(bold("Data import")),*/ clearCache));
 
+        addExplanation(panel, "To load a graph, paste the GitHub link to a Java project, or open it locally " +
+                "from a JAR file or a Java SRC folder. " +
+                "GitHub files are automatically cached, but it is possible to clear the cache to free storage. " +
+                "To open a generic directed graph (not Java), use the built-in Cytoscape functionality. ");
+
         return panel;
     }
 
@@ -200,8 +205,10 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
                 "Choose the number of poles to be set by top indegree or outdegree",
                 e -> dtm.execute(new TaskIterator(new ExtraTasks.MakeTopDegreePoles(style.am, style.pm))))));
 
-        addExplanation(panel, "See the \"Node Table\" tab for search results. To select poles manually, right click " +
-                "a node or use the red/blue pole buttons on the toolbar.");
+        addExplanation(panel, "See the \"Node Table\" tab for search results. " +
+                "To select poles manually, left click on a node and use the red/blue pole buttons on the toolbar. " +
+                "Selecting nodes by degree works well with 3 to 10 poles. " +
+                "To view nodes color-coded by the nearest pole, change coloring in the \"Visual style\" panel.");
 
         return autoDisable(panel);
     }
@@ -242,7 +249,13 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         var subgraphButton = new TooltipButton("Subgraph", "Create a subgraph to show only the selected package and nodes",
                 l -> layout.createSubnetworkFromVisible());
 
-        panel.add(groupBox(new JLabel("Prefix:"), input, subgraphButton));
+        panel.add(groupBox(new JLabel("Package:"), input, subgraphButton));
+
+        addExplanation(panel, "Unique dependencies option filters out nodes that are not connected to a pole, " +
+                "or have 2+ closest connections. " +
+                "Select a package to show all classes in that package only. " +
+                "To create a copy of the current visible graph, use the Subgraph button. " +
+                "All subgraphs are accessible from the \"Network\" tab.");
 
         return autoDisable(panel);
     }
@@ -309,6 +322,11 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         panel.add(group(runPolarLayout));
         update.run();
 
+        addExplanation(panel, "If there are no poles selected, the layout is linear, aligning all edges left to right. " +
+                "If poles are present, the edges would point towards the pole that they're closest to. " +
+                "Pin radius specifies how far poles are placed in a circle. " +
+                "Number of rings specifies the number of hierarchy levels around each pole.");
+
         return autoDisable(panel);
     }
 
@@ -346,9 +364,9 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
 
         //panel.add(group(new JButton("Choose colors...")));
 
-        addExplanation(panel, "The style section allows you to change the size and color of the nodes. Coloring " +
-                "by package will use the Java package information to group items in similar packages together. Coloring " +
-                "by pole will set the color to the closest pole, if there are poles selected.");
+        addExplanation(panel, "The style section allows to change the size and color of the nodes. " +
+                "Coloring by package will use the Java package information to group items in the same packages together. " +
+                "Coloring by pole will set the color to the closest pole, if there are poles selected.");
 
         return autoDisable(panel);
     }
