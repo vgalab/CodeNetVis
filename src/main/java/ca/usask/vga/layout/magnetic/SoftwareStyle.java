@@ -697,6 +697,14 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
                     s.clearNodeColorMappings();
             }
         }
+        @Override
+        public String toString() {
+            return name().charAt(0) + name().toLowerCase()
+                    .replace("_", " ").substring(1);
+        }
+        public static Coloring[] getAllowedList() {
+            return new Coloring[] {NONE, ROOT_PACKAGE, PACKAGE, CLOSEST_POLE};
+        }
     }
 
     /**
@@ -815,9 +823,15 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
             int categories = applyDiscreteColoring(column, type);
 
             if (categories > MAX_DISCRETE_COLORS) {
-                taskMonitor.setStatusMessage("The selected option to color by " + column +
-                        " has more than " + MAX_DISCRETE_COLORS + " categories (" + categories + "), " +
-                        "so the not all colors might be distinct.");
+                // Message must show in another thread as not to interrupt the Task execution
+                Runnable r = () ->
+                        JOptionPane.showMessageDialog(null,
+                                String.format("The selected option to color by %s has %d categories, more than %d.\n " +
+                                        "There are not enough colors to keep all different categories distinct.",
+                                        column.toLowerCase(), categories, MAX_DISCRETE_COLORS),
+                                "Not enough distinct colors to color graph",
+                            JOptionPane.WARNING_MESSAGE);
+                new Thread(r).start();
             }
         }
     }
