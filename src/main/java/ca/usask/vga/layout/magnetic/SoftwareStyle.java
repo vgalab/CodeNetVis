@@ -23,6 +23,7 @@ import org.cytoscape.view.vizmap.mappings.DiscreteMapping;
 import org.cytoscape.view.vizmap.mappings.PassthroughMapping;
 import org.cytoscape.work.*;
 
+import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.Point2D;
 import java.util.*;
@@ -718,6 +719,10 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
         var view = am.getCurrentNetworkView();
         var net = am.getCurrentNetwork();
         if (view == null || net == null) return;
+
+        if (net.getDefaultNodeTable().getColumn(column) == null) {
+            throw new RuntimeException("The graph does not contain \"" + column + "\" property to apply coloring with.");
+        }
 
         var func = (DiscreteMapping<T, Paint>)
                 vmff_discrete.createVisualMappingFunction(column, type, NODE_FILL_COLOR);
