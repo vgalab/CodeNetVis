@@ -471,7 +471,7 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         if (component instanceof JPanel)
             for (var c : ((JPanel) component).getComponents())
                 autoDisable(c);
-        onNewView.add(e -> component.setEnabled(style.am.getCurrentNetworkView() == null ||
+        onNewView.add(e -> component.setEnabled(style.am.getCurrentNetworkView() != null &&
                 !layout.isImmutable(style.am.getCurrentNetwork())));
         return component;
     }
