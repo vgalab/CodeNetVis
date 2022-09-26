@@ -385,7 +385,7 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
 
 
         var edgePartialColoring = new TooltipButton("Partial edge coloring view",
-                "TODO",
+                "Subdivides edges into two pieces, to color only the piece oriented towards the pole",
                 l -> layout.createPartialColoring());
         panel.add(group(edgePartialColoring));
 
@@ -471,8 +471,7 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         if (component instanceof JPanel)
             for (var c : ((JPanel) component).getComponents())
                 autoDisable(c);
-        onNewView.add(e -> component.setEnabled(style.am.getCurrentNetworkView() != null &&
-                !layout.isImmutable(style.am.getCurrentNetwork())));
+        onNewView.add(e -> component.setEnabled(style.am.getCurrentNetworkView() != null));
         return component;
     }
 

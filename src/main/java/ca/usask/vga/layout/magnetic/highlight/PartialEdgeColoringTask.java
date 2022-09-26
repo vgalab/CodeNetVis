@@ -21,7 +21,7 @@ import static org.cytoscape.view.presentation.property.BasicVisualLexicon.*;
  */
 public class PartialEdgeColoringTask extends AbstractTask {
 
-    public static final String NETWORK_NAME = "Partial coloring view - IMMUTABLE";
+    public static final String NETWORK_NAME = "Partial coloring view";
 
     private final NetworkCyAccess cy;
 
@@ -118,8 +118,10 @@ public class PartialEdgeColoringTask extends AbstractTask {
             view.getEdgeView(midpoint.edgeTarget).setLockedValue(EDGE_TARGET_ARROW_SHAPE, ArrowShapeVisualProperty.NONE);
         }
 
-        network.getDefaultNetworkTable().getRow(network.getSUID()).set(CyNetwork.NAME, NETWORK_NAME);
-        network.getDefaultNetworkTable().getRow(network.getSUID()).set(CyRootNetwork.SHARED_NAME, NETWORK_NAME);
+        String newName = cy.cnn.getSuggestedNetworkTitle(NETWORK_NAME);
+
+        network.getDefaultNetworkTable().getRow(network.getSUID()).set(CyNetwork.NAME, newName);
+        network.getDefaultNetworkTable().getRow(network.getSUID()).set(CyRootNetwork.SHARED_NAME, newName);
 
         cy.am.setCurrentNetworkView(null);
 

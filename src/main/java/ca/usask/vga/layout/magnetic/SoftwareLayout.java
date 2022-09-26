@@ -9,6 +9,7 @@ import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.work.*;
 
+import javax.swing.*;
 import java.util.HashSet;
 
 /**
@@ -57,16 +58,21 @@ public class SoftwareLayout {
      */
     public void createPartialColoring() {
         tm.execute(new TaskIterator(new PartialEdgeColoringTask(cy)));
+        JOptionPane.showMessageDialog(null, "Please note that partial edge coloring has extra nodes " +
+                "which can interfere with layout and filtering.\nIt is recommended to treat this subgraph as immutable.",
+                "Partial edge coloring view created", JOptionPane.WARNING_MESSAGE);
     }
 
     /**
      * Checks whether a network is considered IMMUTABLE due to it being
      * a partial coloring of another network.
+     * Note: This function is no longer used due to partial coloring view changed to mutable.
      */
+    @Deprecated
     public boolean isImmutable(CyNetwork net) {
         return net == null || net.getDefaultNetworkTable().getRow(net.getSUID())
                 .get("name", String.class)
-                .equals(PartialEdgeColoringTask.NETWORK_NAME);
+                .startsWith(PartialEdgeColoringTask.NETWORK_NAME);
     }
 
     /**
