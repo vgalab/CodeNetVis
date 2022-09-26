@@ -781,7 +781,7 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
             // Set class as the labels
             setLabelsPassthrough("Class");
             setTooltipsPassthrough("Package");
-            applyDiscreteColoring("Package");
+            applyDiscreteColoring("Root package");
         }
     }
 
