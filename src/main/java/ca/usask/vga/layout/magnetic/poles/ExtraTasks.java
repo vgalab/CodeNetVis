@@ -280,7 +280,7 @@ public class ExtraTasks {
         }
 
         public static Color getDisconnectedColor() {
-            return new Color( 0.9f, 0.9f, 0.9f);
+            return new Color( 0.8f, 0.8f, 0.8f);
         }
 
         @Override

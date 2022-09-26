@@ -111,7 +111,7 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
      * Update the pole color mapping in a separate thread.
      */
     private void updatePoleColors() {
-        if (usePoleColors && pm.getPoleCount(am.getCurrentNetwork()) > 0) {
+        if (usePoleColors) {
             var coloring = new ExtraTasks.LegacyPoleColoring(am, pm, vmm, vmff_discrete);
             tm.execute(new TaskIterator(coloring));
         }
@@ -683,6 +683,11 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
                     return;
                 case CLOSEST_POLE:
                     s.setShowPoleColors(true);
+                    if (!s.polesPresent())
+                        JOptionPane.showMessageDialog(null,
+                            "Pole coloring was selected but no poles have been added yet.\n" +
+                                    "Please use \"Pole selection\" panel or toolbar buttons to add at least one pole.",
+                            "Need at least one pole", JOptionPane.WARNING_MESSAGE);
                     return;
                 default:
                     s.clearNodeColorMappings();
