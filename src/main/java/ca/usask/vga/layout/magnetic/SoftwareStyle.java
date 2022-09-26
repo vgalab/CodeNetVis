@@ -51,8 +51,6 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
     private final UnHideAllTaskFactory utf;
     private final EquationCompiler eq;
 
-    public boolean keepPolesLarger = true;
-
     protected final PinRadiusAnnotation pinRadiusAnnotation;
     protected final RingsAnnotation ringsAnnotation;
 
@@ -533,17 +531,18 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
      * Returns the list of allowed dropdown options for the size mapping.
      */
     public enum SizeEquation {
-        FIXED, INDEGREE, OUTDEGREE, DEGREE;
+        FIXED, BIGGER_POLES, INDEGREE, OUTDEGREE, DEGREE;
         @Override
         public String toString() {
-            return name().charAt(0) + name().toLowerCase().substring(1);
+            return name().charAt(0) + name().toLowerCase()
+                    .replace("_", " ").substring(1);
         }
         public String getColumnName() {
-            if (equals(FIXED)) return null;
+            if (equals(FIXED) || equals(BIGGER_POLES)) return null;
             return toString();
         }
         public static SizeEquation[] getAllowedList() {
-            return new SizeEquation[] {FIXED, INDEGREE, OUTDEGREE, DEGREE};
+            return new SizeEquation[] {FIXED, BIGGER_POLES, INDEGREE, OUTDEGREE, DEGREE};
         }
     }
 
@@ -561,10 +560,10 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
      */
     private void updateSizeMapping() {
         VisualStyle style = vmm.getVisualStyle(am.getCurrentNetworkView());
-        if (currentSizeEquation == SizeEquation.FIXED) {
+        if (currentSizeEquation == SizeEquation.FIXED || currentSizeEquation == SizeEquation.BIGGER_POLES) {
             style.removeVisualMappingFunction(NODE_SIZE);
             style.removeVisualMappingFunction(NODE_LABEL_FONT_SIZE);
-            if (keepPolesLarger) {
+            if (currentSizeEquation == SizeEquation.BIGGER_POLES) {
                 var t = new ExtraTasks.MakePoleNodesLarger(am, vmm, vmff_discrete, null);
                 t.keepIncreasing = false;
                 t.run(ExtraTasks.getBlankTaskMonitor());
@@ -610,7 +609,7 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
      * Initializes the node size column if it doesn't exist.
      */
     private void initColumn(SizeEquation s) {
-        if (s == SizeEquation.FIXED) return;
+        if (s == SizeEquation.FIXED || s == SizeEquation.BIGGER_POLES) return;
 
         var net = am.getCurrentNetwork();
         var table = net.getDefaultNodeTable();
