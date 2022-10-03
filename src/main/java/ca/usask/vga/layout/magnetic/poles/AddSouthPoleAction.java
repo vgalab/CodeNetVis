@@ -2,6 +2,7 @@ package ca.usask.vga.layout.magnetic.poles;
 
 import ca.usask.vga.layout.magnetic.ActionOnSelected;
 import org.cytoscape.application.CyApplicationManager;
+import org.cytoscape.model.CyEdge;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNode;
 import org.cytoscape.util.swing.IconManager;
@@ -52,6 +53,22 @@ public class AddSouthPoleAction extends ActionOnSelected {
         poleManager.addPole(network, selectedNodes);
         poleManager.setPoleDirection(network, selectedNodes, false);
         poleManager.updateTables(network);
+
+        // An extra check if the selected node does not have the required incoming edges
+        if (selectedNodes.size() == 1) {
+            CyNode node = selectedNodes.iterator().next();
+            boolean hasEdge = network.getAdjacentEdgeIterable(node, CyEdge.Type.INCOMING).iterator().hasNext();
+            if (!hasEdge) {
+                int res = JOptionPane.showConfirmDialog(null,
+                        "You are trying to create an inward (S) pole, however, the selected node has no incoming edges. " +
+                                "\nWould you like to make this node an outgoing (N) pole instead?",
+                        "Inward pole has no incoming edges", JOptionPane.OK_CANCEL_OPTION);
+                if (res == 0) {
+                    poleManager.setPoleDirection(network, selectedNodes, true);
+                    poleManager.updateTables(network);
+                }
+            }
+        }
 
         poleManager.completeEdit();
     }
