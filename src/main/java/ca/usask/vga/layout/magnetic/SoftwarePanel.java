@@ -321,20 +321,10 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
      * The panel is automatically disabled when no network is loaded.
      */
     protected JPanel createFilterPanel() {
-        var panel = createTitledPanel("Filtering nodes by package");
+        var panel = createTitledPanel("Data filtering");
         panel.closeContent();
 
-        var b1 = new JRadioButton("All dependencies", true);
-        var b2 = new JRadioButton("Pole-specific dependencies", false);
-
-        var group = new ButtonGroup();
-        group.add(b1);
-        group.add(b2);
-
-        b2.addChangeListener(e -> style.setShowUnique(b2.isSelected()));
-        onSessionLoaded.add(e -> b1.setSelected(true));
-        panel.add(group(b1, b2));
-
+        // Package selection drop down
         var input = new JComboBox<>(new DefaultComboBoxModel<>(style.getPackageFilterOptions()));
 
         Consumer<Object> updateModel = (Object e) -> {
@@ -349,16 +339,34 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
 
         input.addActionListener(e -> style.setFilterPrefix(input.getSelectedItem() == null ? "" : input.getSelectedItem().toString()));
 
-        var subgraphButton = new TooltipButton("Subgraph", "Create a subgraph to show only the selected package and nodes",
+        panel.add(groupBox(new JLabel("Package:"), input));
+
+        panel.add(group(10, new JSeparator())); // set to 15 to show separator, 10 is a small gap
+
+        // Radio buttons for dependencies
+        var b1 = new JRadioButton("All dependencies", true);
+        var b2 = new JRadioButton("Pole-specific dependencies", false);
+
+        var group = new ButtonGroup();
+        group.add(b1);
+        group.add(b2);
+
+        b2.addChangeListener(e -> style.setShowUnique(b2.isSelected()));
+        onSessionLoaded.add(e -> b1.setSelected(true));
+        panel.add(group(b1, b2));
+
+        // Create subgraph copy button
+        var subgraphButton = new TooltipButton("Create a dataset copy using current layout",
+                "Lets you make changes to the copy without impacting the original",
                 l -> layout.createSubnetworkFromVisible());
 
-        panel.add(groupBox(new JLabel("Package:"), input, subgraphButton));
+        panel.add(group(subgraphButton));
 
-        addExplanation(panel, "Unique dependencies option filters out nodes that are not connected to a pole, " +
-                "or have 2+ closest connections. " +
-                "Select a package to show all classes in that package only. " +
-                "To create a copy of the current visible graph, use the Subgraph button. " +
-                "All subgraphs are accessible from the \"Network\" tab.");
+        addExplanation(panel, "Pole-specific dependencies hides a node if it is not connected to a pole or " +
+                "if its closest pole is not unique. " +
+                "Select a package to only show the nodes in that package. " +
+                "To create a dataset using the currently visible graph, use the Create button. " +
+                "All datasets are accessible from the \"Network\" tab.");
 
         return autoDisable(panel);
     }
