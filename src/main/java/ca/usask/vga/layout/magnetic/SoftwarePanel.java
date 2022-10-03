@@ -455,6 +455,7 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
      */
     protected JPanel createStylePanel() {
         var panel = createTitledPanel("Layout aesthetics and style");
+        panel.closeContent();
 
         // CONTENTS
         var comboBoxColor = new JComboBox<>(SoftwareStyle.Coloring.getAllowedList());
