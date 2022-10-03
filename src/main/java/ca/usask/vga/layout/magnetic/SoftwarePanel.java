@@ -222,7 +222,7 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         radiusEditor.addMouseListener(annotationOnMouse(style.getRadiusAnnotation()));
         fireChangeListeners(radiusEditor);
 
-        panel.add(label("Pin radius:", radiusEditor));
+        panel.add(label("Pin radius:", "Off", radiusEditor));
 
         onSessionLoaded.add(e -> {
             radiusEditor.setValue(Math.round(style.getSuggestedRadius()) / 100);
@@ -571,6 +571,19 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
 
     /**
      * Appends a label with the given text that is updated when the slider value changes.
+     * @param zeroText the text that is displayed when the slider is at 0.
+     */
+    private JPanel label(String text, String zeroText, JSlider component) {
+        var label = new JLabel(text);
+        component.addChangeListener(e -> updateLabelValue(label, (component.getValue() == 0) ? zeroText : ""+component.getValue()));
+        updateLabelValue(label, (component.getValue() == 0) ? zeroText : ""+component.getValue());
+        if (component.getPaintLabels())
+            return group(50, label, component);
+        return group(label, component);
+    }
+
+    /**
+     * Appends a label with the given text that is updated when the slider value changes.
      */
     private JPanel label(String text, JSlider component) {
         var label = new JLabel(text);
@@ -615,10 +628,19 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
      * Updates the text of the given label to the given value, in the format "property: value".
      */
     private void updateLabelValue(JLabel label, float value) {
+        if (value == Math.round(value))
+            updateLabelValue(label, ""+Math.round(value));
+        else
+            updateLabelValue(label, ""+value);
+    }
+
+    /**
+     * Updates the text of the given label to the given value, in the format "property: value".
+     */
+    private void updateLabelValue(JLabel label, String value) {
         var text = label.getText();
         text = text.split(":")[0];
         String valString = value + "";
-        if (value == Math.round(value)) valString = Math.round(value) + "";
         label.setText(text + ": " + valString);
     }
 

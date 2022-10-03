@@ -18,6 +18,8 @@ import java.util.HashSet;
  */
 public class SoftwareLayout {
 
+    static final float DEFAULT_RING_CIRCLE_RADIUS = 500f;
+
     private final PoleMagneticLayout pml;
     private final TaskManager tm;
     private final CyApplicationManager am;
@@ -123,6 +125,7 @@ public class SoftwareLayout {
             c.useHierarchyForce = true;
             c.hierarchyType = HierarchyForce.Type.SINE_FUNCTION;
             c.ringRadius = pinRadius / (maxRings + 1);
+            if (pinRadius == 0) c.ringRadius = DEFAULT_RING_CIRCLE_RADIUS / (maxRings + 1);
             c.hierarchyForce = 2e-1;
         }
 

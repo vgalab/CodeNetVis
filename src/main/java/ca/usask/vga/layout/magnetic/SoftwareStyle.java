@@ -403,7 +403,10 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
         }
 
         protected float getRingRadius(int i) {
-            return (i+1) * (getPinRadius() / (maxRings + 1));
+            float pinRadius = getPinRadius();
+            if (pinRadius == 0)
+                pinRadius = SoftwareLayout.DEFAULT_RING_CIRCLE_RADIUS;
+            return (i+1) * (pinRadius / (maxRings + 1));
         }
 
         protected void init() {
