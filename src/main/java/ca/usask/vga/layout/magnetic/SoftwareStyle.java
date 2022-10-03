@@ -788,7 +788,11 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
             // Set class as the labels
             setLabelsPassthrough("Class");
             setTooltipsPassthrough("Package");
-            applyDiscreteColoring("Root package");
+            // Pick best coloring based on the size of the project
+            if (am.getCurrentNetwork().getNodeCount() >= 100)
+                applyDiscreteColoring("Root package");
+            else
+                applyDiscreteColoring("Package");
         }
     }
 
