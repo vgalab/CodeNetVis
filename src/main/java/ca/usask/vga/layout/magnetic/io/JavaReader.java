@@ -266,6 +266,9 @@ public class JavaReader extends AbstractInputStreamTaskFactory {
                 if (result.contains("/main/java"))
                     inMainJavaFolder = true;
                 setPathToFiles(result);
+            } else {
+                // .jar file detected
+                setPathToFiles(inputName);
             }
 
             afterComplete.accept(this);

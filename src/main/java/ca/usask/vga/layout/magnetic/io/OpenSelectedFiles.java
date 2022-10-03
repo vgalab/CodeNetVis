@@ -8,6 +8,7 @@ import org.cytoscape.util.swing.IconManager;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Properties;
 
@@ -47,6 +48,9 @@ public class OpenSelectedFiles extends ActionOnSelected  {
     public void runTask(CyNetwork network, Collection<CyNode> selectedNodes) {
 
         if (!isReady(network, selectedNodes)) {
+            JOptionPane.showMessageDialog(null,
+                    "This action is not supported for this graph.\n" +
+                    "It is specific to software layout graphs.", "Unsupported action", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
@@ -58,11 +62,18 @@ public class OpenSelectedFiles extends ActionOnSelected  {
             try {
                 pathToFiles = pathToFiles.replace("file:/", "");
                 // Select up to the last slash
-                pathToFiles = pathToFiles.substring(0, pathToFiles.lastIndexOf('/'));
+                pathToFiles = pathToFiles.substring(0, pathToFiles.lastIndexOf('/')+1)
+                        .replace("%20", " ");
                 System.out.println("Opening folder: " + pathToFiles);
                 Desktop.getDesktop().open(new java.io.File(pathToFiles));
-            } catch (Exception e) {
+                if (!Desktop.isDesktopSupported() || !Desktop.getDesktop().isSupported(Desktop.Action.OPEN))
+                    throw new IOException("Unsupported action");
+            } catch (IOException e) {
                 e.printStackTrace();
+                var text = new JTextArea("Please use the link below to go to the folder:\n" + pathToFiles);
+                text.setEditable(false);
+                JOptionPane.showMessageDialog(null, text,
+                        "Unsupported action on this operating system", JOptionPane.INFORMATION_MESSAGE);
             }
             return;
         }
@@ -82,18 +93,34 @@ public class OpenSelectedFiles extends ActionOnSelected  {
             } catch (Exception e) {
                 e.printStackTrace();
             }*/
+            boolean successfullyOpened = false;
+
             if (fileName.startsWith("http")) {
                 try {
                     Desktop.getDesktop().browse(java.net.URI.create(fileName));
-                } catch (Exception e) {
+                    successfullyOpened = true;
+                } catch (IOException e) {
                     e.printStackTrace();
+                }
+                if (!Desktop.isDesktopSupported() || !Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+                    successfullyOpened = false;
                 }
             } else {
                 try {
                     Desktop.getDesktop().open(new java.io.File(fileName));
-                } catch (Exception e) {
+                    successfullyOpened = true;
+                } catch (IOException e) {
                     e.printStackTrace();
                 }
+                if (!Desktop.isDesktopSupported() || !Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {
+                    successfullyOpened = false;
+                }
+            }
+            if (!successfullyOpened) {
+                var text = new JTextArea("Please use the link below to go to the file:\n" + fileName);
+                text.setEditable(false);
+                JOptionPane.showMessageDialog(null, text,
+                        "Unsupported action on this operating system", JOptionPane.INFORMATION_MESSAGE);
             }
         }
     }
