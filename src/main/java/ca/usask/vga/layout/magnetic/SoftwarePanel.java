@@ -66,9 +66,6 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         // IMPORT panel
         innerPanel.add(createImportPanel());
 
-        // STYLE panel
-        innerPanel.add(createStylePanel());
-
         // SEARCH panel
         innerPanel.add(createSearchPanel());
 
@@ -77,6 +74,9 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
 
         // LAYOUT panel
         innerPanel.add(createLayoutPanel());
+
+        // STYLE panel
+        innerPanel.add(createStylePanel());
 
         // EXPERIMENTAL panel
         innerPanel.add(createExperimentalPanel());
@@ -163,7 +163,7 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         addExplanation(panel, "To load a graph, paste the GitHub link to a Java project, or open it locally " +
                 "from a JAR file or a Java SRC folder. " +
                 "GitHub files are automatically cached, but it is possible to clear the cache to free storage. " +
-                "To open a generic directed graph (not Java), use the built-in Cytoscape functionality. ");
+                "To open a generic directed graph, use the built-in Cytoscape functionality. ");
 
         return panel;
     }
@@ -222,7 +222,7 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         panel.closeContent();
 
         var b1 = new JRadioButton("All dependencies", true);
-        var b2 = new JRadioButton("Unique dependencies", false);
+        var b2 = new JRadioButton("Pole-specific dependencies", false);
 
         var group = new ButtonGroup();
         group.add(b1);
@@ -335,7 +335,7 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
      * The panel is automatically disabled when no network is loaded.
      */
     protected JPanel createStylePanel() {
-        var panel = createTitledPanel("Visual style of the graph");
+        var panel = createTitledPanel("Layout aesthetics and style");
 
         // CONTENTS
         var comboBoxColor = new JComboBox<>(SoftwareStyle.Coloring.getAllowedList());
