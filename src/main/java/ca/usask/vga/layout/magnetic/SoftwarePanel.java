@@ -66,14 +66,16 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         // IMPORT panel
         innerPanel.add(createImportPanel());
 
-        // SEARCH panel
-        innerPanel.add(createSearchPanel());
+        // CREATE LAYOUT panel
+        innerPanel.add(createMakeLayoutPanel());
+
+        // OLD SEARCH panel
+        // innerPanel.add(createSearchPanel());
+        // OLD LAYOUT panel
+        // innerPanel.add(createLegacyLayoutPanel());
 
         // FILTERING panel
         innerPanel.add(createFilterPanel());
-
-        // LAYOUT panel
-        innerPanel.add(createLayoutPanel());
 
         // STYLE panel
         innerPanel.add(createStylePanel());
@@ -180,9 +182,110 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
     }
 
     /**
-     * Describes the "Pole selection" panel components and functionality.
+     * Describes the "Create layout" panel components and functionality.
+     * This panel is merged from "Search" and "Layout" panels
      * The panel is automatically disabled when no network is loaded.
      */
+    protected JPanel createMakeLayoutPanel() {
+        var panel = createTitledPanel("Create layout");
+        panel.closeContent();
+
+        // the SEARCH part of the panel
+
+        // Set poles button
+        var poleCountText = "Total number of poles: ";
+
+        var poleCount = new JLabel(poleCountText + style.pm.getPoleCount(style.am.getCurrentNetwork()));
+        style.pm.addChangeListener(() -> poleCount.setText(poleCountText+style.pm.getPoleCount(style.am.getCurrentNetwork())));
+
+        panel.add(group(poleCount, new TooltipButton("Set poles by top degree...",
+                "Choose the number of poles to be set by top indegree or outdegree",
+                e -> dtm.execute(new TaskIterator(new ExtraTasks.MakeTopDegreePoles(style.am, style.pm))))));
+
+        // Search field
+        var searchField = new JTextField();
+
+        searchField.addActionListener(e -> searchNetworkFor(searchField.getText().strip()));
+        onSessionLoaded.add(e -> searchField.setText(""));
+
+        panel.add(label("Search nodes by name:", searchField));
+
+
+        // the LAYOUT part of the panel
+        panel.add(group(10, new JSeparator())); // set to 15 to show separator, 10 is a small gap
+
+        var initialRadius = Math.round(style.getSuggestedRadius())/100;
+        var radiusEditor = createCustomSlider(0, 100, initialRadius, 25, 5, 5);
+
+        radiusEditor.addChangeListener(e -> layout.setPinRadius(radiusEditor.getValue()*100));
+        radiusEditor.addChangeListener(e -> style.getRadiusAnnotation().setRadius(radiusEditor.getValue()*100));
+        radiusEditor.addMouseListener(annotationOnMouse(style.getRadiusAnnotation()));
+        fireChangeListeners(radiusEditor);
+
+        panel.add(label("Pin radius:", radiusEditor));
+
+        onSessionLoaded.add(e -> {
+            radiusEditor.setValue(Math.round(style.getSuggestedRadius()) / 100);
+            fireChangeListeners(radiusEditor);
+        });
+
+        var ringsEditor = createCustomSpinner(0, 100, 4, 1);
+
+        ringsEditor.addChangeListener(e -> layout.setMaxRings((Integer) ringsEditor.getValue()));
+        ringsEditor.addChangeListener(e -> style.getRingsAnnotation().setMaxRings((Integer) ringsEditor.getValue()));
+        layout.setMaxRings((Integer) ringsEditor.getValue());
+
+        ((JSpinner.NumberEditor)ringsEditor.getEditor()).getTextField()
+                .addMouseListener(annotationOnMouse(style.getRingsAnnotation()));
+
+        panel.add(label("Number of rings:", ringsEditor));
+
+        var runPolarLayout = new TooltipButton("Run pole layout",
+                "At least 1 pole is required to run the pole layout",
+                e -> {
+                    int count = style.pm.getPoleCount(style.am.getCurrentNetwork());
+                    Runnable onComplete = () -> {
+                        // On layout complete
+                        style.getRadiusAnnotation().reposition();
+                        style.getRingsAnnotation().reposition();
+                    };
+                    if (count == 0) {
+                        layout.runLinearLayout(onComplete);
+                    } else {
+                        layout.runLayout(onComplete);
+                    }
+                }
+        );
+
+        Runnable update = () -> {
+            var count = style.pm.getPoleCount(style.am.getCurrentNetwork());
+            runPolarLayout.setText(count > 0
+                    ? "Run pole layout (" + count + (count > 1 ? " poles"  : " pole") +  " selected)"
+                    : "Run linear layout (No poles selected)");
+        };
+
+        style.pm.addChangeListener(update);
+        panel.add(group(runPolarLayout));
+        update.run();
+
+        addExplanation(panel, 165, "You can select a set of nodes and pin them by degree. " +
+                "To pin specific nodes, left click on a node and use the red/blue pole buttons on the toolbar. " +
+                "You can search for a node and see the \"Node Table\" tab for search results. " +
+                "To view nodes color-coded by the nearest pole, change coloring in the \"Layout aesthetics\" panel. " +
+                "\n\n" +
+                "If there are no poles selected, the layout is linear, aligning all edges left to right. " +
+                "If poles are present, the edges would point towards the pole that they're closest to. " +
+                "Pin radius specifies how far poles are placed in a circle. " +
+                "Number of rings specifies the number of hierarchy levels around each pole.");
+
+        return autoDisable(panel);
+    }
+
+    /**
+     * Describes the old "Pole selection" panel components and functionality.
+     * @deprecated The panel is automatically disabled when no network is loaded.
+     */
+    @Deprecated
     protected JPanel createSearchPanel() {
         var panel = createTitledPanel("Pole selection and node search");
         panel.closeContent();
@@ -261,10 +364,11 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
     }
 
     /**
-     * Describes the "Layout" panel components and functionality.
-     * The panel is automatically disabled when no network is loaded.
+     * Describes the old "Layout" panel components and functionality.
+     * @deprecated This panel was merged into "Create Layout" panel and is no longer used on its own.
      */
-    protected JPanel createLayoutPanel() {
+    @Deprecated
+    protected JPanel createLegacyLayoutPanel() {
         var panel = createTitledPanel("Run layout for the dependency graph ");
         panel.closeContent();
 
@@ -657,6 +761,10 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
     }
 
     private JTextArea addExplanation(JPanel panel, String text) {
+        return addExplanation(panel, 75, text);
+    }
+
+    private JTextArea addExplanation(JPanel panel, int height, String text) {
         panel.add(group(10, new JSeparator())); // set to 15 to show separator
 
         var textExplanation = new JTextArea(text);
@@ -665,7 +773,7 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         textExplanation.setBackground(panel.getBackground());
         textExplanation.setFont(new Label().getFont());
         textExplanation.setEditable(false);
-        panel.add(group(75, textExplanation));
+        panel.add(group(height, textExplanation));
         return textExplanation;
     }
 
