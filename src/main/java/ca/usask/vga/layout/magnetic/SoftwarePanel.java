@@ -453,10 +453,15 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         var comboBoxColor = new JComboBox<>(SoftwareStyle.Coloring.getAllowedList());
         comboBoxColor.addItemListener(e -> style.setCurrentColoring((SoftwareStyle.Coloring) e.getItem()));
         panel.add(group(new JLabel("Color nodes by"), comboBoxColor));
+        style.pm.addInitializationListener(() -> comboBoxColor.setSelectedItem(SoftwareStyle.Coloring.CLOSEST_POLE));
 
         var comboBox = new JComboBox<>(SoftwareStyle.SizeEquation.getAllowedList());
         comboBox.addItemListener(e -> style.setSizeEquation((SoftwareStyle.SizeEquation) e.getItem()));
         panel.add(group(new JLabel("Node size based on"), comboBox));
+        style.pm.addInitializationListener(() -> {
+            if (comboBox.getSelectedIndex() == 0)
+                comboBox.setSelectedItem(SoftwareStyle.SizeEquation.BIGGER_POLES);
+        });
 
         var initialSize = Math.round(style.getInitialNodeSizeValue());
         var sizeEditor = createCustomSlider(0, 100, initialSize, 25, 5, 1);

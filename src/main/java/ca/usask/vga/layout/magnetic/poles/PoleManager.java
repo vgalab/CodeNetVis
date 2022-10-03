@@ -40,7 +40,8 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
 
     protected PoleManagerEdit lastEdit;
 
-    private final List<Runnable> changeListeners;
+    private final List<Runnable> changeListeners; // fired when the pole list is changed
+    private final List<Runnable> initializationListeners; // fired when the first pole is added
 
     /**
      * Creates a new PoleManager service for all networks, with undo support.
@@ -51,6 +52,7 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
         poleIsOutwards = new HashSet<>();
         cachedPoleDistances = new HashMap<>();
         changeListeners = new ArrayList<>();
+        initializationListeners = new ArrayList<>();
         for (CyNetwork net : networkManager.getNetworkSet()) {
             readPoleListFromTable(net);
         }
@@ -169,7 +171,11 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
      */
     public void addPole(CyNetwork network, CyNode node) {
         if (!getPoleList(network).contains(node)) {
+            boolean isFirstPole = getPoleCount(network) == 0;
             getPoleList(network).add(node);
+
+            // If this was the first pole added, fire the event
+            if (isFirstPole) for (var l : initializationListeners) l.run();
         }
     }
 
@@ -683,6 +689,21 @@ public class PoleManager implements NetworkAddedListener, SetCurrentNetworkListe
      */
     public void removeChangeListener(Runnable r) {
         changeListeners.remove(r);
+    }
+
+    /**
+     * Add an initialization listener to the pole manager.
+     * The listener will be notified when the first pole is added.
+     */
+    public void addInitializationListener(Runnable r) {
+        initializationListeners.add(r);
+    }
+
+    /**
+     * Remove an initialization listener from the pole manager.
+     */
+    public void removeInitializationListener(Runnable r) {
+        initializationListeners.remove(r);
     }
 
     /**
