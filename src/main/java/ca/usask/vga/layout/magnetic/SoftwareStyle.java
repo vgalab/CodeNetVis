@@ -224,6 +224,13 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
         if (this.showUnique == showUnique)
             return;
         this.showUnique = showUnique;
+        if (showUnique && !polesPresent()) {
+            JOptionPane.showMessageDialog(null,
+                    "Pole-specific dependencies was selected but no poles have been added yet.\n" +
+                            "Please use the \"Create layout\" panel or toolbar buttons to add at least one pole.",
+                    "Need at least one pole", JOptionPane.WARNING_MESSAGE);
+            return; // do not make any changes in this situation
+        }
         reapplyFilters();
     }
 
@@ -690,7 +697,7 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
                     if (!s.polesPresent())
                         JOptionPane.showMessageDialog(null,
                             "Pole coloring was selected but no poles have been added yet.\n" +
-                                    "Please use \"Pole selection\" panel or toolbar buttons to add at least one pole.",
+                                    "Please use the \"Create layout\" panel or toolbar buttons to add at least one pole.",
                             "Need at least one pole", JOptionPane.WARNING_MESSAGE);
                     return;
                 default:
