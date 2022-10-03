@@ -354,6 +354,13 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         b2.addChangeListener(e -> style.setShowUnique(b2.isSelected()));
         onSessionLoaded.add(e -> b1.setSelected(true));
         panel.add(group(b1, b2));
+        onNewView.add(e -> { // reapply filters on changed view
+            if (e.getNetworkView() != null) {
+                style.setFilterPrefix("");
+                b1.setSelected(true);
+                style.reapplyFilters();
+            }
+        });
 
         // Create subgraph copy button
         var subgraphButton = new TooltipButton("Create a dataset copy using current layout",
