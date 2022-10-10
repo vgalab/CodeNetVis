@@ -603,14 +603,13 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
     }
 
     /**
-     * Automatically disables the given component there is no network loaded,
-     * and when an immutable partial coloring network is loaded.
+     * Automatically disables the given component there is no network loaded.
      */
     private <T extends Component> T autoDisable(T component) {
         if (component instanceof JPanel)
             for (var c : ((JPanel) component).getComponents())
                 autoDisable(c);
-        onNewView.add(e -> component.setEnabled(style.am.getCurrentNetworkView() != null));
+        onNewView.add(e -> component.setEnabled(e.getNetworkView() != null));
         return component;
     }
 

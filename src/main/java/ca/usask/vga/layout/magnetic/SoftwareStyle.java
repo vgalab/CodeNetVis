@@ -249,8 +249,9 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
      * Hide and unhide nodes according to the current filter settings.
      */
     public void reapplyFilters() {
-
         var net = am.getCurrentNetwork();
+        if (net == null) return;
+
         var view = am.getCurrentNetworkView();
         var table = net.getDefaultNodeTable();
 
@@ -261,6 +262,8 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
             clearNodeVisible(n);
             String name = table.getRow(n.getSUID()).get("name", String.class);
             if (showUnique && (pm.isClosestToMultiple(net, n) || pm.isDisconnected(net, n))) {
+                setNodeVisible(n, false);
+            } else if (name == null) {
                 setNodeVisible(n, false);
             } else if (!filterPrefix.isEmpty() && (!name.startsWith(filterPrefix)) || name.length() < filterPrefix.length()) {
                 setNodeVisible(n, false);
