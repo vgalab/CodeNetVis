@@ -1,9 +1,20 @@
 
-# Cytoscape Magnetic Layout
+# CodeNetVis
 
 Contributors: Mykyta Shvets, Ehsan Moradi, Debajyoti Mondal
 
 An app for Cytoscape 3.9.1+ that introduces a magnetic force to the default prefuse algorithm.
+
+
+### Introductory Video
+
+[![Introduction to CodeNetVis](youtube-video.png )](https://youtu.be/aC_zvUjOr8A?t=0s "Introduction to CodeNetVis")
+
+
+### Quick Preview
+
+<img src="CodeNetVis.gif" width="100%"> 
+
 
 ### Installation:
 
@@ -40,6 +51,4 @@ This code uses the following libraries:
 
 They are built into the app, so no need to install them separately.
 
-### App Preview:
 
-![Preview image](preview-image.png)
