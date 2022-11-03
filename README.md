@@ -17,7 +17,7 @@ visualization of the dependencies around the poles.
 
 ### Introductory Video
 
-<iframe width="800" height="450" src="https://www.youtube.com/embed/aC_zvUjOr8A?rel=0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+[![Introduction to CodeNetVis](youtube-video.png)](https://youtu.be/aC_zvUjOr8A?t=0s "Introduction to CodeNetVis")
 
 ### Quick Preview
 
