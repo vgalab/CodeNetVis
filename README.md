@@ -3,17 +3,25 @@
 
 Contributors: Mykyta Shvets, Ehsan Moradi, Debajyoti Mondal
 
-An app for Cytoscape 3.9.1+ that introduces a magnetic force to the default prefuse algorithm.
+CodeNetVis is an app for Cytoscape 3.9.1+ that allows you to
+visualize and explore the dependency graph of a software
+system.
+
+The app can create a visualization treating
+selected packages as magnetic poles. The dependencies are
+visualized such that the directed paths are aligned along
+the magnetic fields. This creates an easy-to-explore
+visualization of the dependencies around the poles.
+
 
 
 ### Introductory Video
 
-[![Introduction to CodeNetVis](youtube-video.png )](https://youtu.be/aC_zvUjOr8A?t=0s "Introduction to CodeNetVis")
-
+<iframe width="800" height="450" src="https://www.youtube.com/embed/aC_zvUjOr8A?rel=0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 ### Quick Preview
 
-<img src="CodeNetVis.gif" width="100%"> 
+<img src="CodeNetVis.gif" width="800" alt="Preview gif of CodeNetVis"> 
 
 
 ### Installation:
@@ -39,7 +47,7 @@ should appear to the left of the editor.
 - https://github.com/MinecraftForge/MinecraftForge
 - https://github.com/tensorflow/java
 
-### Libraries
+### Used Libraries
 
 This code uses the following libraries:
 
