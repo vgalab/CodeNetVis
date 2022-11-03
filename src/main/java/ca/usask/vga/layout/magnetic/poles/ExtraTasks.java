@@ -33,7 +33,7 @@ import static org.cytoscape.work.ServiceProperties.MENU_GRAVITY;
  */
 public class ExtraTasks {
 
-    final static String MENU_APP_ROOT = "Apps.Magnetic Layout";
+    final static String MENU_APP_ROOT = "Apps.CodeNetVis";
 
     // UTILITY METHODS
 

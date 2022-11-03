@@ -22,11 +22,11 @@
 
     <modelVersion>4.0.0</modelVersion>
     <groupId>ca.usask.vga.cytoscape</groupId>
-    <artifactId>magnetic-layout</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <artifactId>codenetvis</artifactId>
+    <version>1.0</version>
 
 
-    <name>USask VGA Lab Magnetic Layout (${project.artifactId})</name>
+    <name>CodeNetVis</name>
 
     <packaging>bundle</packaging>
 
@@ -162,14 +162,14 @@
         <dependency>
             <groupId>org.apache.bcel</groupId>
             <artifactId>bcel</artifactId>
-            <version>6.5.0</version>
+            <version>6.6.0</version>
         </dependency>
 
         <!-- GitHub download dependencies -->
         <dependency>
             <groupId>org.kohsuke</groupId>
             <artifactId>github-api</artifactId>
-            <version>1.307</version>
+            <version>1.313</version>
         </dependency>
         <dependency>
             <groupId>org.zeroturnaround</groupId>
@@ -182,7 +182,7 @@
         <dependency>
             <groupId>com.github.javaparser</groupId>
             <artifactId>javaparser-symbol-solver-core</artifactId>
-            <version>3.24.4</version>
+            <version>3.24.7</version>
         </dependency>
 
         <!-- Cytoscape OSGI -->

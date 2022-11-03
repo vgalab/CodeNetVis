@@ -29,7 +29,7 @@ visualization of the dependencies around the poles.
 1. First install Cytoscape 3.9.1+ from [their official website](https://cytoscape.org/).
 
 2. Download the app .JAR file from 
-[this repository](https://github.com/BJNick/CytoscapeMagneticLayout/raw/master/target/magnetic-layout-1.0-SNAPSHOT.jar).
+[this repository](https://github.com/BJNick/CytoscapeMagneticLayout/raw/master/target/codenetvis-1.0.jar).
 
 3. Copy the .JAR file into the folder
 `%userprofile%\CytoscapeConfiguration\3\apps\installed`
