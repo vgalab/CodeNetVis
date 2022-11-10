@@ -13,7 +13,23 @@ visualized such that the directed paths are aligned along
 the magnetic fields. This creates an easy-to-explore
 visualization of the dependencies around the poles.
 
+[<p align="center">![CodeNetVis on App Store Preview](app-store-preview.png)<br>Open on Cytoscape app store</p>](https://apps.cytoscape.org/apps/codenetvis)
 
+**Highlighted Usages:**
+
+- Revealing classes that need to be
+  rigorously tested to make sure an error does not impact
+  the other parts of the program.
+
+- Finding classes that are not well related
+  to each other--in function or dependency, meaning it may be
+  better to reorganize them in separate packages.
+
+- Using the polar layout to identify major dependency
+  links between classes, to find groups of classes that could be
+  separated into modules of their own.
+
+---
 
 ### Introductory Video
 
@@ -25,6 +41,10 @@ visualization of the dependencies around the poles.
 
 
 ### Installation:
+
+Go to [CodeNetVis app page](https://apps.cytoscape.org/apps/codenetvis) on the Cytoscape App Store and click the "Install" button. 
+
+Alternatively, follow the instructions below:
 
 1. First install Cytoscape 3.9.1+ from [their official website](https://cytoscape.org/).
 
