@@ -12,8 +12,8 @@ selected packages as magnetic poles. The dependencies are
 visualized such that the directed paths are aligned along
 the magnetic fields. This creates an easy-to-explore
 visualization of the dependencies around the poles.
-
-[<p align="center">![CodeNetVis on App Store Preview](app-store-preview.png)<br>Open on Cytoscape app store</p>](https://apps.cytoscape.org/apps/codenetvis)
+<br><br>
+<p align="center"><a href="https://apps.cytoscape.org/apps/codenetvis"><img src="app-store-preview.png" alt="App Store Preview"><br>Open on Cytoscape app store</a></p>
 
 **Highlighted Usages:**
 
