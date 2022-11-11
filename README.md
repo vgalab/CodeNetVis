@@ -15,7 +15,7 @@ visualization of the dependencies around the poles.
 <br><br>
 <p align="center"><a href="https://apps.cytoscape.org/apps/codenetvis"><img src="app-store-preview.png" alt="App Store Preview"><br>Open on Cytoscape app store</a></p>
 
-### Highlighted Usages:
+### Highlighted Usages
 
 - Revealing classes that need to be
   rigorously tested to make sure an error does not impact
@@ -38,7 +38,7 @@ visualization of the dependencies around the poles.
 <img src="CodeNetVis.gif" width="800" alt="Preview gif of CodeNetVis"> 
 
 
-### Installation:
+### Installation
 
 Go to [CodeNetVis app page](https://apps.cytoscape.org/apps/codenetvis) on the Cytoscape App Store and click the "Install" button. 
 
@@ -56,7 +56,7 @@ Alternatively, follow the instructions below:
 should appear to the left of the editor.
 
 
-### Sample GitHub links to try out:
+### Sample GitHub links to try out
 
 - https://github.com/BJNick/CytoscapeMagneticLayout
 - https://github.com/TheAlgorithms/Java
@@ -64,6 +64,11 @@ should appear to the left of the editor.
 - https://github.com/ReactiveX/RxJava
 - https://github.com/MinecraftForge/MinecraftForge
 - https://github.com/tensorflow/java
+
+### Tutorial Video
+
+Coming soon!
+
 
 ### Used Libraries
 
