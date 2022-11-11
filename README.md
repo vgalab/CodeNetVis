@@ -37,6 +37,7 @@ visualization of the dependencies around the poles.
 <img src="CodeNetVis.gif" width="800" alt="Preview gif of CodeNetVis"> 
 
 
+---
 ### Installation
 
 Go to [CodeNetVis app page](https://apps.cytoscape.org/apps/codenetvis) on the Cytoscape App Store and click the "Install" button. 
@@ -55,7 +56,16 @@ Alternatively, follow the instructions below:
 should appear to the left of the editor.
 
 
-### Sample GitHub links to try out
+
+
+---
+### Tutorial Video
+
+
+[![A short tutorial for CodeNetVis](youtube-video-tutorial.png)](https://youtu.be/fVHLr1nyM6g?t=0s "A short tutorial for CodeNetVis")
+
+
+### Sample GitHub links to try out with CodeNetVis
 
 - https://github.com/BJNick/CytoscapeMagneticLayout
 - https://github.com/TheAlgorithms/Java
@@ -64,14 +74,11 @@ should appear to the left of the editor.
 - https://github.com/MinecraftForge/MinecraftForge
 - https://github.com/tensorflow/java
 
-### Tutorial Video
+---
+### Libraries Used
 
-Coming soon!
-
-
-### Used Libraries
-
-This code uses the following libraries:
+<!-- This code uses the following libraries:
+They are built into the app, so no need to install them separately.-->
 
 - https://github.com/cytoscape/cytoscape-api
 - https://github.com/gousiosg/java-callgraph/
@@ -79,6 +86,6 @@ This code uses the following libraries:
 - https://github.com/zeroturnaround/zt-zip/
 - https://github.com/javaparser/javaparser
 
-They are built into the app, so no need to install them separately.
+
 
 
