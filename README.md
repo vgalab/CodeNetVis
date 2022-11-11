@@ -17,15 +17,14 @@ visualization of the dependencies around the poles.
 
 ### Highlighted Usages
 
-- Revealing classes that need to be
-  rigorously tested to make sure an error does not impact
-  the other parts of the program.
-- Finding classes that are not well related
-  to each other--in function or dependency, meaning it may be
-  better to reorganize them in separate packages.
-- Using the polar layout to identify major dependency
-  links between classes, to find groups of classes that could be
-  separated into modules of their own.
+- Revealing class dependencies, which may be used to understand how 
+  bugs may propagate  across modules or for planning software testing 
+  
+- Finding opportunities for code restructuring, which may be used to find 
+  classes that are related to each other but belong to different packages and thus to reorganize the structure
+  
+- Using polar layout to select a set of classes and examine the dependencies 
+  around them, which may be used to plan how to extract them out to create independent modules
 
 ---
 
