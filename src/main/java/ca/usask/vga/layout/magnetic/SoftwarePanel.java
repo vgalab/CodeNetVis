@@ -1,5 +1,6 @@
 package ca.usask.vga.layout.magnetic;
 
+import ca.usask.vga.layout.magnetic.io.JGitMetadataInput;
 import ca.usask.vga.layout.magnetic.poles.ExtraTasks;
 import org.cytoscape.application.events.SetCurrentNetworkViewEvent;
 import org.cytoscape.application.events.SetCurrentNetworkViewListener;
@@ -16,6 +17,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.FileNotFoundException;
 import java.util.*;
 import java.util.List;
 import java.util.function.Consumer;
@@ -514,6 +516,12 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
                 "Subdivides edges into two pieces, to color only the piece oriented towards the pole",
                 l -> layout.createPartialColoring());
         panel.add(group(edgePartialColoring));
+
+
+        var loadGitMetadata = new TooltipButton("Load Git metadata",
+                "Loads the Git metadata from the current repository",
+                l -> dtm.execute(JGitMetadataInput.loadGitTaskIterator(style.am.getCurrentNetwork())));
+        panel.add(group(loadGitMetadata));
 
         return autoDisable(panel);
     }
