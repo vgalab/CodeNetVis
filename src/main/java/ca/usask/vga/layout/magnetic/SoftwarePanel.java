@@ -1,5 +1,6 @@
 package ca.usask.vga.layout.magnetic;
 
+import ca.usask.vga.layout.magnetic.io.JGitCloneRepository;
 import ca.usask.vga.layout.magnetic.io.JGitMetadataInput;
 import ca.usask.vga.layout.magnetic.poles.ExtraTasks;
 import org.cytoscape.application.events.SetCurrentNetworkViewEvent;
@@ -522,6 +523,11 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
                 "Loads the Git metadata from the current repository",
                 l -> dtm.execute(JGitMetadataInput.loadGitTaskIterator(style.am.getCurrentNetwork())));
         panel.add(group(loadGitMetadata));
+
+        // TODO: Remove. Testing only.
+        var cloneGit = new TooltipButton("Clone Git","",
+                l -> JGitCloneRepository.cloneTest(dtm));
+        panel.add(group(cloneGit));
 
         return autoDisable(panel);
     }

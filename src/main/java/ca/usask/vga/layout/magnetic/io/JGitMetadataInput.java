@@ -21,6 +21,10 @@ import java.util.Date;
 
 import static ca.usask.vga.layout.magnetic.io.JavaReader.PATH_TO_FILES_COLUMN;
 
+/**
+ * Class for loading Git metadata for the Cytoscape network from its repository.
+ * The network must be created from a local git repository with commit history available.
+ */
 public class JGitMetadataInput implements AutoCloseable {
 
     // New CyNode table column names
@@ -32,6 +36,14 @@ public class JGitMetadataInput implements AutoCloseable {
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     private boolean cancelled = false;
+
+    /**
+     * Checks if the metadata has already been loaded for this network.
+     */
+    public static boolean isMetadataLoaded(CyNetwork network) {
+        CyTable nodeTable = network.getDefaultNodeTable();
+        return nodeTable.getColumn(TOTAL_COMMITS) != null;
+    }
 
     /**
      * Create a new JGitMetadata object from a path, and prepare for working with data.
