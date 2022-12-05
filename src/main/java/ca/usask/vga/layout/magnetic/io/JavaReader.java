@@ -42,6 +42,7 @@ public class JavaReader extends AbstractInputStreamTaskFactory {
     public static final String ROOT_PACKAGE_FORMULA_2 = "=FIRST(SPLIT(SUBSTITUTE($Package,\".\",\"%\",4),\"%\"))";
 
     public static final String PATH_TO_FILES_COLUMN = "Path to files";
+    public static final String PATH_TO_REMOTE_REPO = "URL to remote";
 
     /**
      * Provides services necessary for the JavaReader.
@@ -265,10 +266,11 @@ public class JavaReader extends AbstractInputStreamTaskFactory {
                 String result = EdgeClassVisitor.getPackagesFolder(inputName);
                 if (result.contains("/main/java"))
                     inMainJavaFolder = true;
-                setPathToFiles(result);
+                if (!result.endsWith("/")) result += "/";
+                setPathToLocalFiles(result);
             } else {
                 // .jar file detected
-                setPathToFiles(inputName);
+                setPathToLocalFiles(inputName);
             }
 
             afterComplete.accept(this);
@@ -288,15 +290,29 @@ public class JavaReader extends AbstractInputStreamTaskFactory {
 
         /**
          * Sets the path to the files that were imported, which is used for
-         * opening the files in an editor. Could be a local src folder or a URL.
+         * opening the files in an editor. Should be a local src folder.
          */
-        public void setPathToFiles(String path) {
+        public void setPathToLocalFiles(String path) {
             for (var n : getNetworks()) {
                 var netTable = n.getDefaultNetworkTable();
                 if (netTable.getColumn(PATH_TO_FILES_COLUMN) == null) {
                     netTable.createColumn(PATH_TO_FILES_COLUMN, String.class, false);
                 }
                 netTable.getRow(n.getSUID()).set(PATH_TO_FILES_COLUMN, path);
+            }
+        }
+
+        /**
+         * Sets the URL to the remote repository, which is used for
+         * opening the files in a browser. Could be a local src folder or a URL.
+         */
+        public void setRemoteURL(String url) {
+            for (var n : getNetworks()) {
+                var netTable = n.getDefaultNetworkTable();
+                if (netTable.getColumn(PATH_TO_REMOTE_REPO) == null) {
+                    netTable.createColumn(PATH_TO_REMOTE_REPO, String.class, false);
+                }
+                netTable.getRow(n.getSUID()).set(PATH_TO_REMOTE_REPO, url);
             }
         }
 

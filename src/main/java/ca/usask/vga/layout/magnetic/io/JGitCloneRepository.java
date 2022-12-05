@@ -9,8 +9,9 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.EmptyProgressMonitor;
 
-import javax.swing.*;
 import java.io.File;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Class for cloning a Git repository to a local directory.
@@ -92,13 +93,14 @@ public class JGitCloneRepository implements AutoCloseable {
      * Updates the progress bar in the Cytoscape GUI to show the download progress.
      */
     public static TaskIterator cloneGitTaskIterator(String gitUrl, String path) {
+        final String convertedUrl = convertToGitUrl(gitUrl);
         return new TaskIterator(new Task() {
             JGitCloneRepository clone;
             @Override
             public void run(TaskMonitor taskMonitor) throws Exception {
-                taskMonitor.setTitle("Cloning repository from " + gitUrl + "...");
+                taskMonitor.setTitle("Cloning repository from " + convertedUrl + "...");
                 // Close the clone object when the task is finished using try-with-resources
-                try (JGitCloneRepository clone = new JGitCloneRepository(gitUrl, path)) {
+                try (JGitCloneRepository clone = new JGitCloneRepository(convertedUrl, path)) {
                     this.clone = clone;
                     clone.setTaskMonitor(taskMonitor);
                     clone.execute();
@@ -117,6 +119,29 @@ public class JGitCloneRepository implements AutoCloseable {
         });
     }
 
+
+    /**
+     * Tries to extract the .git url of the repository from the GitHub link.
+     * Throws an exception if the link is not a proper GitHub link, or if the
+     * conversion fails. Can be called multiple times on the same string.
+     * @param githubUrl the GitHub link to convert.
+     * @return the .git url of the repository.
+     */
+    public static String convertToGitUrl(String githubUrl) {
+        // Remove anything after github.com and three slashes
+        // Keep: ^.*github.com/[^/]+/[^/]+
+        Matcher matcher = Pattern.compile("^.*github.com/[^/]+/[^/]+").matcher(githubUrl);
+        if (matcher.find()) {
+            if (matcher.group().endsWith(".git")) {
+                return matcher.group();
+            } else {
+                return matcher.group() + ".git";
+            }
+        } else {
+            throw new IllegalArgumentException("Unable to get git URL from: " + githubUrl);
+        }
+    }
+
     /**
      * Closes this resource, relinquishing any underlying resources.
      * This method is invoked automatically on objects managed by the
@@ -126,10 +151,4 @@ public class JGitCloneRepository implements AutoCloseable {
         gitCall.close();
     }
 
-    // TODO: Remove. Testing only.
-    public static void cloneTest(TaskManager tm) {
-        String gitUrl = JOptionPane.showInputDialog("Enter git url:");
-        String path = JOptionPane.showInputDialog("Enter path:");
-        tm.execute(cloneGitTaskIterator(gitUrl, path));
-    }
 }

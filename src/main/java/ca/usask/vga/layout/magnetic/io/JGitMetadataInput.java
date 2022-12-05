@@ -62,12 +62,17 @@ public class JGitMetadataInput implements AutoCloseable {
         String packageRootFolder = network.getDefaultNetworkTable()
                 .getRow(network.getSUID()).get(PATH_TO_FILES_COLUMN, String.class);
 
-        if (packageRootFolder.matches("(http|file)s?:.*")) {
+        if (packageRootFolder.isBlank() || packageRootFolder.matches("(http|file)s?:.*")) {
             // If it is a file or http link, notify user
             throw new FileNotFoundException("The provided network does not have a local git repository.");
         }
 
         File gitDir = findGitRepoRoot(new File(packageRootFolder));
+
+        if (gitDir == null) {
+            throw new FileNotFoundException("The provided network does not have a local git repository.");
+        }
+
         String repoPath = gitDir.getPath();
 
         git = Git.open(new File(repoPath));

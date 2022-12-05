@@ -1,5 +1,6 @@
 package ca.usask.vga.layout.magnetic;
 
+import ca.usask.vga.layout.magnetic.io.JGitCloneRepository;
 import ca.usask.vga.layout.magnetic.io.JavaReader;
 import org.apache.commons.io.FileUtils;
 import org.cytoscape.application.swing.CySwingApplication;
@@ -14,6 +15,7 @@ import org.kohsuke.github.GitHub;
 import org.kohsuke.github.GitHubBuilder;
 import org.zeroturnaround.zip.ZipUtil;
 
+import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -76,7 +78,7 @@ public class SoftwareImport {
 
     /**
      * Uses the path to a folder containing Java source code to import the source code.
-     * If the import is successful, the path of the folder is returned.
+     * If the import is successful, the path of the folder is returned via onSuccess.
      * @param path The path to the folder containing the local files of the source code.
      * @param originalSource The path to the original source code, may be a GitHub link.
      * @param onSuccess The function to call when the import is successful.
@@ -85,10 +87,14 @@ public class SoftwareImport {
         System.out.println("Importing Java source code from: " + path);
         if (path.equals("")) return;
         dtm.execute(new TaskIterator(new JavaReader.ReaderTask(path, readerAccess, rt -> {
-            String packagePath = originalSource;
-            if (!packagePath.endsWith("/")) packagePath += "/";
-            if (rt.inMainJavaFolder()) packagePath += "main/java/";
-            rt.setPathToFiles(packagePath);
+            if (originalSource.startsWith("http")) {
+                String remotePath = originalSource;
+                if (!remotePath.endsWith("/")) remotePath += "/";
+                if (rt.inMainJavaFolder()) remotePath += "main/java/";
+                rt.setRemoteURL(remotePath);
+            } else {
+                rt.setRemoteURL(""); // No remote URL
+            }
             rt.loadIntoView(nm, vm);
             onSuccess.accept(path);
         })));
@@ -96,12 +102,33 @@ public class SoftwareImport {
 
     /**
      * Uses the path to a folder containing Java source code to import the source code.
-     * If the import is successful, the path of the folder is returned.
+     * If the import is successful, the path of the folder is returned via onSuccess.
      * @param path The path to the folder containing the local files of the source code.
      * @param onSuccess The function to call when the import is successful.
      */
     public void loadFromSrcFolder(String path, Consumer<String> onSuccess) {
         loadFromSrcFolder(path, path, onSuccess);
+    }
+
+    /**
+     * Uses the path to a generic project folder containing Java code to import the source code.
+     * If the import is successful, the path of the folder is returned via onSuccess.
+     * @param path The path to the folder containing the local files of the source code.
+     * @param onSuccess The function to call when the import is successful.
+     */
+    public void loadFromGenericFolder(String path, String originURL, Consumer<String> onSuccess) {
+        String sourceFolder = path + "/src/";
+        if (Files.exists(Paths.get(sourceFolder))) {
+            loadFromSrcFolder(sourceFolder, originURL, onSuccess);
+        } else {
+            String subpath = chooseSrcFolderDialogue(path);
+
+            // Make sure any selected sub folders are included in the origin URL.
+            String difference = subpath.substring(path.length()).replace("\\", "/");
+            System.out.println("Subpath: " + difference);
+
+            loadFromSrcFolder(subpath, originURL.replace("/src", difference), onSuccess);
+        }
     }
 
     /**
@@ -132,21 +159,37 @@ public class SoftwareImport {
 
             cancelRepoDownload = false;
             downloadOrReadAsync(repo, (contents) -> {
-                String sourceFolder = contents.getPath() + "/src/";
-                if (Files.exists(Paths.get(sourceFolder))) {
-                    loadFromSrcFolder(sourceFolder, originURL, onSuccess);
-                } else {
-                    String subpath = chooseSrcFolderDialogue(contents.getPath());
-
-                    // Make sure any selected sub folders are included in the origin URL.
-                    String difference = subpath.substring(contents.getPath().length()).replace("\\", "/");
-                    System.out.println("Subpath: " + difference);
-
-                    loadFromSrcFolder(subpath, originURL.replace("/src", difference), onSuccess);
-                }
+                loadFromGenericFolder(contents.getPath(), originURL, onSuccess);
             });
 
         } catch (IOException e) {e.printStackTrace();}
+    }
+
+
+    /**
+     * Prompts the user to select a folder to clone a repository into
+     */
+    public String chooseCloneFolderDialogue(String initialFolder) {
+        return fileUtil.getFolder(swingApp.getJFrame(), "Select a folder to clone the repository into", initialFolder).getAbsolutePath();
+    }
+
+    /**
+     * Clones a repository from a URL into a folder, then loads the source code from the folder,
+     * using the loadFromGenericFolder function. Executes the two tasks one after the other.
+     * if the import is successful, the path of the folder is returned via onSuccess.
+     */
+    public void cloneAndLoadFromFolder(String gitUrl, Consumer<String> onSuccess) {
+        String path = chooseCloneFolderDialogue(null).replace("\\", "/");
+        String convertedUrl = JGitCloneRepository.convertToGitUrl(gitUrl);
+        TaskIterator cloneTaskIterator = JGitCloneRepository.cloneGitTaskIterator(convertedUrl, path);
+        dtm.execute(cloneTaskIterator, new TaskObserver() {
+            @Override
+            public void taskFinished(ObservableTask task) {}
+            @Override
+            public void allFinished(FinishStatus finishStatus) {
+                loadFromGenericFolder(path, convertedUrl.replace(".git", ""), onSuccess);
+            }
+        });
     }
 
     /**

@@ -98,6 +98,9 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
 
         add(scrollPane);
+
+        // Disable panels on startup, if no network is loaded
+        handleEvent(new SetCurrentNetworkViewEvent(style.am, style.am.getCurrentNetworkView()));
     }
 
     /**
@@ -139,17 +142,36 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         });
 
         var gitLink = new JTextField("https://github.com/BJNick/CytoscapeMagneticLayout");
-        panel.add(groupBox(new JLabel("GitHub Link:"), gitLink,
-                new TooltipButton("Load", "Downloads and imports all Java classes from the repository", l -> {
-                    try {
-                        importS.loadFromGitHub(gitLink.getText(), (it) -> {
-                            onFileLoaded(it);
-                            clearCache.setText("Clear cache " + importS.getTempDirSize());
-                        });
-                    } catch (IllegalArgumentException e) {
-                        JOptionPane.showMessageDialog(gitLink, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-                    }
-                })));
+
+        TooltipButton loadButton = new TooltipButton("Load", "Downloads and imports all Java classes from the repository (latest version only)", l -> {
+            try {
+                importS.loadFromGitHub(gitLink.getText(), (it) -> {
+                    onFileLoaded(it);
+                    clearCache.setText("Clear cache " + importS.getTempDirSize());
+                });
+            } catch (IllegalArgumentException e) {
+                JOptionPane.showMessageDialog(gitLink, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        TooltipButton cloneButton = new TooltipButton("Clone", "Clones the whole history of the repository (may take longer)", l -> {
+            try {
+                importS.cloneAndLoadFromFolder(gitLink.getText(), (it) -> {
+                    onFileLoaded(it);
+                    clearCache.setText("Clear cache " + importS.getTempDirSize());
+                    new Thread(() -> {  // New thread must be used to avoid blocking the Task Manager
+                        // Ask the user if they want to import git statistics
+                        if (JOptionPane.showConfirmDialog(null, "Do you want to also import git commit statistics?", "Import git statistics", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+                            dtm.execute(JGitMetadataInput.loadGitTaskIterator(style.am.getCurrentNetwork()));
+                        }
+                    }).start();
+                });
+            } catch (IllegalArgumentException e) {
+                JOptionPane.showMessageDialog(gitLink, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        panel.add(groupBox(new JLabel("GitHub Link:"), gitLink, loadButton, cloneButton));
 
         /*var srcFolder = new JTextField("");
         panel.add(groupBox(new JLabel("Source code folder:"), srcFolder, addListener(new JButton("Load"),
@@ -523,11 +545,6 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
                 "Loads the Git metadata from the current repository",
                 l -> dtm.execute(JGitMetadataInput.loadGitTaskIterator(style.am.getCurrentNetwork())));
         panel.add(group(loadGitMetadata));
-
-        // TODO: Remove. Testing only.
-        var cloneGit = new TooltipButton("Clone Git","",
-                l -> JGitCloneRepository.cloneTest(dtm));
-        panel.add(group(cloneGit));
 
         return autoDisable(panel);
     }
