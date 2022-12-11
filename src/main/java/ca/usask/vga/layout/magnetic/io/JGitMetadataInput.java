@@ -120,22 +120,18 @@ public class JGitMetadataInput implements AutoCloseable {
         File nodeFile = new File(fullPath);
 
         if (!nodeFile.exists()) {
-            System.err.println("File " + fullPath + " does not exist.");
+            System.err.println("\nFile " + fullPath + " does not exist.");
             return null;
         }
 
         File gitRoot = findGitRepoRoot(nodeFile);
 
         if (gitRoot == null) {
-            System.err.println("File " + fullPath + " is not part of a git repository");
+            System.err.println("\nFile " + fullPath + " is not part of a git repository");
             return null;
         }
 
-        String relativePath = gitRoot.toPath().relativize(nodeFile.toPath()).toString();
-
-        System.out.println("Relative Path: " + relativePath);
-
-        return relativePath;
+        return gitRoot.toPath().relativize(nodeFile.toPath()).toString();
     }
 
     /**
@@ -148,6 +144,8 @@ public class JGitMetadataInput implements AutoCloseable {
 
         // Git only accepts / as separators
         relativePath = relativePath.replace("\\", "/");
+
+        System.out.print("Relative Path: " + relativePath + "\r");
 
         CyTable nodeTable = network.getDefaultNodeTable();
 
@@ -189,11 +187,13 @@ public class JGitMetadataInput implements AutoCloseable {
         // For every node, load the metadata by its local filepath
         for (CyNode node : network.getNodeList()) {
             if (cancelled) return;
-            System.out.println("Reading node " + node.getSUID());
+            System.out.print("\33[2KReading node " + node.getSUID() + "; ");
             getNodeData(network, node);
             nodesProcessed++;
             if (taskMonitor != null) taskMonitor.setProgress(nodesProcessed / totalNodes);
         }
+
+        System.out.println("\nGit data loaded for " + (int) nodesProcessed + " nodes.");
     }
 
     /**

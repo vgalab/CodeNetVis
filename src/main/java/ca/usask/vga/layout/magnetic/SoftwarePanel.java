@@ -83,6 +83,9 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         // STYLE panel
         innerPanel.add(createStylePanel());
 
+        // GIT DATA panel
+        innerPanel.add(createGitDataPanel());
+
         // EXPERIMENTAL panel
         innerPanel.add(createExperimentalPanel());
 
@@ -522,6 +525,31 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
     }
 
     /**
+     * Describes the "Git Statistics" panel components and functionality.
+     * The panel is automatically disabled when no network is loaded.
+     */
+    protected JPanel createGitDataPanel() {
+        var panel = createTitledPanel("Visualize Git Statistics");
+        panel.closeContent();
+
+        var loadGitMetadata = new TooltipButton("Import Git statistics for each node",
+                "Attempts to load the Git statistics for this network. See the results in the 'Node Table' tab.",
+                l -> dtm.execute(JGitMetadataInput.loadGitTaskIterator(style.am.getCurrentNetwork())));
+        panel.add(group(loadGitMetadata));
+
+        var comboBoxStyle = new JComboBox<>(SoftwareStyle.GitDataStyle.getAllowedList());
+        comboBoxStyle.addItemListener(e -> style.setCurrentGitDataStyle((SoftwareStyle.GitDataStyle) e.getItem()));
+        panel.add(group(new JLabel("Visualize"), comboBoxStyle));
+
+        addExplanation(panel, "If the current network is a Git repository, this section allows to load the Git commit metadata. " +
+                "It can be used to visualize the Git statistics of the network. " +
+                "The 'Node Table' tab shows the detailed statistics values for each node. " +
+                "Please note that this feature only works for git cloned and local SRC folder imports.");
+
+        return autoDisable(panel);
+    }
+
+    /**
      * Describes the "Experimental" panel components and functionality.
      * The panel is automatically disabled when no network is loaded.
      */
@@ -539,12 +567,6 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
                 "Subdivides edges into two pieces, to color only the piece oriented towards the pole",
                 l -> layout.createPartialColoring());
         panel.add(group(edgePartialColoring));
-
-
-        var loadGitMetadata = new TooltipButton("Load Git metadata",
-                "Loads the Git metadata from the current repository",
-                l -> dtm.execute(JGitMetadataInput.loadGitTaskIterator(style.am.getCurrentNetwork())));
-        panel.add(group(loadGitMetadata));
 
         return autoDisable(panel);
     }
