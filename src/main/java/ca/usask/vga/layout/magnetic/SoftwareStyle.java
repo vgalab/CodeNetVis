@@ -6,6 +6,7 @@ import ca.usask.vga.layout.magnetic.poles.PoleManager;
 import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.equations.EquationCompiler;
 import org.cytoscape.model.CyEdge;
+import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNode;
 import org.cytoscape.task.hide.HideTaskFactory;
 import org.cytoscape.task.hide.UnHideAllTaskFactory;
@@ -13,12 +14,10 @@ import org.cytoscape.view.model.CyNetworkView;
 import org.cytoscape.view.model.VisualProperty;
 import org.cytoscape.view.model.events.NetworkViewAboutToBeDestroyedEvent;
 import org.cytoscape.view.model.events.NetworkViewAboutToBeDestroyedListener;
-import org.cytoscape.view.presentation.RenderingEngine;
 import org.cytoscape.view.presentation.annotations.AnnotationFactory;
 import org.cytoscape.view.presentation.annotations.AnnotationManager;
 import org.cytoscape.view.presentation.annotations.ShapeAnnotation;
 import org.cytoscape.view.presentation.property.ArrowShapeVisualProperty;
-import org.cytoscape.view.presentation.property.BasicVisualLexicon;
 import org.cytoscape.view.presentation.property.LineTypeVisualProperty;
 import org.cytoscape.view.presentation.property.NodeShapeVisualProperty;
 import org.cytoscape.view.presentation.property.values.LineType;
@@ -34,7 +33,6 @@ import java.awt.*;
 import java.awt.geom.Point2D;
 import java.util.*;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.cytoscape.view.presentation.property.BasicVisualLexicon.*;
 
@@ -74,6 +72,10 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
     private Coloring currentColoring = Coloring.PACKAGE;
 
     private GitDataStyle currentGitDataStyle = GitDataStyle.NONE;
+    private int currentGitHistoryCutoff = 0;
+
+    private CyNetwork cachedLastCommitDateNetwork = null;
+    private TreeSet<String> cachedLastCommitDateOptions = null;
 
     public final int MAX_DISCRETE_COLORS = 12*2;
 
@@ -974,6 +976,7 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
      * in the current network, which can be used for discrete coloring.
      */
     public TreeSet<String> getLastCommitDateOptions() {
+
         var net = am.getCurrentNetwork();
         if (net == null) return new TreeSet<>();
 
@@ -981,13 +984,18 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
         var column = table.getColumn(JGitMetadataInput.LAST_COMMIT_DATE);
         if (column == null) return new TreeSet<>();
 
-        // Return them sorted, using a TreeSet to remove duplicates
-        var dates = column.getValues(String.class);
-        dates.removeIf(Objects::isNull);
-        var sortedSet = new TreeSet<>(dates);
-        // Remove the empty string
-        sortedSet.remove("");
-        return sortedSet;
+        if (cachedLastCommitDateOptions == null || cachedLastCommitDateNetwork != net) {
+            // Return them sorted, using a TreeSet to remove duplicates
+            var dates = column.getValues(String.class);
+            dates.removeIf(Objects::isNull);
+            var sortedSet = new TreeSet<>(dates);
+            // Remove the empty string
+            sortedSet.remove("");
+            cachedLastCommitDateOptions = sortedSet;
+            cachedLastCommitDateNetwork = net;
+        }
+
+        return new TreeSet<>(cachedLastCommitDateOptions);
     }
 
     /**
@@ -1167,6 +1175,85 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
             return new GitDataStyle[] {NONE, DATE_COLOR, DATE_BORDER_WIDTH, DATE_CIRCLED,
                     COMMITS_COLOR, COMMITS_SIZE, COMMITS_BOTH, AUTHOR_COLOR};
         }
+    }
+
+    /**
+     * Sets the currentGitHistoryCutoff to the given value. The value of 0
+     * means that all commits are shown. The value of 100 means that only the
+     * most recent commit is shown.
+     * @param value integer between 0 and 100
+     * @return date of the cutoff commit or null if nothing changed
+     */
+    public String setGitHistoryCutoff(int value) {
+        if (value < 0 || value > 100) {
+            throw new IllegalArgumentException("The value must be between 0 and 100");
+        }
+        if (currentGitHistoryCutoff != value) {
+            currentGitHistoryCutoff = value;
+            return applyGitHistoryCutoff();
+        }
+        return null;
+    }
+
+    /**
+     * Apply currentGitHistoryCutoff to the graph. The value of 0
+     * means that all commits are shown. The value of 100 means that only the
+     * most recent commit is shown.
+     * @return date of the cutoff commit
+     */
+    private String applyGitHistoryCutoff() {
+        var net = am.getCurrentNetwork();
+        var view = am.getCurrentNetworkView();
+        if (net == null || view == null) return null;
+
+        if (currentGitHistoryCutoff == 0) {
+            // Show all commits
+            for (var node : net.getNodeList()) {
+                setNodeVisible(node, true);
+            }
+            var dates = getLastCommitDateOptions();
+            return dates.isEmpty() ? null : dates.first();
+        }
+
+        // Get the cutoff commit out of the list of commits
+        var dates = getLastCommitDateOptions();
+        var totalCommits = dates.size();
+        if (totalCommits <= 0) return null;
+
+        var cutoffIndex = (int) Math.ceil((totalCommits-1) * (currentGitHistoryCutoff / 100.0));
+        var cutoffDate = dates.toArray(new String[0])[cutoffIndex];
+
+        // Hide all commits that are older than the cutoff commit
+        for (var node : net.getNodeList()) {
+            var date = net.getDefaultNodeTable().getRow(node.getSUID()).get(JGitMetadataInput.LAST_COMMIT_DATE, String.class);
+            if (date == null) {
+                setNodeVisible(node, false);
+            } else {
+                setNodeVisible(node, date.compareTo(cutoffDate) >= 0);
+            }
+        }
+
+        return cutoffDate;
+    }
+
+    /**
+     * Get the commit properties from the given commit date:
+     * valid keys: "Author", "Message", "SHA"
+     */
+    public Properties getCommitPropertiesFromDate(String date) {
+        var net = am.getCurrentNetwork();
+        if (net == null) return null;
+        for (var node : net.getNodeList()) {
+            var nodeDate = net.getDefaultNodeTable().getRow(node.getSUID()).get(JGitMetadataInput.LAST_COMMIT_DATE, String.class);
+            if (nodeDate != null && nodeDate.equals(date)) {
+                Properties properties = new Properties();
+                properties.setProperty("Author", net.getDefaultNodeTable().getRow(node.getSUID()).get(JGitMetadataInput.LAST_COMMIT_AUTHOR, String.class));
+                properties.setProperty("Message", net.getDefaultNodeTable().getRow(node.getSUID()).get(JGitMetadataInput.LAST_COMMIT_MESSAGE, String.class));
+                properties.setProperty("SHA", net.getDefaultNodeTable().getRow(node.getSUID()).get(JGitMetadataInput.LAST_COMMIT_SHA, String.class));
+                return properties;
+            }
+        }
+        return null;
     }
 
 }

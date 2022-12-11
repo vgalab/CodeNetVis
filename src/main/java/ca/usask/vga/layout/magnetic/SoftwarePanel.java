@@ -1,6 +1,5 @@
 package ca.usask.vga.layout.magnetic;
 
-import ca.usask.vga.layout.magnetic.io.JGitCloneRepository;
 import ca.usask.vga.layout.magnetic.io.JGitMetadataInput;
 import ca.usask.vga.layout.magnetic.poles.ExtraTasks;
 import org.cytoscape.application.events.SetCurrentNetworkViewEvent;
@@ -18,7 +17,6 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.FileNotFoundException;
 import java.util.*;
 import java.util.List;
 import java.util.function.Consumer;
@@ -541,6 +539,33 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         comboBoxStyle.addItemListener(e -> style.setCurrentGitDataStyle((SoftwareStyle.GitDataStyle) e.getItem()));
         panel.add(group(new JLabel("Visualize"), comboBoxStyle));
 
+        var commitInfoLabel = newLabelTextArea(panel, "(Commit information will be shown here)");
+
+        panel.add(group(new JLabel("Recent change history:")));
+
+        var historySlider = createCustomSlider(0, 100, 0, 25, -1, 1);
+        var labels = new Hashtable<Integer, JLabel>();
+        labels.put(0, new JLabel("All"));
+        labels.put(100, new JLabel("Recent"));
+        historySlider.setLabelTable(labels);
+        historySlider.setPaintLabels(true);
+        historySlider.addChangeListener(e -> {
+            String commitDate = style.setGitHistoryCutoff(historySlider.getValue());
+            Properties commitInfo = style.getCommitPropertiesFromDate(commitDate);
+            if (commitDate != null && commitInfo != null) {
+                String commitMessage = commitInfo.getProperty("Message");
+                String commitAuthor = commitInfo.getProperty("Author");
+                String commitSHA = commitInfo.getProperty("SHA");
+                commitMessage = commitMessage.split("\n")[0];
+                commitInfoLabel.setText(commitMessage + "\n"
+                        + commitDate + "\n"
+                        + commitAuthor + "\n"
+                        + commitSHA);
+            }
+        });
+        panel.add(historySlider);
+        panel.add(group(80, commitInfoLabel));
+
         addExplanation(panel, "If the current network is a Git repository, this section allows to load the Git commit metadata. " +
                 "It can be used to visualize the Git statistics of the network. " +
                 "The 'Node Table' tab shows the detailed statistics values for each node. " +
@@ -862,14 +887,19 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
     private JTextArea addExplanation(JPanel panel, int height, String text) {
         panel.add(group(10, new JSeparator())); // set to 15 to show separator
 
-        var textExplanation = new JTextArea(text);
-        textExplanation.setLineWrap(true);
-        textExplanation.setWrapStyleWord(true);
-        textExplanation.setBackground(panel.getBackground());
-        textExplanation.setFont(new Label().getFont());
-        textExplanation.setEditable(false);
+        var textExplanation = newLabelTextArea(panel, text);
         panel.add(group(height, textExplanation));
         return textExplanation;
+    }
+
+    private JTextArea newLabelTextArea(JPanel panel, String text) {
+        var textArea = new JTextArea(text);
+        textArea.setLineWrap(true);
+        textArea.setWrapStyleWord(true);
+        textArea.setBackground(panel.getBackground());
+        textArea.setFont(new Label().getFont());
+        textArea.setEditable(false);
+        return textArea;
     }
 
     private void fireChangeListeners(JSlider component) {
