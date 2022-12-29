@@ -23,7 +23,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>ca.usask.vga.cytoscape</groupId>
     <artifactId>codenetvis</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.1</version>
 
 
     <name>CodeNetVis</name>

@@ -1199,6 +1199,7 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
             currentColoring.apply(this);
         } else {
             setShowPoleColors(false);
+            clearNodeColorMappings();
         }
 
         // Set tooltips to commit summary if selected
