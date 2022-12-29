@@ -30,7 +30,7 @@ public class JGitMetadataInput implements AutoCloseable {
     // New CyNode table column names
     public static String TOTAL_COMMITS = "Total Commits", LAST_COMMIT_DATE = "Last Commit Date",
             LAST_COMMIT_MESSAGE = "Last Commit Message", LAST_COMMIT_AUTHOR = "Last Commit Author",
-            LAST_COMMIT_SHA = "Last Commit SHA";
+            LAST_COMMIT_SHA = "Last Commit SHA", LAST_COMMIT_SUMMARY = "Last Commit Summary";
 
     private final Git git;
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -99,6 +99,7 @@ public class JGitMetadataInput implements AutoCloseable {
         createDataColumn(network, LAST_COMMIT_DATE, String.class);
         createDataColumn(network, LAST_COMMIT_MESSAGE, String.class);
         createDataColumn(network, LAST_COMMIT_AUTHOR, String.class);
+        createDataColumn(network, LAST_COMMIT_SUMMARY, String.class);
         createDataColumn(network, LAST_COMMIT_SHA, String.class);
     }
 
@@ -167,12 +168,16 @@ public class JGitMetadataInput implements AutoCloseable {
             return;
         }
 
+        String summary = lastCommitMessage.split("\\n")[0] + "\n" +
+                "(" + lastCommitAuthor + ", " + dateFormat.format(lastCommitDate) + ")";
+
         // Update the table for this node
         nodeTable.getRow(node.getSUID()).set(TOTAL_COMMITS, totalCommits);
         nodeTable.getRow(node.getSUID()).set(LAST_COMMIT_DATE, dateFormat.format(lastCommitDate));
         nodeTable.getRow(node.getSUID()).set(LAST_COMMIT_MESSAGE, lastCommitMessage);
         nodeTable.getRow(node.getSUID()).set(LAST_COMMIT_AUTHOR, lastCommitAuthor);
         nodeTable.getRow(node.getSUID()).set(LAST_COMMIT_SHA, lastCommitSHA);
+        nodeTable.getRow(node.getSUID()).set(LAST_COMMIT_SUMMARY, summary);
     }
 
     /**

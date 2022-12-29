@@ -36,6 +36,7 @@ import java.util.*;
 import java.util.List;
 import java.util.function.Function;
 
+import static ca.usask.vga.layout.magnetic.io.JavaReader.NODE_PACKAGE;
 import static org.cytoscape.view.presentation.property.BasicVisualLexicon.*;
 
 /**
@@ -581,7 +582,6 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
      * Sets the size equation to use with the node size mapping.
      */
     public void setSizeEquation(SizeEquation sizeEquation) {
-        if (sizeEquation == this.currentSizeEquation) return;
         currentSizeEquation = sizeEquation;
         updateSizeMapping();
     }
@@ -740,10 +740,8 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
      * Sets the current coloring scheme for nodes and edges of the graph.
      */
     public void setCurrentColoring(Coloring c) {
-        if (currentColoring != c) {
-            currentColoring = c;
-            c.apply(this);
-        }
+        currentColoring = c;
+        c.apply(this);
     }
 
     /**
@@ -1174,6 +1172,16 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
      * @param vis the visualization to apply
      */
     public void applyGitDataStyle(GitDataProperty property, GitDataVisualization vis) {
+
+        if (am.getCurrentNetwork() == null) return;
+
+        if (am.getCurrentNetwork().getDefaultNodeTable().getColumn(JGitMetadataInput.LAST_COMMIT_DATE) == null) {
+            JOptionPane.showMessageDialog(null,
+                    "No Git metadata found in the current network. Please import the metadata first.",
+                    "No Git metadata found", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
         // Reset style first
         VisualStyle style = vmm.getVisualStyle(am.getCurrentNetworkView());
 
@@ -1187,8 +1195,20 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
             updateSizeMapping();
 
         // Reset the coloring
-        if (vis != GitDataVisualization.NODE_COLOR || property == GitDataProperty.NONE)
+        if (vis != GitDataVisualization.NODE_COLOR || property == GitDataProperty.NONE) {
             currentColoring.apply(this);
+        } else {
+            setShowPoleColors(false);
+        }
+
+        // Set tooltips to commit summary if selected
+        VisualMappingFunction<String, String> tooltip;
+        if (vis == GitDataVisualization.NONE && property == GitDataProperty.NONE) {
+            tooltip = vmff_passthrough.createVisualMappingFunction(NODE_PACKAGE, String.class, NODE_TOOLTIP);
+        } else {
+            tooltip = vmff_passthrough.createVisualMappingFunction(JGitMetadataInput.LAST_COMMIT_SUMMARY, String.class, NODE_TOOLTIP);
+        }
+        style.addVisualMappingFunction(tooltip);
 
         switch (vis) {
             case BORDER_WIDTH: {

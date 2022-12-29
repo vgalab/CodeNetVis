@@ -485,12 +485,12 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
 
         // CONTENTS
         var comboBoxColor = new JComboBox<>(SoftwareStyle.Coloring.getAllowedList());
-        comboBoxColor.addItemListener(e -> style.setCurrentColoring((SoftwareStyle.Coloring) e.getItem()));
+        comboBoxColor.addActionListener(e -> style.setCurrentColoring((SoftwareStyle.Coloring) comboBoxColor.getSelectedItem()));
         panel.add(group(new JLabel("Color nodes by"), comboBoxColor));
         style.pm.addInitializationListener(() -> comboBoxColor.setSelectedItem(SoftwareStyle.Coloring.CLOSEST_POLE));
 
         var comboBox = new JComboBox<>(SoftwareStyle.SizeEquation.getAllowedList());
-        comboBox.addItemListener(e -> style.setSizeEquation((SoftwareStyle.SizeEquation) e.getItem()));
+        comboBox.addActionListener(e -> style.setSizeEquation((SoftwareStyle.SizeEquation) comboBox.getSelectedItem()));
         panel.add(group(new JLabel("Node size based on"), comboBox));
         style.pm.addInitializationListener(() -> {
             if (comboBox.getSelectedIndex() == 0)
@@ -539,12 +539,13 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
         var comboBoxStyle = new JComboBox<>(SoftwareStyle.GitDataVisualization.getAllowedList());
         var comboBoxProperty = new JComboBox<>(SoftwareStyle.GitDataProperty.getAllowedList());
 
-        comboBoxStyle.addItemListener(e -> {
+
+        comboBoxStyle.addActionListener(e -> {
             style.applyGitDataStyle((SoftwareStyle.GitDataProperty) comboBoxProperty.getSelectedItem(),
                     (SoftwareStyle.GitDataVisualization) comboBoxStyle.getSelectedItem());
         });
 
-        comboBoxProperty.addItemListener(e -> {
+        comboBoxProperty.addActionListener(e -> {
             style.applyGitDataStyle((SoftwareStyle.GitDataProperty) comboBoxProperty.getSelectedItem(),
                     (SoftwareStyle.GitDataVisualization) comboBoxStyle.getSelectedItem());
         });
