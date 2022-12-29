@@ -535,9 +535,23 @@ public class SoftwarePanel extends JPanel implements CytoPanelComponent2, Sessio
                 l -> dtm.execute(JGitMetadataInput.loadGitTaskIterator(style.am.getCurrentNetwork())));
         panel.add(group(loadGitMetadata));
 
-        var comboBoxStyle = new JComboBox<>(SoftwareStyle.GitDataStyle.getAllowedList());
-        comboBoxStyle.addItemListener(e -> style.setCurrentGitDataStyle((SoftwareStyle.GitDataStyle) e.getItem()));
-        panel.add(group(new JLabel("Visualize"), comboBoxStyle));
+        // comboBoxProperty shows possible properties to visualize, comboBoxStyle shows possible styles for the visualization
+        var comboBoxStyle = new JComboBox<>(SoftwareStyle.GitDataVisualization.getAllowedList());
+        var comboBoxProperty = new JComboBox<>(SoftwareStyle.GitDataProperty.getAllowedList());
+
+        comboBoxStyle.addItemListener(e -> {
+            style.applyGitDataStyle((SoftwareStyle.GitDataProperty) comboBoxProperty.getSelectedItem(),
+                    (SoftwareStyle.GitDataVisualization) comboBoxStyle.getSelectedItem());
+        });
+
+        comboBoxProperty.addItemListener(e -> {
+            style.applyGitDataStyle((SoftwareStyle.GitDataProperty) comboBoxProperty.getSelectedItem(),
+                    (SoftwareStyle.GitDataVisualization) comboBoxStyle.getSelectedItem());
+        });
+
+        panel.add(group(new JLabel("Visualize"), comboBoxProperty));
+        panel.add(group(new JLabel("Using"), comboBoxStyle));
+
 
         var commitInfoLabel = newLabelTextArea(panel, "(Commit information will be shown here)");
 

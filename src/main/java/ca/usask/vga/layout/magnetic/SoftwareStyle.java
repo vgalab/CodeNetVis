@@ -18,6 +18,7 @@ import org.cytoscape.view.presentation.annotations.AnnotationFactory;
 import org.cytoscape.view.presentation.annotations.AnnotationManager;
 import org.cytoscape.view.presentation.annotations.ShapeAnnotation;
 import org.cytoscape.view.presentation.property.ArrowShapeVisualProperty;
+import org.cytoscape.view.presentation.property.BasicVisualLexicon;
 import org.cytoscape.view.presentation.property.LineTypeVisualProperty;
 import org.cytoscape.view.presentation.property.NodeShapeVisualProperty;
 import org.cytoscape.view.presentation.property.values.LineType;
@@ -33,6 +34,7 @@ import java.awt.*;
 import java.awt.geom.Point2D;
 import java.util.*;
 import java.util.List;
+import java.util.function.Function;
 
 import static org.cytoscape.view.presentation.property.BasicVisualLexicon.*;
 
@@ -71,11 +73,13 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
     private boolean usePoleColors = true;
     private Coloring currentColoring = Coloring.PACKAGE;
 
-    private GitDataStyle currentGitDataStyle = GitDataStyle.NONE;
     private int currentGitHistoryCutoff = 0;
 
     private CyNetwork cachedLastCommitDateNetwork = null;
     private TreeSet<String> cachedLastCommitDateOptions = null;
+    private CyNetwork cachedCommitAuthorsNetwork = null;
+    private TreeSet<String> cachedCommitAuthors = null;
+
 
     public final int MAX_DISCRETE_COLORS = 12*2;
 
@@ -187,7 +191,7 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
 
         VisualStyle style = vmm.getVisualStyle(am.getCurrentNetworkView());
 
-        style.setDefaultValue(NODE_SIZE, size);
+        style.setDefaultValue(BasicVisualLexicon.NODE_SIZE, size);
         style.setDefaultValue(NODE_LABEL_FONT_SIZE, (int) Math.ceil(size/2));
     }
 
@@ -197,7 +201,7 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
     private double getCurrentNodeSize() {
         if (am.getCurrentNetworkView() == null) return 30;
         VisualStyle style = vmm.getVisualStyle(am.getCurrentNetworkView());
-        var value = style.getDefaultValue(NODE_SIZE);
+        var value = style.getDefaultValue(BasicVisualLexicon.NODE_SIZE);
         lastSetNodeSize = value;
         return value;
     }
@@ -588,7 +592,7 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
     private void updateSizeMapping() {
         VisualStyle style = vmm.getVisualStyle(am.getCurrentNetworkView());
         if (currentSizeEquation == SizeEquation.FIXED || currentSizeEquation == SizeEquation.BIGGER_POLES) {
-            style.removeVisualMappingFunction(NODE_SIZE);
+            style.removeVisualMappingFunction(BasicVisualLexicon.NODE_SIZE);
             style.removeVisualMappingFunction(NODE_LABEL_FONT_SIZE);
             if (currentSizeEquation == SizeEquation.BIGGER_POLES) {
                 var t = new ExtraTasks.MakePoleNodesLarger(am, vmm, vmff_discrete, null);
@@ -599,7 +603,7 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
             initColumn(currentSizeEquation);
 
             var nodeSizeFunc = (ContinuousMapping<Integer, Double>) vmff_continuous.createVisualMappingFunction(
-                    currentSizeEquation.getColumnName(), Integer.class, NODE_SIZE);
+                    currentSizeEquation.getColumnName(), Integer.class, BasicVisualLexicon.NODE_SIZE);
             var fontSizeFunc = (ContinuousMapping<Integer, Integer>) vmff_continuous.createVisualMappingFunction(
                     currentSizeEquation.getColumnName(), Integer.class, NODE_LABEL_FONT_SIZE);
 
@@ -663,7 +667,7 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
         style.setDefaultValue(EDGE_TARGET_ARROW_SHAPE, ArrowShapeVisualProperty.ARROW);
         style.setDefaultValue(EDGE_TARGET_ARROW_SIZE, 12d);
 
-        style.setDefaultValue(NODE_SIZE, 30d);
+        style.setDefaultValue(BasicVisualLexicon.NODE_SIZE, 30d);
         style.setDefaultValue(NODE_LABEL_FONT_SIZE, 15);
 
         style.removeVisualMappingFunction(EDGE_LABEL);
@@ -739,16 +743,6 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
         if (currentColoring != c) {
             currentColoring = c;
             c.apply(this);
-        }
-    }
-
-    /**
-     * Sets the current git data style scheme for nodes and edges of the graph.
-     */
-    public void setCurrentGitDataStyle(GitDataStyle s) {
-        if (currentGitDataStyle != s) {
-            currentGitDataStyle = s;
-            currentGitDataStyle.apply(this);
         }
     }
 
@@ -999,6 +993,32 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
     }
 
     /**
+     * Returns a set of commit authors for all nodes in the current network.
+     */
+    public Set<String> getCommitAuthors() {
+
+        var net = am.getCurrentNetwork();
+        if (net == null) return new TreeSet<>();
+
+        var table = net.getDefaultNodeTable();
+        var column = table.getColumn(JGitMetadataInput.LAST_COMMIT_AUTHOR);
+        if (column == null) return new TreeSet<>();
+
+        if (cachedCommitAuthors == null || cachedCommitAuthorsNetwork != net) {
+            // Return them sorted, using a TreeSet to remove duplicates
+            var authors = column.getValues(String.class);
+            authors.removeIf(Objects::isNull);
+            var sortedSet = new TreeSet<>(authors);
+            // Remove the empty string
+            sortedSet.remove("");
+            cachedCommitAuthors = sortedSet;
+            cachedCommitAuthorsNetwork = net;
+        }
+
+        return new TreeSet<>(cachedCommitAuthors);
+    }
+
+    /**
      * Returns the highest number of commits for nodes in the current network.
      */
     public int getMostNodeCommits() {
@@ -1064,25 +1084,134 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
     }
 
     /**
-     * Returns the list of allowed dropdown options for git metadata coloring.
+     * Returns topN most recent commits. If reveseSort is true, returns topN oldest commits.
+     * If topN is 0, returns all commits in the specified order.
      */
-    public enum GitDataStyle {
-        NONE, DATE_COLOR, DATE_BORDER_WIDTH, DATE_CIRCLED, COMMITS_COLOR, COMMITS_SIZE, COMMITS_BOTH, AUTHOR_COLOR;
-        public void apply(SoftwareStyle s) {
-            // Check that the Git Metadata is present
-            if (s.am.getCurrentNetwork() == null) return;
-            if (this != NONE && s.am.getCurrentNetwork().getDefaultNodeTable().getColumn(JGitMetadataInput.LAST_COMMIT_DATE) == null) {
-                JOptionPane.showMessageDialog(null,
-                        "No Git metadata found in the current network. Please import the metadata first.",
-                        "No Git metadata found", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
+    public Map<Integer, String> getMostRecentCommits(int topN, boolean reverseSort) {
+        var sortedDates = getLastCommitDateOptions();
+        Map<Integer, String> mostRecentCommits = new TreeMap<>();
+        // N most recent dates are added
+        for (int i = 0; (i < topN || topN == 0) && !sortedDates.isEmpty(); i++) {
+            if (!reverseSort)
+                mostRecentCommits.put(i, sortedDates.pollLast());
+            else
+                mostRecentCommits.put(i, sortedDates.pollFirst());
+        }
+        return mostRecentCommits;
+    }
 
-            s.setShowPoleColors(false);
-            s.resetGitDataStyle(!this.toString().toLowerCase().contains("color"));
-            switch (this) {
-                case DATE_COLOR: {
-                    var sortedDates = s.getLastCommitDateOptions();
+    /**
+     * Applies a mapping from the selected data property to a quantitative visual property.
+     * @param property the data property to map
+     * @param maxValue the maximum value of the visual property (e.g. 255 for transparency, 10 for width)
+     * @param visualProperty the visual property to map to, must be a number
+     * @param convertToT a function that converts a double to the type of the visual property (usually rounding)
+     * @param <T> the type of the visual property, must be a number (extends Number)
+     */
+    public <T> void applyNumberVisualization(GitDataProperty property, double minValue, double maxValue, VisualProperty<T> visualProperty,
+                                             Function<Double, T> convertToT) {
+        double range = maxValue - minValue;
+        if (property == GitDataProperty.MOST_RECENT_COMMIT_DATE) {
+            Map<String, T> mapping = new HashMap<>();
+            var recentCommits = getMostRecentCommits(0, true);
+            recentCommits.forEach((k, v) -> {
+                mapping.put(v, convertToT.apply( Math.pow(1d * k / (recentCommits.size()-1), 2) * range + minValue));
+            });
+            applyDiscreteMapping(JGitMetadataInput.LAST_COMMIT_DATE, String.class, mapping, visualProperty);
+        } else if (property == GitDataProperty.TOTAL_NUMBER_OF_COMMITS) {
+            // Continuous mapping from 0 to maxValue based on number of commits
+            var func = (ContinuousMapping<Integer, T>)
+                    vmff_continuous.createVisualMappingFunction(JGitMetadataInput.TOTAL_COMMITS, Integer.class, visualProperty);
+            int maxCommits = getMostNodeCommits();
+            T min = convertToT.apply(minValue);
+            T max = convertToT.apply(maxValue);
+            func.addPoint(0, new BoundaryRangeValues<T>(min, min, min));
+            func.addPoint(maxCommits, new BoundaryRangeValues<T>(max, max, max));
+            vmm.getVisualStyle(am.getCurrentNetworkView()).addVisualMappingFunction(func);
+        } else if (property == GitDataProperty.LAST_COMMIT_AUTHOR) {
+            // Discrete mapping of authors to doubles, from minValue to maxValue
+            Map<String, T> mapping = new HashMap<>();
+            var authors = getCommitAuthors();
+            double currentValue = 0;
+            if (authors.size() == 1) currentValue = 0.5; // If only one author choose value halfway
+            for (var author : authors) { // Calculates width of each based on number of authors
+                mapping.put(author, convertToT.apply(minValue+(currentValue++)*range/Math.max(1, authors.size()-1)));
+            }
+            applyDiscreteMapping(JGitMetadataInput.LAST_COMMIT_AUTHOR, String.class, mapping, visualProperty);
+        }
+    }
+
+    /**
+     * A list of properties that can be visualized, and their different options.
+     */
+    public enum GitDataProperty {
+        NONE, MOST_RECENT_COMMIT_DATE, TOTAL_NUMBER_OF_COMMITS, LAST_COMMIT_AUTHOR;
+        public static GitDataProperty[] getAllowedList() {
+            return GitDataProperty.values();
+        }
+        @Override
+        public String toString() {
+            return name().charAt(0) + name().toLowerCase()
+                    .replace("_", " ").substring(1);
+        }
+    }
+
+    public enum GitDataVisualization {
+        NONE, BORDER_WIDTH, CIRCLED_NODES, NODE_COLOR, NODE_SIZE;
+        public static GitDataVisualization[] getAllowedList() {
+            return GitDataVisualization.values();
+        }
+        @Override
+        public String toString() {
+            return name().charAt(0) + name().toLowerCase()
+                    .replace("_", " ").substring(1);
+        }
+    }
+
+    /**
+     * Applies the selected combination of data property and visualization.
+     * @param property the data property to map
+     * @param vis the visualization to apply
+     */
+    public void applyGitDataStyle(GitDataProperty property, GitDataVisualization vis) {
+        // Reset style first
+        VisualStyle style = vmm.getVisualStyle(am.getCurrentNetworkView());
+
+        style.removeVisualMappingFunction(NODE_BORDER_WIDTH);
+        style.removeVisualMappingFunction(NODE_BORDER_TRANSPARENCY);
+        style.setDefaultValue(NODE_BORDER_WIDTH, 0.0);
+        style.setDefaultValue(NODE_BORDER_LINE_TYPE, LineTypeVisualProperty.SOLID);
+
+        // Reset sizes
+        if (vis != GitDataVisualization.NODE_SIZE || property == GitDataProperty.NONE)
+            updateSizeMapping();
+
+        // Reset the coloring
+        if (vis != GitDataVisualization.NODE_COLOR || property == GitDataProperty.NONE)
+            currentColoring.apply(this);
+
+        switch (vis) {
+            case BORDER_WIDTH: {
+                style.setDefaultValue(NODE_BORDER_WIDTH, 0.0);
+                style.setDefaultValue(NODE_BORDER_TRANSPARENCY, 255);
+                style.setDefaultValue(NODE_BORDER_PAINT, Color.BLACK);  // set border color to black
+                style.setDefaultValue(NODE_BORDER_LINE_TYPE, LineTypeVisualProperty.SOLID);
+                applyNumberVisualization(property, 0,10, NODE_BORDER_WIDTH, (d) -> d);
+                break;
+            }
+            case CIRCLED_NODES: {
+                style.setDefaultValue(NODE_BORDER_WIDTH, 10.0);
+                style.setDefaultValue(NODE_BORDER_TRANSPARENCY, 0);
+                style.setDefaultValue(NODE_BORDER_PAINT, Color.BLACK);  // set border color to black
+                style.setDefaultValue(NODE_BORDER_LINE_TYPE, retrieveParallelLinesStyle());
+                applyNumberVisualization(property, 0,255, NODE_BORDER_TRANSPARENCY, Double::intValue);
+                break;
+            }
+            case NODE_COLOR: {
+                if (property == GitDataProperty.MOST_RECENT_COMMIT_DATE) {
+
+                    // Coloring: Green --- Gray --- Red
+                    var sortedDates = getLastCommitDateOptions();
                     Map<String, Paint> colorMapping = new HashMap<>();
                     // 4 most recent dates get green colors
                     for (int i = 0; i < 4 && !sortedDates.isEmpty(); i++) {
@@ -1096,85 +1225,26 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
                     for (var d : sortedDates) {
                         colorMapping.put(d, Color.LIGHT_GRAY);
                     }
-                    s.applyDiscreteMapping(JGitMetadataInput.LAST_COMMIT_DATE, String.class, colorMapping, NODE_FILL_COLOR);
+                    applyDiscreteMapping(JGitMetadataInput.LAST_COMMIT_DATE, String.class, colorMapping, NODE_FILL_COLOR);
                     break;
-                }
-                case DATE_CIRCLED: {
-                    VisualStyle style = s.vmm.getVisualStyle(s.am.getCurrentNetworkView());
-                    style.setDefaultValue(NODE_BORDER_WIDTH, 10.0);
-                    style.setDefaultValue(NODE_BORDER_LINE_TYPE, s.retrieveParallelLinesStyle());
 
-                    var sortedDates = s.getLastCommitDateOptions();
-                    Map<String, Integer> transparencyMapping = new HashMap<>();
-                    // 10 most recent dates get decreasing transparency, starting at 255
-                    for (int i = 0; i < 10 && !sortedDates.isEmpty(); i++) {
-                        transparencyMapping.put(sortedDates.pollLast(), 255 - i * 25);
-                    }
-                    // The rest get 0 transparency
-                    for (var d : sortedDates) {
-                        transparencyMapping.put(d, 0);
-                    }
-                    s.applyDiscreteMapping(JGitMetadataInput.LAST_COMMIT_DATE, String.class, transparencyMapping, NODE_BORDER_TRANSPARENCY);
+                } else if (property == GitDataProperty.LAST_COMMIT_AUTHOR) {
+                    applyDiscreteColoring(JGitMetadataInput.LAST_COMMIT_AUTHOR);
                     break;
-                }
-                case DATE_BORDER_WIDTH: {
-                    VisualStyle style = s.vmm.getVisualStyle(s.am.getCurrentNetworkView());
-                    style.setDefaultValue(NODE_BORDER_LINE_TYPE, LineTypeVisualProperty.SOLID);
-
-                    var sortedDates = s.getLastCommitDateOptions();
-                    Map<String, Double> widthMapping = new HashMap<>();
-                    // 10 most recent dates get decreasing widths
-                    for (int i = 0; i < 10 && !sortedDates.isEmpty(); i++) {
-                        widthMapping.put(sortedDates.pollLast(), 10.0 - i);
-                    }
-                    s.applyDiscreteMapping(JGitMetadataInput.LAST_COMMIT_DATE, String.class, widthMapping, NODE_BORDER_WIDTH);
+                } else if (property == GitDataProperty.TOTAL_NUMBER_OF_COMMITS) {
+                    applyColoringByCommits();
                     break;
-                }
-                case COMMITS_COLOR: {
-                    // Set colors
-                    s.applyColoringByCommits();
-                    break;
-                }
-                case COMMITS_SIZE: {
-                    // Set sizes
-                    s.setSizeEquation(SizeEquation.COMMITS);
-                    break;
-                }
-                case COMMITS_BOTH: {
-                    // Set sizes
-                    s.setSizeEquation(SizeEquation.COMMITS);
-                    // Set colors
-                    s.applyColoringByCommits();
-                    break;
-                }
-                case AUTHOR_COLOR: {
-                    s.applyDiscreteColoring(JGitMetadataInput.LAST_COMMIT_AUTHOR);
-                    break;
-                }
-                default: {
-                    // Reset all styles (happens in any case)
                 }
             }
-        }
-        @Override
-        public String toString() {
-            // Choose from a string array for better description
-            switch (this) {
-                case NONE: return "None";
-                case DATE_COLOR: return "Most recent commits by color";
-                case DATE_BORDER_WIDTH: return "Most recent commits by border width";
-                case DATE_CIRCLED: return "Most recent commits are circled";
-                case COMMITS_COLOR: return "Number of commits by color";
-                case COMMITS_SIZE: return "Number of commits by node size";
-                case COMMITS_BOTH: return "Number of commits by color and size";
-                case AUTHOR_COLOR: return "Author of last commit by color";
-                default: return super.toString();
+            case NODE_SIZE: {
+                style.setDefaultValue(NODE_BORDER_WIDTH, 0.0);
+                applyNumberVisualization(property, 20, 120, BasicVisualLexicon.NODE_SIZE, (d) -> d);
+                applyNumberVisualization(property, 10, 60, NODE_LABEL_FONT_SIZE, Double::intValue);
+                break;
             }
         }
-        public static GitDataStyle[] getAllowedList() {
-            return new GitDataStyle[] {NONE, DATE_COLOR, DATE_BORDER_WIDTH, DATE_CIRCLED,
-                    COMMITS_COLOR, COMMITS_SIZE, COMMITS_BOTH, AUTHOR_COLOR};
-        }
+
+
     }
 
     /**
