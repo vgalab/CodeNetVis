@@ -828,9 +828,9 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
             setTooltipsPassthrough("Package");
             // Pick best coloring based on the size of the project
             if (am.getCurrentNetwork().getNodeCount() >= 100)
-                applyDiscreteColoring("Root package");
+                this.setCurrentColoring(Coloring.ROOT_PACKAGE);
             else
-                applyDiscreteColoring("Package");
+                this.setCurrentColoring(Coloring.PACKAGE);
         }
     }
 
@@ -1203,13 +1203,11 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
         }
 
         // Set tooltips to commit summary if selected
-        VisualMappingFunction<String, String> tooltip;
         if (vis == GitDataVisualization.NONE && property == GitDataProperty.NONE) {
-            tooltip = vmff_passthrough.createVisualMappingFunction(NODE_PACKAGE, String.class, NODE_TOOLTIP);
+            setTooltipsPassthrough(NODE_PACKAGE);
         } else {
-            tooltip = vmff_passthrough.createVisualMappingFunction(JGitMetadataInput.LAST_COMMIT_SUMMARY, String.class, NODE_TOOLTIP);
+            setTooltipsPassthrough(JGitMetadataInput.LAST_COMMIT_SUMMARY);
         }
-        style.addVisualMappingFunction(tooltip);
 
         switch (vis) {
             case BORDER_WIDTH: {
