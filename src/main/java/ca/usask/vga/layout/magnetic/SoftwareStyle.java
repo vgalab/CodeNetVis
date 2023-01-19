@@ -873,6 +873,21 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
             new Color(82, 0, 0),
     };
 
+    /**
+     * Color brewer divergent 9 red-yellow-green palette.
+     */
+    public final static Color[] COLOR_BREWER_DIVERGENT = {
+            new Color(215,48,39),
+            new Color(244,109,67),
+            new Color(253,174,97),
+            new Color(254,224,139),
+            new Color(255,255,191),
+            new Color(217,239,139),
+            new Color(166,217,106),
+            new Color(102,189,99),
+            new Color(26,152,80)
+    };
+
 
     /**
      * Applies the discrete coloring to the node color, based on the given column and type.
@@ -1229,20 +1244,21 @@ public class SoftwareStyle implements NetworkViewAboutToBeDestroyedListener {
             case NODE_COLOR: {
                 if (property == GitDataProperty.MOST_RECENT_COMMIT_DATE) {
 
-                    // Coloring: Green --- Gray --- Red
+                    // Coloring: Green --- Yellow --- Red
+                    // Use color brewer diverging color scheme
                     var sortedDates = getLastCommitDateOptions();
                     Map<String, Paint> colorMapping = new HashMap<>();
                     // 4 most recent dates get green colors
                     for (int i = 0; i < 4 && !sortedDates.isEmpty(); i++) {
-                        colorMapping.put(sortedDates.pollLast(), GREEN_4[i]);
+                        colorMapping.put(sortedDates.pollLast(), COLOR_BREWER_DIVERGENT[8-i]);
                     }
                     // 4 oldest dates get red colors
                     for (int i = 0; i < 4 && !sortedDates.isEmpty(); i++) {
-                        colorMapping.put(sortedDates.pollFirst(), RED_4[i]);
+                        colorMapping.put(sortedDates.pollFirst(), COLOR_BREWER_DIVERGENT[i]);
                     }
-                    // The rest get gray
+                    // The rest get yellow
                     for (var d : sortedDates) {
-                        colorMapping.put(d, Color.LIGHT_GRAY);
+                        colorMapping.put(d, COLOR_BREWER_DIVERGENT[4]);
                     }
                     applyDiscreteMapping(JGitMetadataInput.LAST_COMMIT_DATE, String.class, colorMapping, NODE_FILL_COLOR);
                     break;

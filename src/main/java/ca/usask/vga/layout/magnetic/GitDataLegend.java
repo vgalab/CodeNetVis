@@ -117,11 +117,11 @@ public class GitDataLegend extends JPanel {
                         break;
                     }
                     case MOST_RECENT_COMMIT_DATE: {
-                        circles[0].color = RED_4[0];
-                        circles[1].color = RED_4[2];
-                        circles[2].color = Color.LIGHT_GRAY;
-                        circles[3].color = GREEN_4[2];
-                        circles[4].color = GREEN_4[0];
+                        circles[0].color = COLOR_BREWER_DIVERGENT[0];
+                        circles[1].color = COLOR_BREWER_DIVERGENT[2];
+                        circles[2].color = COLOR_BREWER_DIVERGENT[4];
+                        circles[3].color = COLOR_BREWER_DIVERGENT[6];
+                        circles[4].color = COLOR_BREWER_DIVERGENT[8];
                         break;
                     }
                     case LAST_COMMIT_AUTHOR: {
