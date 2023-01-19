@@ -26,6 +26,9 @@ visualization of the dependencies around the poles.
 - Using polar layout to select a set of classes and examine the dependencies 
   around them, which may be used to plan how to extract them out to create independent modules
 
+- **New in v1.1:** Visualizing git repository commit information, such as the most recent changes, 
+  commit authors, and the total number of commits.
+
 ---
 
 ### Introductory Video
