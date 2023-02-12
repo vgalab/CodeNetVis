@@ -50,7 +50,7 @@ Alternatively, follow the instructions below:
 1. First install Cytoscape 3.9.1+ from [their official website](https://cytoscape.org/).
 
 2. Download the app .JAR file from 
-[this repository](https://github.com/vgalab/CodeNetVis/raw/master/target/codenetvis-1.0.jar).
+[this repository](https://apps.cytoscape.org/apps/codenetvis).
 
 3. Copy the .JAR file into the folder
 `%userprofile%\CytoscapeConfiguration\3\apps\installed`
